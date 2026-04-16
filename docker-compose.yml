@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:17
+    container_name: tracker_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tracker_db
+      POSTGRES_USER: tracker_user
+      POSTGRES_PASSWORD: tracker_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tracker_user -d tracker_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: tracker_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: tracker_frontend
+    restart: unless-stopped
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
