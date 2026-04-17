@@ -1,19 +1,58 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
 
-class UserRole(models.TextChoices):
-    ADMIN = "admin", "Admin"
-    MANAGER = "manager", "Manager"
-    MEMBER = "member", "Member"
+def user_avatar_upload_path(instance, filename):
+    return f"users/avatars/{instance.id}/{filename}"
+
+
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Email is required")
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True")
+
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True")
+
+        return self.create_user(email, password, **extra_fields)
 
 
 class User(AbstractUser):
-    role = models.CharField(
-        max_length=20,
-        choices=UserRole.choices,
-        default=UserRole.MEMBER,
+    username = None
+    email = models.EmailField(unique=True)
+
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+
+    avatar = models.ImageField(
+        upload_to=user_avatar_upload_path,
+        null=True,
+        blank=True,
     )
 
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
+
+    @property
+    def full_name(self):
+        full_name = f"{self.first_name} {self.last_name}".strip()
+        return full_name or self.email
+
     def __str__(self):
-        return self.username
+        return self.email
