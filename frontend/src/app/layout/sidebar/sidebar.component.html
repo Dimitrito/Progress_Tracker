@@ -1,0 +1,28 @@
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-mark">PT</div>
+
+    <div class="sidebar-brand-copy">
+      <strong class="sidebar-brand-title">Progress Tracker</strong>
+      <p class="sidebar-brand-subtitle">Project workspace</p>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    @for (item of items; track item.label) {
+      @if (item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="sidebar-link-active"
+          class="sidebar-link"
+        >
+          {{ item.label }}
+        </a>
+      } @else {
+        <span class="sidebar-link sidebar-link-disabled">
+          {{ item.label }}
+        </span>
+      }
+    }
+  </nav>
+</aside>

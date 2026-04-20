@@ -1,0 +1,16 @@
+<header class="topbar">
+  <div class="topbar-copy">
+    <h1 class="topbar-title">Workspace</h1>
+    <p class="topbar-subtitle">Project management and analytics workspace</p>
+  </div>
+
+  <div class="topbar-actions">
+    <span class="topbar-user">
+      {{ authService.user()?.email ?? 'Loading profile...' }}
+    </span>
+
+    <button type="button" class="topbar-logout" (click)="logout()">
+      Logout
+    </button>
+  </div>
+</header>

@@ -1,0 +1,60 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">Login</h1>
+      <p class="auth-description">
+        Sign in to access organizations, projects and team analytics.
+      </p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+      <label class="form-field">
+        <span class="form-label">
+          Email
+          <span class="required-mark">*</span>
+        </span>
+        <input
+          class="form-input"
+          type="email"
+          formControlName="email"
+        />
+      </label>
+
+      <label class="form-field">
+        <span class="form-label">
+          Password
+          <span class="required-mark">*</span>
+        </span>
+
+        <div class="password-field">
+          <input
+            class="form-input"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+          />
+
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+          >
+            {{ showPassword() ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+      </label>
+
+      @if (errorMessage()) {
+        <p class="auth-error">{{ errorMessage() }}</p>
+      }
+
+      <button class="auth-submit" type="submit" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Signing in...' : 'Sign in' }}
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      No account yet?
+      <a routerLink="/register" class="auth-link">Create one</a>
+    </p>
+  </div>
+</section>

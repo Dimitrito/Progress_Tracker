@@ -1,0 +1,42 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-main);
+}
+
+/* Sidebar фиксированной ширины */
+.layout-sidebar {
+  flex: 0 0 260px;
+}
+
+/* Основная часть */
+.layout-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Topbar */
+.layout-topbar {
+  flex: 0 0 auto;
+}
+
+/* Контент */
+.layout-content {
+  flex: 1;
+  padding: var(--space-6);
+  background: var(--bg-main);
+}
+
+/* Адаптив */
+@media (max-width: 960px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .layout-sidebar {
+    width: 100%;
+    flex: unset;
+  }
+}

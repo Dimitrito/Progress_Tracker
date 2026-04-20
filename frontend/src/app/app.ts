@@ -1,18 +1,11 @@
-import { Component, inject } from '@angular/core';
-import { ApiService } from './core/services/api.service';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  template: `<h1>Project Progress Tracker</h1><p>{{ status }}</p>`
+  standalone: true,
+  imports: [RouterOutlet],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class AppComponent {
-  private api = inject(ApiService);
-  status = 'loading...';
-
-  ngOnInit() {
-    this.api.getHealth().subscribe({
-      next: (res) => this.status = res.status,
-      error: () => this.status = 'backend unavailable'
-    });
-  }
-}
+export class AppComponent {}

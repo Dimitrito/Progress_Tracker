@@ -1,3 +1,66 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'app',
+  },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./layout/auth-layout/auth-layout.component').then(
+        (m) => m.AuthLayoutComponent,
+      ),
+    children: [
+      {
+        path: 'login',
+        loadComponent: () =>
+          import('./features/auth/login-page/login-page.component').then(
+            (m) => m.LoginPageComponent,
+          ),
+      },
+      {
+        path: 'register',
+        loadComponent: () =>
+          import('./features/auth/register-page/register-page.component').then(
+            (m) => m.RegisterPageComponent,
+          ),
+      },
+    ],
+  },
+  {
+    path: 'app',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./layout/dashboard-layout/dashboard-layout.component').then(
+        (m) => m.DashboardLayoutComponent,
+      ),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'organizations',
+      },
+      {
+        path: 'organizations',
+        loadComponent: () =>
+          import('./features/organizations/organizations-page/organizations-page.component').then(
+            (m) => m.OrganizationsPageComponent,
+          ),
+      },
+      {
+        path: 'projects',
+        loadComponent: () =>
+          import('./features/projects/projects-page/projects-page.component').then(
+            (m) => m.ProjectsPageComponent,
+          ),
+      },
+    ],
+  },
+  {
+    path: '**',
+    redirectTo: 'app',
+  },
+];

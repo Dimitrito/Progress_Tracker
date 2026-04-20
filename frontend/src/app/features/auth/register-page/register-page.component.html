@@ -1,0 +1,105 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">Create account</h1>
+      <p class="auth-description">
+        Register to join organizations, collaborate in projects and track progress.
+      </p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+      <label class="form-field">
+        <span class="form-label">
+          Email
+          <span class="required-mark">*</span>
+        </span>
+        <input
+          class="form-input"
+          type="email"
+          formControlName="email"
+        />
+      </label>
+
+      <div class="form-grid">
+        <label class="form-field">
+          <span class="form-label">First name</span>
+          <input
+            class="form-input"
+            type="text"
+            formControlName="first_name"
+          />
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">Last name</span>
+          <input
+            class="form-input"
+            type="text"
+            formControlName="last_name"
+          />
+        </label>
+      </div>
+
+      <label class="form-field">
+        <span class="form-label">
+          Password
+          <span class="required-mark">*</span>
+        </span>
+
+        <div class="password-field">
+          <input
+            class="form-input"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Minimum 6 characters"
+          />
+
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+          >
+            {{ showPassword() ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+      </label>
+
+      <label class="form-field">
+        <span class="form-label">
+          Confirm password
+          <span class="required-mark">*</span>
+        </span>
+
+        <div class="password-field">
+          <input
+            class="form-input"
+            [type]="showConfirmPassword() ? 'text' : 'password'"
+            formControlName="confirm_password"
+            placeholder="Repeat password"
+          />
+
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="toggleConfirmPasswordVisibility()"
+          >
+            {{ showConfirmPassword() ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+      </label>
+
+      @if (errorMessage()) {
+        <p class="auth-error">{{ errorMessage() }}</p>
+      }
+
+      <button class="auth-submit" type="submit" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Creating account...' : 'Create account' }}
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Already registered?
+      <a routerLink="/login" class="auth-link">Back to login</a>
+    </p>
+  </div>
+</section>
