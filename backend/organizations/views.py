@@ -68,7 +68,11 @@ class MyOrganizationsView(APIView):
             organization.membership = membership
             organizations.append(organization)
 
-        serializer = OrganizationListSerializer(organizations, many=True)
+        serializer = OrganizationListSerializer(
+            organizations,
+            many=True,
+            context={"request": request},
+        )
         return Response(serializer.data)
 
 
@@ -100,7 +104,10 @@ class OrganizationDetailUpdateView(APIView):
         serializer.save()
 
         organization.membership = membership
-        response_serializer = OrganizationListSerializer(organization)
+        response_serializer = OrganizationListSerializer(
+            organization,
+            context={"request": request},
+        )
         return Response(response_serializer.data)
 
 

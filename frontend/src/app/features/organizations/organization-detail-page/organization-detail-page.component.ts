@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 import { OrganizationContextService } from '../../../core/services/organization-context.service';
 import {
@@ -19,6 +20,7 @@ interface OrganizationDetailViewModel {
   id: number;
   name: string;
   description: string;
+  icon: string | null;
   role: OrganizationApiRole;
   roleLabel: string;
   createdAt: string;
@@ -39,7 +41,11 @@ export class OrganizationDetailPageComponent {
   private readonly organizationsService = inject(OrganizationsService);
   private readonly organizationContext = inject(OrganizationContextService);
 
-  private baseline = { name: '', description: '' };
+  private baseline = {
+    name: '',
+    description: '',
+    icon: null as string | null,
+  };
   private loadedOrganizationId: number | null = null;
 
   protected readonly isLoading = signal(true);
@@ -54,6 +60,10 @@ export class OrganizationDetailPageComponent {
     () => this.organization()?.role === 'admin',
   );
   protected readonly formDirty = signal(false);
+
+  protected readonly selectedIconFile = signal<File | null>(null);
+  protected readonly iconPreviewUrl = signal<string | null>(null);
+  protected readonly removeIcon = signal(false);
 
   protected readonly teamLoading = signal(false);
   protected readonly teamError = signal<string | null>(null);
@@ -71,10 +81,7 @@ export class OrganizationDetailPageComponent {
   protected readonly joinRequestBusyId = signal<number | null>(null);
 
   protected readonly editOrganizationForm = this.fb.nonNullable.group({
-    name: [
-      '',
-      [Validators.required, Validators.maxLength(255)],
-    ],
+    name: ['', [Validators.required, Validators.maxLength(255)]],
     description: [''],
   });
 
@@ -150,9 +157,41 @@ export class OrganizationDetailPageComponent {
     }
   }
 
+  protected onIconSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    if (!file) {
+      return;
+    }
+
+    this.selectedIconFile.set(file);
+    this.removeIcon.set(false);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.iconPreviewUrl.set(
+        typeof reader.result === 'string' ? reader.result : null,
+      );
+      this.syncDirtyFlag();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  protected removeSelectedIcon(): void {
+    this.selectedIconFile.set(null);
+    this.iconPreviewUrl.set(null);
+    this.removeIcon.set(true);
+    this.syncDirtyFlag();
+  }
+
   protected discardChanges(): void {
     this.saveError.set(null);
     this.saveSuccess.set(null);
+    this.selectedIconFile.set(null);
+    this.iconPreviewUrl.set(this.baseline.icon);
+    this.removeIcon.set(false);
+
     this.editOrganizationForm.reset(
       {
         name: this.baseline.name,
@@ -186,6 +225,8 @@ export class OrganizationDetailPageComponent {
       .updateOrganization(organization.id, {
         name: name.trim(),
         description: description.trim(),
+        icon: this.selectedIconFile(),
+        clear_icon: this.removeIcon(),
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -193,6 +234,9 @@ export class OrganizationDetailPageComponent {
           const detailViewModel = this.mapToViewModel(updatedOrganization);
           this.organization.set(detailViewModel);
           this.setBaselineFromApi(updatedOrganization);
+          this.selectedIconFile.set(null);
+          this.iconPreviewUrl.set(updatedOrganization.icon);
+          this.removeIcon.set(false);
           this.editOrganizationForm.reset(
             {
               name: updatedOrganization.name,
@@ -235,7 +279,9 @@ export class OrganizationDetailPageComponent {
         next: (invitation) => {
           this.inviteSubmitting.set(false);
           this.inviteForm.reset({ email: '' }, { emitEvent: false });
-          this.inviteSuccess.set(`Invitation sent to ${invitation.invited_user_email}.`);
+          this.inviteSuccess.set(
+            `Invitation sent to ${invitation.invited_user_email}.`,
+          );
           this.pendingInvitations.update((list) => [...list, invitation]);
         },
         error: (error: HttpErrorResponse) => {
@@ -336,6 +382,9 @@ export class OrganizationDetailPageComponent {
           const detailViewModel = this.mapToViewModel(organization);
           this.organization.set(detailViewModel);
           this.setBaselineFromApi(organization);
+          this.selectedIconFile.set(null);
+          this.iconPreviewUrl.set(organization.icon);
+          this.removeIcon.set(false);
           this.editOrganizationForm.reset(
             {
               name: organization.name,
@@ -364,7 +413,9 @@ export class OrganizationDetailPageComponent {
       forkJoin({
         members: this.organizationsService.getOrganizationMembers(organizationId),
         invitations:
-          this.organizationsService.getPendingInvitationsForOrganization(organizationId),
+          this.organizationsService.getPendingInvitationsForOrganization(
+            organizationId,
+          ),
         joinRequests: this.organizationsService.getReceivedJoinRequests(),
       })
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -409,6 +460,7 @@ export class OrganizationDetailPageComponent {
     this.baseline = {
       name: organization.name,
       description: organization.description,
+      icon: organization.icon,
     };
   }
 
@@ -417,11 +469,17 @@ export class OrganizationDetailPageComponent {
       this.formDirty.set(false);
       return;
     }
+
     const { name, description } = this.editOrganizationForm.getRawValue();
+
     const dirty =
       name.trim() !== this.baseline.name.trim() ||
-      description !== this.baseline.description;
+      description !== this.baseline.description ||
+      this.selectedIconFile() !== null ||
+      this.removeIcon();
+
     this.formDirty.set(dirty);
+
     if (dirty) {
       this.saveSuccess.set(null);
     }
@@ -434,6 +492,7 @@ export class OrganizationDetailPageComponent {
       id: organization.id,
       name: organization.name,
       description: organization.description,
+      icon: organization.icon,
       role: organization.role,
       roleLabel: this.mapRoleLabel(organization.role),
       createdAt: organization.created_at,

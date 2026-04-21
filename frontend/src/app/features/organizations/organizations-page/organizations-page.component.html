@@ -23,7 +23,11 @@
           (ngSubmit)="submitCreateForm()"
         >
           <div class="form-field">
-            <label class="form-label" for="organization-name">Name</label>
+            <label class="form-label" for="organization-name">
+              Name
+              <span class="required-mark">*</span>
+            </label>
+
             <input
               id="organization-name"
               class="form-input"
@@ -44,6 +48,7 @@
             <label class="form-label" for="organization-description">
               Description
             </label>
+
             <textarea
               id="organization-description"
               class="form-textarea"
@@ -51,6 +56,41 @@
               rows="4"
               placeholder="Add a short description"
             ></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="organization-icon">
+              Icon
+            </label>
+
+            <input
+              #iconInput
+              id="organization-icon"
+              class="form-input file-input"
+              type="file"
+              accept="image/*"
+              (change)="onIconSelected($event)"
+            />
+
+            @if (selectedIconPreview()) {
+              <div class="icon-preview-row">
+                <div class="icon-preview">
+                  <img
+                    [src]="selectedIconPreview()!"
+                    alt="Organization icon preview"
+                    class="icon-preview-image"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  class="secondary-button"
+                  (click)="clearSelectedIcon(iconInput)"
+                >
+                  Remove icon
+                </button>
+              </div>
+            }
           </div>
 
           @if (createError()) {

@@ -11,22 +11,38 @@ from .models import (
 User = get_user_model()
 
 
-class OrganizationCreateSerializer(serializers.ModelSerializer):
+class AbsoluteIconUrlMixin:
+    def get_icon(self, obj):
+        if not obj.icon:
+            return None
+
+        request = self.context.get("request")
+        url = obj.icon.url
+
+        if request is None:
+            return url
+
+        return request.build_absolute_uri(url)
+
+class OrganizationCreateSerializer(AbsoluteIconUrlMixin, serializers.ModelSerializer):
+    icon = serializers.SerializerMethodField()
+
     class Meta:
         model = Organization
         fields = ("id", "name", "description", "icon")
 
+class OrganizationUpdateSerializer(AbsoluteIconUrlMixin, serializers.ModelSerializer):
+    icon = serializers.ImageField(required=False, allow_null=True)
 
-class OrganizationUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ("id", "name", "description", "icon")
         read_only_fields = ("id",)
 
 
-class OrganizationListSerializer(serializers.ModelSerializer):
+class OrganizationListSerializer(AbsoluteIconUrlMixin, serializers.ModelSerializer):
     role = serializers.CharField(source="membership.role", read_only=True)
-    icon = serializers.ImageField(read_only=True)
+    icon = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization

@@ -47,6 +47,9 @@ export class OrganizationsPageComponent {
   protected readonly selectedOrganization =
     this.organizationContext.selectedOrganization;
 
+  protected readonly selectedIconFile = signal<File | null>(null);
+  protected readonly selectedIconPreview = signal<string | null>(null);
+
   protected readonly createOrganizationForm = this.fb.nonNullable.group({
     name: ['', [Validators.required]],
     description: [''],
@@ -65,6 +68,9 @@ export class OrganizationsPageComponent {
     this.showCreateForm.set(false);
     this.createError.set(null);
     this.isCreating.set(false);
+    this.selectedIconFile.set(null);
+    this.selectedIconPreview.set(null);
+
     this.createOrganizationForm.reset({
       name: '',
       description: '',
@@ -73,6 +79,27 @@ export class OrganizationsPageComponent {
 
   reloadOrganizations(): void {
     this.loadOrganizations();
+  }
+
+  onIconSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    this.selectedIconFile.set(file);
+
+    if (!file) {
+      this.selectedIconPreview.set(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    this.selectedIconPreview.set(objectUrl);
+  }
+
+  clearSelectedIcon(fileInput: HTMLInputElement): void {
+    this.selectedIconFile.set(null);
+    this.selectedIconPreview.set(null);
+    fileInput.value = '';
   }
 
   selectOrganization(organization: OrganizationCardViewModel): void {
@@ -108,16 +135,21 @@ export class OrganizationsPageComponent {
       .createOrganization({
         name: name.trim(),
         description: description.trim(),
+        icon: this.selectedIconFile() ?? undefined,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.isCreating.set(false);
           this.showCreateForm.set(false);
+          this.selectedIconFile.set(null);
+          this.selectedIconPreview.set(null);
+
           this.createOrganizationForm.reset({
             name: '',
             description: '',
           });
+
           this.loadOrganizations();
         },
         error: (error: HttpErrorResponse) => {
@@ -240,6 +272,10 @@ export class OrganizationsPageComponent {
 
     if (typeof error.error?.description?.[0] === 'string') {
       return error.error.description[0];
+    }
+
+    if (typeof error.error?.icon?.[0] === 'string') {
+      return error.error.icon[0];
     }
 
     if (typeof error.error?.non_field_errors?.[0] === 'string') {

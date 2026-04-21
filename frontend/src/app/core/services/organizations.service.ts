@@ -29,6 +29,8 @@ export interface CreateOrganizationPayload {
 export interface UpdateOrganizationPayload {
   name: string;
   description: string;
+  icon?: File | null;
+  clear_icon?: boolean;
 }
 
 export interface OrganizationMember {
@@ -123,9 +125,21 @@ export class OrganizationsService {
     organizationId: number,
     payload: UpdateOrganizationPayload,
   ): Observable<OrganizationListItem> {
+    const formData = new FormData();
+    formData.append('name', payload.name);
+    formData.append('description', payload.description || '');
+
+    if (payload.icon) {
+      formData.append('icon', payload.icon);
+    }
+
+    if (payload.clear_icon) {
+      formData.append('clear_icon', 'true');
+    }
+
     return this.http.patch<OrganizationListItem>(
       `${this.baseUrl}/organizations/${organizationId}/`,
-      payload,
+      formData,
     );
   }
 

@@ -8,7 +8,7 @@ urlpatterns = [
     path("api/auth/", include("users.urls")),
     path("api/organizations/", include("organizations.urls")),
     path("api/projects/", include("projects.urls")),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# if settings.DEBUG:
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
