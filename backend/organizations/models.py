@@ -23,6 +23,7 @@ class InvitationStatus(models.TextChoices):
 
 class Organization(models.Model):
     name = models.CharField(max_length=255, unique=True)
+    icon = models.ImageField(upload_to="organization_icons/", null=True, blank=True)
     description = models.TextField(blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

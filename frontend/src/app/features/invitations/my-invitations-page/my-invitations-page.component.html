@@ -1,0 +1,67 @@
+<section class="page">
+  <header class="page-header">
+    <div class="page-header-copy">
+      <h1 class="page-title">Invitations</h1>
+      <p class="page-subtitle">
+        Pending invitations to join organizations. Accept to add the workspace to
+        your account.
+      </p>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <div class="panel state">
+      <p class="eyebrow">Loading</p>
+      <p class="lead">Fetching your invitations…</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="panel state">
+      <p class="eyebrow">Error</p>
+      <p class="lead">{{ errorMessage() }}</p>
+      <button type="button" class="btn btn-secondary" (click)="reload()">
+        Try again
+      </button>
+    </div>
+  } @else if (invitations().length === 0) {
+    <div class="panel state">
+      <p class="eyebrow">Invitations</p>
+      <p class="lead">You have no pending invitations.</p>
+    </div>
+  } @else {
+    <ul class="invitation-list">
+      @for (invitation of invitations(); track invitation.id) {
+        <li class="panel invitation-card">
+          <div class="invitation-main">
+            <p class="eyebrow">{{ invitation.organization_name }}</p>
+            <p class="invitation-meta">
+              From <span class="mono">{{ invitation.invited_by_email }}</span>
+              · {{ formatDate(invitation.created_at) }}
+            </p>
+          </div>
+          <div class="invitation-actions">
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="processingId() !== null"
+              (click)="accept(invitation)"
+            >
+              @if (processingId() === invitation.id) {
+                Working…
+              } @else {
+                Accept
+              }
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="processingId() !== null"
+              (click)="decline(invitation)"
+            >
+              Decline
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

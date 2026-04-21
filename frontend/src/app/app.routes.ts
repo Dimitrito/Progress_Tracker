@@ -46,9 +46,23 @@ export const routes: Routes = [
       {
         path: 'organizations',
         loadComponent: () =>
-          import('./features/organizations/organizations-page/organizations-page.component').then(
-            (m) => m.OrganizationsPageComponent,
-          ),
+          import(
+            './features/organizations/organizations-page/organizations-page.component'
+          ).then((m) => m.OrganizationsPageComponent),
+      },
+      {
+        path: 'organizations/:id',
+        loadComponent: () =>
+          import(
+            './features/organizations/organization-detail-page/organization-detail-page.component'
+          ).then((m) => m.OrganizationDetailPageComponent),
+      },
+      {
+        path: 'invitations',
+        loadComponent: () =>
+          import(
+            './features/invitations/my-invitations-page/my-invitations-page.component'
+          ).then((m) => m.MyInvitationsPageComponent),
       },
       {
         path: 'projects',

@@ -8,6 +8,9 @@ from .views import (
     MyInvitationsView,
     MyOrganizationsView,
     OrganizationCreateView,
+    OrganizationDetailUpdateView,
+    OrganizationMembersView,
+    OrganizationPendingInvitationsView,
     ReceivedJoinRequestsView,
     RejectJoinRequestView,
 )
@@ -15,6 +18,12 @@ from .views import (
 urlpatterns = [
     path("create/", OrganizationCreateView.as_view()),
     path("my/", MyOrganizationsView.as_view()),
+    path("<int:organization_id>/members/", OrganizationMembersView.as_view()),
+    path(
+        "<int:organization_id>/invitations/pending/",
+        OrganizationPendingInvitationsView.as_view(),
+    ),
+    path("<int:organization_id>/", OrganizationDetailUpdateView.as_view()),
 
     path("<int:organization_id>/join-request/", CreateJoinRequestView.as_view()),
     path("join-requests/received/", ReceivedJoinRequestsView.as_view()),

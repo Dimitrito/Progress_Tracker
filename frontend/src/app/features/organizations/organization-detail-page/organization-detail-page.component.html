@@ -1,0 +1,356 @@
+<section class="page">
+  @if (isLoading()) {
+    <div class="state-card">
+      <p class="state-eyebrow">Loading</p>
+      <h1 class="state-title">Fetching organization</h1>
+      <p class="state-description">
+        Loading workspace details and settings.
+      </p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-card">
+      <p class="state-eyebrow">Organization</p>
+      <h1 class="state-title">Unable to open this organization</h1>
+      <p class="state-description">{{ errorMessage() }}</p>
+      <a class="btn btn-secondary" routerLink="/app/organizations">
+        Back to organizations
+      </a>
+    </div>
+  } @else if (organization(); as organization) {
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/app/organizations" class="breadcrumb-link">Organizations</a>
+      <span class="breadcrumb-sep" aria-hidden="true">/</span>
+      <span class="breadcrumb-current">{{ organization.name }}</span>
+    </nav>
+
+    <header class="hero">
+      <div class="hero-main">
+        <div class="hero-identity">
+          <div class="hero-avatar" aria-hidden="true">
+            {{ heroInitials(organization.name) }}
+          </div>
+          <div class="hero-copy">
+            <p class="hero-eyebrow">Workspace</p>
+            <h1 class="hero-title">{{ organization.name }}</h1>
+            @if (hasDescription(organization)) {
+              <p class="hero-description">{{ organization.description }}</p>
+            } @else {
+              <p class="hero-description hero-description-empty">
+                No description yet — add one in settings below.
+              </p>
+            }
+          </div>
+        </div>
+        <div class="hero-meta">
+          <div class="meta-chip">
+            <span class="meta-label">Your role</span>
+            <span
+              class="role-pill"
+              [class.role-pill-owner]="organization.role === 'admin'"
+              [class.role-pill-pm]="organization.role === 'pm'"
+              [class.role-pill-member]="organization.role === 'member'"
+            >
+              {{ organization.roleLabel }}
+            </span>
+          </div>
+          <div class="meta-chip">
+            <span class="meta-label">Created</span>
+            <span class="meta-value">{{ formatCreatedAt(organization.createdAt) }}</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    @if (saveError()) {
+      <div class="alert alert-error" role="alert">{{ saveError() }}</div>
+    }
+
+    @if (saveSuccess()) {
+      <div class="alert alert-success" role="status">{{ saveSuccess() }}</div>
+    }
+
+    <div class="layout">
+      <div class="layout-main">
+        <section class="card editor-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Organization profile</h2>
+              <p class="card-subtitle">
+                Name and description are shown across the workspace. Only owners can
+                edit these fields.
+              </p>
+            </div>
+          </div>
+
+          @if (canEditOrganization()) {
+            <form
+              class="editor-form"
+              [formGroup]="editOrganizationForm"
+              (ngSubmit)="saveOrganization()"
+            >
+              <div class="field">
+                <div class="field-head">
+                  <label class="field-label" for="org-name">Display name</label>
+                  <span class="field-hint">
+                    {{ editOrganizationForm.controls.name.value.length }}/255
+                  </span>
+                </div>
+                <input
+                  id="org-name"
+                  class="input"
+                  type="text"
+                  formControlName="name"
+                  autocomplete="organization"
+                  placeholder="Acme Inc."
+                />
+                @if (
+                  editOrganizationForm.controls.name.invalid &&
+                  editOrganizationForm.controls.name.touched
+                ) {
+                  <p class="field-error">
+                    @if (editOrganizationForm.controls.name.errors?.['required']) {
+                      Name is required.
+                    } @else if (editOrganizationForm.controls.name.errors?.['maxlength']) {
+                      Name must be at most 255 characters.
+                    }
+                  </p>
+                }
+              </div>
+
+              <div class="field">
+                <div class="field-head">
+                  <label class="field-label" for="org-description">Description</label>
+                  <span class="field-hint">Optional</span>
+                </div>
+                <textarea
+                  id="org-description"
+                  class="textarea"
+                  rows="5"
+                  formControlName="description"
+                  placeholder="What does this organization work on? Who is it for?"
+                ></textarea>
+              </div>
+
+              <div class="editor-actions">
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  [disabled]="isSaving() || editOrganizationForm.invalid || !formDirty()"
+                >
+                  {{ isSaving() ? 'Saving…' : 'Save changes' }}
+                </button>
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  [disabled]="isSaving() || !formDirty()"
+                  (click)="discardChanges()"
+                >
+                  Discard
+                </button>
+              </div>
+            </form>
+          } @else {
+            <div class="readonly-profile">
+              <div class="readonly-row">
+                <span class="readonly-label">Display name</span>
+                <span class="readonly-value">{{ organization.name }}</span>
+              </div>
+              <div class="readonly-row">
+                <span class="readonly-label">Description</span>
+                @if (hasDescription(organization)) {
+                  <span class="readonly-value">{{ organization.description }}</span>
+                } @else {
+                  <span class="readonly-value muted">No description</span>
+                }
+              </div>
+              <p class="readonly-note">
+                You don’t have permission to edit this organization. Ask an owner to
+                update the profile or grant you access.
+              </p>
+            </div>
+          }
+        </section>
+
+        <section class="card">
+          <div class="card-header card-header-row">
+            <div>
+              <h2 class="card-title">Members</h2>
+              <p class="card-subtitle">People with access to this organization.</p>
+            </div>
+            @if (teamError()) {
+              <button type="button" class="btn btn-text" (click)="reloadTeamSection()">
+                Retry
+              </button>
+            }
+          </div>
+
+          @if (teamLoading()) {
+            <p class="muted">Loading members…</p>
+          } @else if (teamError() && members().length === 0) {
+            <p class="field-error">{{ teamError() }}</p>
+          } @else if (members().length === 0) {
+            <p class="muted">No members loaded.</p>
+          } @else {
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Email</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (member of members(); track member.id) {
+                    <tr>
+                      <td class="cell-mono">{{ member.user_email }}</td>
+                      <td>{{ memberRoleLabel(member.role) }}</td>
+                      <td class="muted">{{ formatDateTime(member.joined_at) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+
+        @if (canEditOrganization()) {
+          <section class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Join requests</h2>
+                <p class="card-subtitle">
+                  Users who asked to join this organization. Approve to add them as
+                  members.
+                </p>
+              </div>
+            </div>
+
+            @if (teamLoading()) {
+              <p class="muted">Loading requests…</p>
+            } @else if (joinRequestsForOrg().length === 0) {
+              <p class="muted">No pending join requests for this organization.</p>
+            } @else {
+              <ul class="action-list">
+                @for (request of joinRequestsForOrg(); track request.id) {
+                  <li class="action-row">
+                    <div>
+                      <span class="action-title">{{ request.user_email }}</span>
+                      <span class="muted small">
+                        Requested {{ formatDateTime(request.created_at) }}
+                      </span>
+                    </div>
+                    <div class="action-buttons">
+                      <button
+                        type="button"
+                        class="btn btn-primary btn-sm"
+                        [disabled]="joinRequestBusyId() !== null"
+                        (click)="approveJoinRequest(request)"
+                      >
+                        @if (joinRequestBusyId() === request.id) {
+                          …
+                        } @else {
+                          Approve
+                        }
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        [disabled]="joinRequestBusyId() !== null"
+                        (click)="rejectJoinRequest(request)"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+
+          <section class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Invitations</h2>
+                <p class="card-subtitle">
+                  Invite a registered user by email. They can accept from the
+                  Invitations page.
+                </p>
+              </div>
+            </div>
+
+            <form
+              class="invite-form"
+              [formGroup]="inviteForm"
+              (ngSubmit)="submitInvite()"
+            >
+              <div class="field inline-field">
+                <label class="field-label" for="invite-email">Email</label>
+                <input
+                  id="invite-email"
+                  class="input"
+                  type="email"
+                  formControlName="email"
+                  placeholder="colleague@company.com"
+                  autocomplete="email"
+                />
+              </div>
+              @if (
+                inviteForm.controls.email.invalid &&
+                inviteForm.controls.email.touched
+              ) {
+                <p class="field-error">Enter a valid email address.</p>
+              }
+              @if (inviteError()) {
+                <p class="field-error">{{ inviteError() }}</p>
+              }
+              @if (inviteSuccess()) {
+                <p class="alert-inline-success">{{ inviteSuccess() }}</p>
+              }
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="inviteSubmitting() || inviteForm.invalid"
+              >
+                {{ inviteSubmitting() ? 'Sending…' : 'Send invitation' }}
+              </button>
+            </form>
+
+            @if (!teamLoading() && pendingInvitations().length > 0) {
+              <h3 class="subheading">Pending invitations</h3>
+              <ul class="simple-list">
+                @for (
+                  invitation of pendingInvitations();
+                  track invitation.id
+                ) {
+                  <li class="simple-list-item">
+                    <span class="cell-mono">{{ invitation.invited_user_email }}</span>
+                    <span class="muted small">
+                      Sent {{ formatDateTime(invitation.created_at) }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
+      </div>
+
+      <aside class="layout-aside">
+        <section class="card card-plain">
+          <h3 class="aside-title">Active workspace</h3>
+          <p class="aside-text">
+            Context for projects and tasks:
+            <strong>{{ selectedOrganization()?.name ?? '—' }}</strong>
+          </p>
+          @if (selectedOrganization()?.id !== organization.id) {
+            <p class="aside-hint">
+              Select this organization on the list page to switch context.
+            </p>
+          }
+        </section>
+        <a routerLink="/app/invitations" class="aside-link">View my invitations →</a>
+      </aside>
+    </div>
+  }
+</section>

@@ -1,13 +1,15 @@
 <header class="topbar">
   <div class="topbar-copy">
-    <h1 class="topbar-title">Workspace</h1>
-    <p class="topbar-subtitle">Project management and analytics workspace</p>
+    <p class="topbar-label">Selected organization</p>
+    <h1 class="topbar-title">{{ organizationName() }}</h1>
   </div>
 
   <div class="topbar-actions">
-    <span class="topbar-user">
-      {{ authService.user()?.email ?? 'Loading profile...' }}
-    </span>
+    <div class="topbar-user-card">
+      <span class="topbar-user-value">
+        {{ authService.user()?.email ?? 'Loading profile...' }}
+      </span>
+    </div>
 
     <button type="button" class="topbar-logout" (click)="logout()">
       Logout

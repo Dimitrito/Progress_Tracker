@@ -4,6 +4,7 @@ from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import (
     InvitationStatus,
@@ -20,6 +21,8 @@ from .serializers import (
     OrganizationInvitationSerializer,
     OrganizationJoinRequestSerializer,
     OrganizationListSerializer,
+    OrganizationMembershipSerializer,
+    OrganizationUpdateSerializer,
 )
 
 User = get_user_model()
@@ -38,6 +41,7 @@ def is_organization_admin(user, organization):
 
 
 class OrganizationCreateView(generics.CreateAPIView):
+    parser_classes = [MultiPartParser, FormParser]
     serializer_class = OrganizationCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -65,6 +69,72 @@ class MyOrganizationsView(APIView):
             organizations.append(organization)
 
         serializer = OrganizationListSerializer(organizations, many=True)
+        return Response(serializer.data)
+
+
+class OrganizationDetailUpdateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, organization_id):
+        return self._update(request, organization_id, partial=True)
+
+    def put(self, request, organization_id):
+        return self._update(request, organization_id, partial=False)
+
+    def _update(self, request, organization_id, partial):
+        organization = get_object_or_404(Organization, id=organization_id)
+        membership = get_user_organization_membership(request.user, organization)
+
+        if not membership:
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        if membership.role != OrganizationRole.ADMIN:
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = OrganizationUpdateSerializer(
+            organization,
+            data=request.data,
+            partial=partial,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        organization.membership = membership
+        response_serializer = OrganizationListSerializer(organization)
+        return Response(response_serializer.data)
+
+
+class OrganizationMembersView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, organization_id):
+        organization = get_object_or_404(Organization, id=organization_id)
+        if not get_user_organization_membership(request.user, organization):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        memberships = (
+            OrganizationMembership.objects.filter(organization=organization)
+            .select_related("user")
+            .order_by("role", "joined_at")
+        )
+        serializer = OrganizationMembershipSerializer(memberships, many=True)
+        return Response(serializer.data)
+
+
+class OrganizationPendingInvitationsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, organization_id):
+        organization = get_object_or_404(Organization, id=organization_id)
+        if not is_organization_admin(request.user, organization):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        invitations = OrganizationInvitation.objects.filter(
+            organization=organization,
+            status=InvitationStatus.PENDING,
+        ).select_related("invited_user", "invited_by")
+
+        serializer = OrganizationInvitationSerializer(invitations, many=True)
         return Response(serializer.data)
 
 

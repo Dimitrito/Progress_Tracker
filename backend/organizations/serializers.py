@@ -14,15 +14,31 @@ User = get_user_model()
 class OrganizationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = ("id", "name", "description")
+        fields = ("id", "name", "description", "icon")
+
+
+class OrganizationUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ("id", "name", "description", "icon")
+        read_only_fields = ("id",)
 
 
 class OrganizationListSerializer(serializers.ModelSerializer):
     role = serializers.CharField(source="membership.role", read_only=True)
+    icon = serializers.ImageField(read_only=True)
 
     class Meta:
         model = Organization
-        fields = ("id", "name", "description", "role", "created_at")
+        fields = ("id", "name", "description", "icon", "role", "created_at")
+
+
+class OrganizationMembershipSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source="user.email", read_only=True)
+
+    class Meta:
+        model = OrganizationMembership
+        fields = ("id", "user", "user_email", "role", "joined_at")
 
 
 class OrganizationJoinRequestSerializer(serializers.ModelSerializer):

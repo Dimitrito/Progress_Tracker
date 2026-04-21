@@ -1,21 +1,238 @@
 <section class="page">
-  <div class="page-header">
-    <div class="page-header-left">
-      <h1 class="page-title">Organizations</h1>
-      <p class="page-subtitle">
-        Manage your organizations and access their projects
-      </p>
+  <header class="page-header">
+    <div class="page-header-main">
+      <div class="page-header-copy">
+        <h1 class="page-title">Organizations</h1>
+      </div>
     </div>
-
-    <div class="page-header-actions">
-      <button class="primary-button">Create organization</button>
-    </div>
-  </div>
+  </header>
 
   <div class="page-content">
-    <div class="card empty-state">
-      <h3>No organizations yet</h3>
-      <p>Create your first organization to start working with projects.</p>
-    </div>
+    @if (showCreateForm()) {
+      <section class="form-card">
+        <div>
+          <h2 class="form-title">Create organization</h2>
+          <p class="form-subtitle">
+            Add a new organization to start managing projects and members.
+          </p>
+        </div>
+
+        <form
+          class="organization-form"
+          [formGroup]="createOrganizationForm"
+          (ngSubmit)="submitCreateForm()"
+        >
+          <div class="form-field">
+            <label class="form-label" for="organization-name">Name</label>
+            <input
+              id="organization-name"
+              class="form-input"
+              type="text"
+              formControlName="name"
+              placeholder="Enter organization name"
+            />
+
+            @if (
+              createOrganizationForm.controls.name.invalid &&
+              createOrganizationForm.controls.name.touched
+            ) {
+              <p class="field-error">Organization name is required.</p>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="organization-description">
+              Description
+            </label>
+            <textarea
+              id="organization-description"
+              class="form-textarea"
+              formControlName="description"
+              rows="4"
+              placeholder="Add a short description"
+            ></textarea>
+          </div>
+
+          @if (createError()) {
+            <p class="form-error">{{ createError() }}</p>
+          }
+
+          <div class="form-actions">
+            <button
+              class="primary-button"
+              type="submit"
+              [disabled]="isCreating()"
+            >
+              {{ isCreating() ? 'Creating...' : 'Create organization' }}
+            </button>
+
+            <button
+              class="secondary-button"
+              type="button"
+              [disabled]="isCreating()"
+              (click)="cancelCreateForm()"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </section>
+    }
+
+    @if (isLoading()) {
+      <div class="state-card">
+        <p class="state-eyebrow">Loading</p>
+        <h2 class="state-title">Fetching your organizations</h2>
+        <p class="state-description">
+          Please wait while we load your organizations from the API.
+        </p>
+      </div>
+    } @else if (organizations().length === 0) {
+      <div class="organizations-grid">
+        @if (!showCreateForm()) {
+          <button
+            class="organization-create-card"
+            type="button"
+            (click)="openCreateForm()"
+            aria-label="Create organization"
+          >
+            <span class="organization-create-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 1 1 0-2h5V6a1 1 0 0 1 1-1Z"
+                />
+              </svg>
+            </span>
+
+            <span class="organization-create-content">
+              <span class="organization-create-title">Add organization</span>
+              <span class="organization-create-description">
+                Create your first workspace for projects, teams, and tasks
+              </span>
+            </span>
+          </button>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <div class="state-card">
+          <p class="state-eyebrow">Organizations</p>
+          <h2 class="state-title">Unable to load organizations</h2>
+          <p class="state-description">
+            {{ errorMessage() }}
+          </p>
+
+          <button
+            class="secondary-button"
+            type="button"
+            (click)="reloadOrganizations()"
+          >
+            Try again
+          </button>
+        </div>
+      }
+    } @else {
+      <div class="organizations-grid">
+        @if (!showCreateForm()) {
+          <button
+            class="organization-create-card"
+            type="button"
+            (click)="openCreateForm()"
+            aria-label="Create organization"
+          >
+            <span class="organization-create-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 1 1 0-2h5V6a1 1 0 0 1 1-1Z"
+                />
+              </svg>
+            </span>
+
+            <span class="organization-create-content">
+              <span class="organization-create-title">Add organization</span>
+              <span class="organization-create-description">
+                Create a new workspace for projects, teams, and tasks
+              </span>
+            </span>
+          </button>
+        }
+
+        @for (organization of organizations(); track organization.id) {
+          <article
+            class="organization-card"
+            [class.organization-card-active]="isActiveOrganization(organization.id)"
+          >
+            <div class="organization-card-main">
+              <button
+                class="organization-select"
+                type="button"
+                [attr.aria-pressed]="isActiveOrganization(organization.id)"
+                (click)="selectOrganization(organization)"
+              >
+                <div class="organization-card-header">
+                  <div class="organization-identity">
+                    <div class="organization-avatar">
+                      @if (organization.icon) {
+                        <img
+                          [src]="organization.icon"
+                          alt="Organization icon"
+                          class="organization-avatar-image"
+                        />
+                      } @else {
+                        <span class="organization-avatar-fallback">
+                          {{ organization.initials }}
+                        </span>
+                      }
+                    </div>
+
+                    <div class="organization-copy">
+                      <p class="organization-eyebrow">Workspace</p>
+                      <h2 class="organization-name">{{ organization.name }}</h2>
+                    </div>
+                  </div>
+
+                  <span
+                    class="role-badge"
+                    [class.role-owner]="organization.role === 'owner'"
+                    [class.role-pm]="organization.role === 'pm'"
+                    [class.role-worker]="organization.role === 'worker'"
+                  >
+                    {{ organization.roleLabel }}
+                  </span>
+                </div>
+
+                <p class="organization-description">
+                  {{ organization.description }}
+                </p>
+
+                <div class="organization-card-footer">
+                  <div
+                    class="organization-status"
+                    [class.organization-status-hidden]="!isActiveOrganization(organization.id)"
+                  >
+                    <span class="status-indicator status-indicator-active"></span>
+                    <span class="status-text">Selected</span>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                class="organization-edit-button"
+                type="button"
+                (click)="openOrganizationEditor(organization); $event.stopPropagation()"
+                [attr.aria-label]="'Organization settings: ' + organization.name"
+                title="Settings"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M4 20h4.75L19 9.75 14.25 5 4 15.25V20Zm3.9-1.5H5.5v-2.4l8.75-8.75 2.4 2.4L7.9 18.5ZM20.7 8.05a1.2 1.2 0 0 0 0-1.7l-3.05-3.05a1.2 1.2 0 0 0-1.7 0l-.95.95 4.75 4.75.95-.95Z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
   </div>
 </section>

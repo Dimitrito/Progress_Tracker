@@ -16,6 +16,7 @@ interface SidebarItem {
 export class SidebarComponent {
   protected readonly items: SidebarItem[] = [
     { label: 'Organizations', route: '/app/organizations' },
+    { label: 'Invitations', route: '/app/invitations' },
     { label: 'Projects', route: '/app/projects' },
     { label: 'Tasks', route: null },
     { label: 'Metrics', route: null },
