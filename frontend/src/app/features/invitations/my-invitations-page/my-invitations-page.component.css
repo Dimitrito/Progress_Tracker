@@ -1,136 +1,268 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-  max-width: 720px;
+  gap: 20px;
 }
 
 .page-header {
-  padding-bottom: var(--space-4);
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--border);
 }
 
+.page-header-copy {
+  min-width: 0;
+}
+
 .page-title {
-  margin: 0 0 var(--space-2);
-  font-size: 26px;
+  margin: 0;
+  font-size: 28px;
   font-weight: 600;
+  line-height: 1.2;
   color: var(--text-primary);
 }
 
-.page-subtitle {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.55;
-  color: var(--text-secondary);
-  max-width: 520px;
-}
-
-.panel {
+.state-card,
+.empty-state,
+.invitation-card {
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--bg-surface);
-  padding: var(--space-5);
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bg-surface) 95%, white 5%),
+      var(--bg-surface)
+    );
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
 
-.state .lead {
-  margin: 0 0 var(--space-3);
-  font-size: 15px;
-  color: var(--text-secondary);
+.state-card,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 36px 24px;
 }
 
-.eyebrow {
-  margin: 0 0 var(--space-2);
+.state-eyebrow {
+  margin: 0 0 8px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-secondary);
 }
 
-.invitation-list {
-  list-style: none;
+.state-title {
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+.state-description {
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  max-width: 560px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.empty-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, white 20%);
+  background: color-mix(in srgb, var(--bg-surface-2) 82%, var(--primary) 18%);
+  color: var(--primary);
+}
+
+.empty-state-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.invitation-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
 .invitation-card {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  flex-wrap: wrap;
+  gap: 20px;
+  padding: 22px 24px;
+}
+
+.invitation-card-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.invitation-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.invitation-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg-surface-2) 82%, var(--primary) 18%);
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.invitation-copy {
+  min-width: 0;
+}
+
+.invitation-eyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.invitation-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.invitation-description {
+  margin: 0;
+  max-width: 760px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .invitation-meta {
-  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   font-size: 13px;
-  color: var(--text-secondary);
   line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.invitation-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.invitation-meta-sep {
+  opacity: 0.45;
 }
 
 .mono {
-  font-family: ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color: var(--text-primary);
 }
 
 .invitation-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
   font: inherit;
-  font-weight: 600;
   font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
   cursor: pointer;
   border: 1px solid var(--border);
   transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid color-mix(in srgb, var(--primary) 65%, white);
   outline-offset: 2px;
 }
 
 .btn-primary {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 72%, var(--border));
+  background: color-mix(in srgb, var(--primary) 78%, #0f172a);
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-hover);
-  border-color: var(--primary-hover);
+  background: color-mix(in srgb, var(--primary) 88%, #0f172a);
+  border-color: color-mix(in srgb, var(--primary) 88%, white 8%);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: var(--bg-surface-2);
-  color: var(--text-primary);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--border));
+  background: color-mix(in srgb, var(--bg-surface-2) 84%, var(--primary) 16%);
+  color: var(--text-primary);
 }
 
 .btn:disabled {
-  opacity: 0.55;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 760px) {
+  .invitation-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .invitation-actions {
     width: 100%;
   }

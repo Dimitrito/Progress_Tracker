@@ -47,6 +47,7 @@ export interface OrganizationInvitation {
   id: number;
   organization: number;
   organization_name: string;
+  organization_description: string;
   invited_user: number;
   invited_user_email: string;
   invited_by: number;

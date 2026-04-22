@@ -97,6 +97,10 @@ class OrganizationInvitationSerializer(serializers.ModelSerializer):
     organization_name = serializers.CharField(source="organization.name", read_only=True)
     invited_user_email = serializers.EmailField(source="invited_user.email", read_only=True)
     invited_by_email = serializers.EmailField(source="invited_by.email", read_only=True)
+    organization_description = serializers.CharField(
+        source="organization.description",
+        read_only=True,
+    )
 
     class Meta:
         model = OrganizationInvitation
@@ -104,6 +108,7 @@ class OrganizationInvitationSerializer(serializers.ModelSerializer):
             "id",
             "organization",
             "organization_name",
+            "organization_description",
             "invited_user",
             "invited_user_email",
             "invited_by",
