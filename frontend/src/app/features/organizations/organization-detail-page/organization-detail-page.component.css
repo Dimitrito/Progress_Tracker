@@ -91,12 +91,13 @@
 }
 
 .hero-top {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 24px;
+  align-items: stretch;
 }
 
-.hero-identity {
+.hero-main {
   display: flex;
   align-items: flex-start;
   gap: 18px;
@@ -108,32 +109,30 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   width: 58px;
   height: 58px;
-
   border-radius: 16px;
-  overflow: hidden; /* ← КЛЮЧЕВОЕ */
-
+  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--border) 80%, white 20%);
   background: color-mix(in srgb, var(--bg-surface-2) 82%, var(--primary) 18%);
-
   color: var(--text-primary);
   font-size: 22px;
   font-weight: 700;
-
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .hero-avatar-image {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* ← чтобы не тянулось */
+  object-fit: cover;
   display: block;
 }
+
 .hero-copy {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .hero-eyebrow {
@@ -169,21 +168,34 @@
   opacity: 0.92;
 }
 
-.hero-meta {
+.hero-inline-actions {
+  margin-top: 18px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
+  justify-content: flex-start;
 }
 
-.meta-card {
+.hero-side {
+  height: 100%;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.hero-side-card {
+  min-width: max-content;
+  min-height: 74px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-self: stretch;
   gap: 8px;
-  min-width: 148px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: color-mix(in srgb, var(--bg-surface-2) 86%, white 14%);
+  text-align: center;
 }
 
 .meta-label {
@@ -201,9 +213,10 @@
 }
 
 .role-pill {
-  align-self: flex-start;
+  align-self: center;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 7px 12px;
   border-radius: 999px;
   font-size: 11px;
@@ -262,7 +275,20 @@
   flex-direction: column;
   gap: 18px;
 }
+.actions-col {
+  width: 1%;
+}
 
+.table-actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.btn-sm {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+}
 .card {
   position: relative;
   padding: 24px;
@@ -289,11 +315,29 @@
   justify-content: space-between;
   gap: 16px;
 }
+
+.simple-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg-surface-2) 88%, white 12%);
+}
+
+.invitation-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 .required-mark {
   color: var(--danger);
   margin-left: 4px;
   font-weight: 600;
 }
+
 .card-title {
   margin: 0 0 6px;
   font-size: 19px;
@@ -467,6 +511,18 @@
   border-color: color-mix(in srgb, var(--primary) 20%, transparent);
 }
 
+.btn-danger {
+  border: 1px solid color-mix(in srgb, var(--danger) 52%, var(--border));
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  color: var(--danger);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  border-color: var(--danger);
+  color: #ff8a8a;
+}
+
 .btn:disabled {
   cursor: not-allowed;
   transform: none;
@@ -509,16 +565,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.simple-list-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--bg-surface-2) 88%, white 12%);
 }
 
 .inline-success {
@@ -624,6 +670,7 @@
   line-height: 1.6;
   color: var(--text-secondary);
 }
+
 .icon-editor {
   display: flex;
   align-items: center;
@@ -663,6 +710,7 @@
 .icon-input {
   display: none;
 }
+
 @media (max-width: 900px) {
   .hero {
     padding: 22px;
@@ -683,9 +731,23 @@
     gap: 16px;
   }
 
-  .hero-identity {
+  .hero-top {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-main {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .hero-side {
+    width: 100%;
+    height: auto;
+    align-items: stretch;
+  }
+
+  .hero-side-card {
+    width: 100%;
   }
 
   .hero-avatar {
@@ -698,14 +760,6 @@
     font-size: 26px;
   }
 
-  .hero-meta {
-    flex-direction: column;
-  }
-
-  .meta-card {
-    min-width: 0;
-  }
-
   .field-head {
     flex-direction: column;
     align-items: flex-start;
@@ -713,7 +767,8 @@
   }
 
   .editor-actions .btn,
-  .invite-actions .btn {
+  .invite-actions .btn,
+  .hero-inline-actions .btn {
     width: 100%;
   }
 

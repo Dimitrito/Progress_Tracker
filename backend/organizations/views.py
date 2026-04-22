@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, permissions, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -368,3 +369,86 @@ class DeclineInvitationView(APIView):
 
         serializer = OrganizationInvitationSerializer(invitation)
         return Response(serializer.data)
+
+
+class LeaveOrganizationView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, organization_id):
+        organization = get_object_or_404(Organization, id=organization_id)
+        membership = get_user_organization_membership(request.user, organization)
+
+        if not membership:
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        if membership.role == OrganizationRole.ADMIN:
+            return Response(
+                {"detail": "Owners cannot leave the organization. Delete it instead."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        membership.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class DeleteOrganizationView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, organization_id):
+        organization = get_object_or_404(Organization, id=organization_id)
+
+        if not is_organization_admin(request.user, organization):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        organization.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RemoveOrganizationMemberView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, organization_id, membership_id):
+        organization = get_object_or_404(Organization, id=organization_id)
+
+        if not is_organization_admin(request.user, organization):
+            return Response(
+                {"detail": "Forbidden."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        membership = get_object_or_404(
+            OrganizationMembership.objects.select_related("user", "organization"),
+            id=membership_id,
+            organization=organization,
+        )
+
+        if membership.user_id == request.user.id:
+            return Response(
+                {"detail": "You cannot remove yourself from here."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if membership.role == OrganizationRole.ADMIN:
+            return Response(
+                {"detail": "You cannot remove another owner."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        membership.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CancelInvitationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, invitation_id):
+        try:
+            invitation = OrganizationInvitation.objects.get(id=invitation_id)
+        except OrganizationInvitation.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if invitation.invited_by != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        invitation.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

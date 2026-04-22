@@ -12,7 +12,8 @@ from .views import (
     OrganizationMembersView,
     OrganizationPendingInvitationsView,
     ReceivedJoinRequestsView,
-    RejectJoinRequestView,
+    RejectJoinRequestView, LeaveOrganizationView, DeleteOrganizationView, RemoveOrganizationMemberView,
+    CancelInvitationView,
 )
 
 urlpatterns = [
@@ -34,4 +35,9 @@ urlpatterns = [
     path("invitations/my/", MyInvitationsView.as_view()),
     path("invitations/<int:invitation_id>/accept/", AcceptInvitationView.as_view()),
     path("invitations/<int:invitation_id>/decline/", DeclineInvitationView.as_view()),
+
+    path("<int:organization_id>/leave/", LeaveOrganizationView.as_view()),
+    path("<int:organization_id>/delete/", DeleteOrganizationView.as_view()),
+    path("<int:organization_id>/members/<int:membership_id>/remove/", RemoveOrganizationMemberView.as_view()),
+    path("invitations/<int:invitation_id>/cancel/", CancelInvitationView.as_view()),
 ]

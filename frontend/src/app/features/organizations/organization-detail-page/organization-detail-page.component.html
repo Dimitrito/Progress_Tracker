@@ -25,7 +25,7 @@
 
     <header class="hero">
       <div class="hero-top">
-        <div class="hero-identity">
+        <div class="hero-main">
           <div class="hero-avatar" aria-hidden="true">
             @if (organization.icon) {
               <img
@@ -40,6 +40,7 @@
 
           <div class="hero-copy">
             <p class="hero-eyebrow">Workspace settings</p>
+
             <h1 class="hero-title" [attr.title]="organization.name">
               {{ organization.name }}
             </h1>
@@ -53,11 +54,25 @@
                 No description yet — add one below to make this workspace easier to identify.
               </p>
             }
+
+            <div class="hero-inline-actions">
+              <button
+                class="btn btn-danger"
+                type="button"
+                (click)="handleDangerAction()"
+              >
+                @if (organization.role === 'admin') {
+                  Delete organization
+                } @else {
+                  Leave organization
+                }
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="hero-meta">
-          <div class="meta-card">
+        <aside class="hero-side">
+          <div class="hero-side-card">
             <span class="meta-label">Your role</span>
             <span
               class="role-pill"
@@ -69,11 +84,13 @@
             </span>
           </div>
 
-          <div class="meta-card">
+          <div class="hero-side-card">
             <span class="meta-label">Created</span>
-            <span class="meta-value">{{ formatCreatedAt(organization.createdAt) }}</span>
+            <span class="meta-value">
+              {{ formatCreatedAt(organization.createdAt) }}
+            </span>
           </div>
-        </div>
+        </aside>
       </div>
     </header>
 
@@ -304,10 +321,21 @@
                 <ul class="simple-list">
                   @for (invitation of pendingInvitations(); track invitation.id) {
                     <li class="simple-list-item">
-                      <span class="cell-mono">{{ invitation.invited_user_email }}</span>
-                      <span class="muted small">
-                        Sent {{ formatDateTime(invitation.created_at) }}
-                      </span>
+                      <div class="invitation-main">
+                        <span class="cell-mono">{{ invitation.invited_user_email }}</span>
+                        <span class="muted small">
+                          Sent {{ formatDateTime(invitation.created_at) }}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        class="btn btn-tertiary btn-sm"
+                        [disabled]="cancelingInvitationId() === invitation.id"
+                        (click)="cancelInvitation(invitation)"
+                      >
+                        {{ cancelingInvitationId() === invitation.id ? 'Canceling…' : 'Cancel' }}
+                      </button>
                     </li>
                   }
                 </ul>
@@ -344,6 +372,7 @@
                     <th scope="col">Email</th>
                     <th scope="col">Role</th>
                     <th scope="col">Joined</th>
+                    <th scope="col" class="actions-col"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -352,6 +381,17 @@
                       <td class="cell-mono">{{ member.user_email }}</td>
                       <td>{{ memberRoleLabel(member.role) }}</td>
                       <td class="muted">{{ formatDateTime(member.joined_at) }}</td>
+                      <td class="table-actions-cell">
+                        @if (canRemoveMember(member)) {
+                          <button
+                            type="button"
+                            class="btn btn-tertiary btn-sm"
+                            (click)="openRemoveMemberDialog(member)"
+                          >
+                            Remove
+                          </button>
+                        }
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -362,4 +402,14 @@
       </div>
     </div>
   }
+  <app-confirm-dialog
+    [open]="confirmDialogOpen()"
+    [title]="confirmDialogTitle()"
+    [message]="confirmDialogMessage()"
+    [confirmText]="confirmDialogConfirmText()"
+    [danger]="true"
+    [busy]="confirmDialogBusy()"
+    (closed)="closeConfirmDialog()"
+    (confirmed)="confirmMemberRemoval()"
+  />
 </section>

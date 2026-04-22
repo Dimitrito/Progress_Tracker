@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 import { OrganizationContextService } from '../../../core/services/organization-context.service';
 import {
@@ -29,7 +29,7 @@ interface OrganizationDetailViewModel {
 @Component({
   selector: 'app-organization-detail-page',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, ConfirmDialogComponent],
   templateUrl: './organization-detail-page.component.html',
   styleUrl: './organization-detail-page.component.css',
 })
@@ -47,6 +47,13 @@ export class OrganizationDetailPageComponent {
     icon: null as string | null,
   };
   private loadedOrganizationId: number | null = null;
+
+  protected readonly confirmDialogOpen = signal(false);
+  protected readonly confirmDialogTitle = signal('');
+  protected readonly confirmDialogMessage = signal('');
+  protected readonly confirmDialogConfirmText = signal('');
+  protected readonly confirmDialogBusy = signal(false);
+  protected readonly memberPendingRemoval = signal<OrganizationMember | null>(null);
 
   protected readonly isLoading = signal(true);
   protected readonly isSaving = signal(false);
@@ -77,6 +84,7 @@ export class OrganizationDetailPageComponent {
   protected readonly inviteSubmitting = signal(false);
   protected readonly inviteError = signal<string | null>(null);
   protected readonly inviteSuccess = signal<string | null>(null);
+  protected readonly cancelingInvitationId = signal<number | null>(null);
 
   protected readonly joinRequestBusyId = signal<number | null>(null);
 
@@ -185,6 +193,55 @@ export class OrganizationDetailPageComponent {
     this.syncDirtyFlag();
   }
 
+  private deleteOrganization(id: number): void {
+    if (!confirm('Are you sure you want to delete this organization?')) {
+      return;
+    }
+
+    this.organizationsService
+      .deleteOrganization(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.organizationContext.clearSelectedOrganization();
+          this.router.navigateByUrl('/app/organizations');
+        },
+        error: () => {
+          this.saveError.set('Failed to delete organization.');
+        },
+      });
+  }
+
+  protected handleDangerAction(): void {
+    const organization = this.organization();
+    if (!organization) return;
+
+    if (organization.role === 'admin') {
+      this.deleteOrganization(organization.id);
+    } else {
+      this.leaveOrganization(organization.id);
+    }
+  }
+
+  private leaveOrganization(id: number): void {
+    if (!confirm('Leave this organization?')) {
+      return;
+    }
+
+    this.organizationsService
+      .leaveOrganization(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.organizationContext.clearSelectedOrganization();
+          this.router.navigateByUrl('/app/organizations');
+        },
+        error: () => {
+          this.saveError.set('Failed to leave organization.');
+        },
+      });
+  }
+
   protected discardChanges(): void {
     this.saveError.set(null);
     this.saveSuccess.set(null);
@@ -291,6 +348,28 @@ export class OrganizationDetailPageComponent {
       });
   }
 
+  protected cancelInvitation(invitation: OrganizationInvitation): void {
+    this.cancelingInvitationId.set(invitation.id);
+    this.inviteError.set(null);
+    this.inviteSuccess.set(null);
+
+    this.organizationsService
+      .cancelInvitation(invitation.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.pendingInvitations.update((list) =>
+            list.filter((item) => item.id !== invitation.id),
+          );
+          this.cancelingInvitationId.set(null);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.cancelingInvitationId.set(null);
+          this.inviteError.set(this.parseDetail(error, 'Could not cancel invitation.'));
+        },
+      });
+  }
+
   protected approveJoinRequest(request: OrganizationJoinRequest): void {
     const organizationId = this.loadedOrganizationId;
     this.joinRequestBusyId.set(request.id);
@@ -331,6 +410,66 @@ export class OrganizationDetailPageComponent {
         error: (error: HttpErrorResponse) => {
           this.joinRequestBusyId.set(null);
           this.teamError.set(this.parseDetail(error, 'Could not reject request.'));
+        },
+      });
+  }
+
+  protected canRemoveMember(member: OrganizationMember): boolean {
+    const organization = this.organization();
+
+    if (!organization || organization.role !== 'admin') {
+      return false;
+    }
+
+    if (member.role === 'admin') {
+      return false;
+    }
+
+    return true;
+  }
+
+  protected openRemoveMemberDialog(member: OrganizationMember): void {
+    this.memberPendingRemoval.set(member);
+    this.confirmDialogTitle.set('Remove member');
+    this.confirmDialogMessage.set(
+      `Remove ${member.user_email} from this organization? They will lose access immediately.`,
+    );
+    this.confirmDialogConfirmText.set('Remove');
+    this.confirmDialogOpen.set(true);
+  }
+
+  protected closeConfirmDialog(): void {
+    if (this.confirmDialogBusy()) {
+      return;
+    }
+
+    this.confirmDialogOpen.set(false);
+    this.memberPendingRemoval.set(null);
+  }
+
+  protected confirmMemberRemoval(): void {
+    const organization = this.organization();
+    const member = this.memberPendingRemoval();
+
+    if (!organization || !member) {
+      return;
+    }
+
+    this.confirmDialogBusy.set(true);
+
+    this.organizationsService
+      .removeOrganizationMember(organization.id, member.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.members.update((list) => list.filter((item) => item.id !== member.id));
+          this.confirmDialogBusy.set(false);
+          this.confirmDialogOpen.set(false);
+          this.memberPendingRemoval.set(null);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.confirmDialogBusy.set(false);
+          this.teamError.set(this.parseDetail(error, 'Could not remove member.'));
         },
       });
   }

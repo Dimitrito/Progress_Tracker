@@ -1,0 +1,52 @@
+@if (open) {
+  <div class="confirm-backdrop" (click)="onBackdropClick($event)">
+    <div
+      class="confirm-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'confirm-dialog-title'"
+    >
+      <div class="confirm-dialog-header">
+        <h2 id="confirm-dialog-title" class="confirm-dialog-title">
+          {{ title }}
+        </h2>
+
+        <button
+          type="button"
+          class="confirm-dialog-close"
+          (click)="onClose()"
+          [disabled]="busy"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </div>
+
+      <p class="confirm-dialog-message">
+        {{ message }}
+      </p>
+
+      <div class="confirm-dialog-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onClose()"
+          [disabled]="busy"
+        >
+          {{ cancelText }}
+        </button>
+
+        <button
+          type="button"
+          class="btn"
+          [class.btn-danger]="danger"
+          [class.btn-primary]="!danger"
+          (click)="onConfirm()"
+          [disabled]="busy"
+        >
+          {{ busy ? 'Please wait…' : confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

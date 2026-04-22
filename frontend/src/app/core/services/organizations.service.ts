@@ -199,4 +199,25 @@ export class OrganizationsService {
       {},
     );
   }
+
+  deleteOrganization(id: number) {
+    return this.http.delete(`${this.baseUrl}/organizations/${id}/delete/`);
+  }
+
+  leaveOrganization(id: number) {
+    return this.http.post(`${this.baseUrl}/organizations/${id}/leave/`, {});
+  }
+
+  removeOrganizationMember(organizationId: number, membershipId: number) {
+    return this.http.post(
+      `${this.baseUrl}/organizations/${organizationId}/members/${membershipId}/remove/`,
+      {},
+    );
+  }
+
+  cancelInvitation(invitationId: number) {
+    return this.http.delete(
+      `${this.baseUrl}/organizations/invitations/${invitationId}/cancel/`
+    );
+  }
 }
