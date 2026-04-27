@@ -84,6 +84,56 @@ class ProjectListSerializer(serializers.ModelSerializer):
         )
 
 
+class ProjectUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = (
+            "name",
+            "description",
+            "manager",
+            "start_date",
+            "end_date",
+        )
+
+    def validate(self, attrs):
+        request = self.context["request"]
+        project = self.instance
+        manager = attrs.get("manager")
+
+        is_admin = OrganizationMembership.objects.filter(
+            user=request.user,
+            organization=project.organization,
+            role=OrganizationRole.ADMIN,
+        ).exists()
+
+        is_pm = project.manager_id == request.user.id
+
+        if not (is_admin or is_pm):
+            raise serializers.ValidationError(
+                "Only organization admin or project manager can edit this project."
+            )
+
+        # PM НЕ может менять project manager
+        if is_pm and not is_admin and "manager" in attrs:
+            if manager != project.manager:
+                raise serializers.ValidationError(
+                    "Project manager cannot change project manager."
+                )
+
+        if manager:
+            manager_membership = OrganizationMembership.objects.filter(
+                user=manager,
+                organization=project.organization,
+            ).exists()
+
+            if not manager_membership:
+                raise serializers.ValidationError(
+                    "Manager must be a member of this organization."
+                )
+
+        return attrs
+
+
 class ProjectRoleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectRole

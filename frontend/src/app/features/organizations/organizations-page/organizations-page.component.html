@@ -2,7 +2,8 @@
   <header class="page-header">
     <div class="page-header-main">
       <div class="page-header-copy">
-        <h1 class="page-title">Organizations</h1>
+        <h1 class="page-title">Workspaces</h1>
+        <p class="page-subtitle"> Create a workspace where you can invite people and create projects </p>
       </div>
     </div>
   </header>
@@ -11,9 +12,9 @@
     @if (showCreateForm()) {
       <section class="form-card">
         <div>
-          <h2 class="form-title">Create organization</h2>
+          <h2 class="form-title">Create workspace</h2>
           <p class="form-subtitle">
-            Add a new organization to start managing projects and members.
+            Add a new workspace to start managing projects and members.
           </p>
         </div>
 
@@ -33,7 +34,7 @@
               class="form-input"
               type="text"
               formControlName="name"
-              placeholder="Enter organization name"
+              placeholder="Enter workspace name"
             />
 
             @if (
@@ -122,9 +123,9 @@
     @if (isLoading()) {
       <div class="state-card">
         <p class="state-eyebrow">Loading</p>
-        <h2 class="state-title">Fetching your organizations</h2>
+        <h2 class="state-title">Fetching your workspaces</h2>
         <p class="state-description">
-          Please wait while we load your organizations from the API.
+          Please wait while we load your workspaces from the API.
         </p>
       </div>
     } @else if (organizations().length === 0) {
@@ -145,7 +146,7 @@
             </span>
 
             <span class="organization-create-content">
-              <span class="organization-create-title">Add organization</span>
+              <span class="organization-create-title">Add workspace</span>
               <span class="organization-create-description">
                 Create your first workspace for projects, teams, and tasks
               </span>
@@ -156,8 +157,8 @@
 
       @if (errorMessage()) {
         <div class="state-card">
-          <p class="state-eyebrow">Organizations</p>
-          <h2 class="state-title">Unable to load organizations</h2>
+          <p class="state-eyebrow">Workspaces</p>
+          <h2 class="state-title">Unable to load workspaces</h2>
           <p class="state-description">
             {{ errorMessage() }}
           </p>
@@ -189,7 +190,7 @@
             </span>
 
             <span class="organization-create-content">
-              <span class="organization-create-title">Add organization</span>
+              <span class="organization-create-title">Add workspace</span>
               <span class="organization-create-description">
                 Create a new workspace for projects, teams, and tasks
               </span>

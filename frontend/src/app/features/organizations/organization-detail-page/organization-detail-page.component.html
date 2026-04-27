@@ -2,7 +2,7 @@
   @if (isLoading()) {
     <div class="state-card">
       <p class="state-eyebrow">Loading</p>
-      <h1 class="state-title">Fetching organization</h1>
+      <h1 class="state-title">Fetching workspace</h1>
       <p class="state-description">
         Loading workspace details and settings.
       </p>
@@ -111,9 +111,9 @@
         <section class="card card-profile">
           <div class="card-header">
             <div class="card-header-copy">
-              <h2 class="card-title">Organization profile</h2>
+              <h2 class="card-title">Workspace profile</h2>
               <p class="card-subtitle">
-                These details appear across the workspace and help teammates identify this organization.
+                These details appear across the workspace and help teammates identify this workspace.
               </p>
             </div>
           </div>
@@ -126,7 +126,7 @@
             >
               <div class="field">
                 <div class="field-head">
-                  <label class="field-label" for="org-icon">Organization icon</label>
+                  <label class="field-label" for="org-icon">Workspace icon</label>
                   <span class="field-meta">Optional</span>
                 </div>
 
@@ -212,7 +212,7 @@
                   class="textarea"
                   rows="6"
                   formControlName="description"
-                  placeholder="What does this organization work on? Who is it for?"
+                  placeholder="What does this workspace work on? Who is it for?"
                 ></textarea>
               </div>
 
@@ -252,7 +252,7 @@
               </div>
 
               <p class="readonly-note">
-                You don’t have permission to edit this organization. Ask an owner to update the profile or grant you access.
+                You don’t have permission to edit this workspace. Ask an owner to update the profile or grant you access.
               </p>
             </div>
           }
@@ -348,7 +348,7 @@
           <div class="card-header card-header-row">
             <div class="card-header-copy">
               <h2 class="card-title">Members</h2>
-              <p class="card-subtitle">People with access to this organization.</p>
+              <p class="card-subtitle">People with access to this workspace.</p>
             </div>
 
             @if (teamError()) {
@@ -385,7 +385,7 @@
                         @if (canRemoveMember(member)) {
                           <button
                             type="button"
-                            class="btn btn-tertiary btn-sm"
+                            class="btn btn-danger btn-sm"
                             (click)="openRemoveMemberDialog(member)"
                           >
                             Remove

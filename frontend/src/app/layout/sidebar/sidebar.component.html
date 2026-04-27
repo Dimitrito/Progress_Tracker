@@ -4,11 +4,117 @@
 
     <div class="sidebar-brand-copy">
       <strong class="sidebar-brand-title">Progress Tracker</strong>
-      <p class="sidebar-brand-subtitle">Project workspace</p>
     </div>
   </div>
 
   <nav class="sidebar-nav">
+    <div class="sidebar-group">
+      <div class="sidebar-parent">
+        <a
+          routerLink="/app/organizations"
+          routerLinkActive="sidebar-link-active"
+          class="sidebar-link sidebar-parent-link"
+        >
+          <span class="sidebar-link-label">Workspaces</span>
+        </a>
+
+        <button
+          type="button"
+          class="sidebar-toggle"
+          [class.sidebar-toggle-open]="workspacesOpen()"
+          (click)="toggleWorkspaces($event)"
+          aria-label="Toggle workspaces"
+        >
+          <svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8.7 9.3 12 12.6l3.3-3.3 1.4 1.4-4.7 4.7-4.7-4.7 1.4-1.4Z" />
+          </svg>
+        </button>
+      </div>
+
+      @if (workspacesOpen()) {
+        <div class="sidebar-submenu">
+          @for (organization of organizations(); track organization.id) {
+            <button
+              type="button"
+              class="sidebar-submenu-item"
+              [class.sidebar-submenu-item-active]="isSelectedOrganization(organization.id)"
+              (click)="selectOrganization(organization)"
+            >
+              <span class="sidebar-dot workspace-dot"></span>
+
+              <span class="sidebar-submenu-text">
+                {{ organization.name }}
+              </span>
+            </button>
+          } @empty {
+            <a routerLink="/app/organizations" class="sidebar-submenu-empty">
+              No workspaces yet
+            </a>
+          }
+        </div>
+      }
+    </div>
+
+    <a
+      routerLink="/app/invitations"
+      routerLinkActive="sidebar-link-active"
+      class="sidebar-link"
+    >
+      <span class="sidebar-link-label">Invitations</span>
+
+      @if (invitationsCount() > 0) {
+        <span class="sidebar-badge">
+          {{ invitationsCount() }}
+        </span>
+      }
+    </a>
+
+    <div class="sidebar-group">
+      <div class="sidebar-parent">
+        <a
+          routerLink="/app/projects"
+          routerLinkActive="sidebar-link-active"
+          class="sidebar-link sidebar-parent-link"
+        >
+          <span class="sidebar-link-label">Projects</span>
+        </a>
+
+        <button
+          type="button"
+          class="sidebar-toggle"
+          [class.sidebar-toggle-open]="projectsOpen()"
+          (click)="toggleProjects($event)"
+          aria-label="Toggle projects"
+        >
+          <svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8.7 9.3 12 12.6l3.3-3.3 1.4 1.4-4.7 4.7-4.7-4.7 1.4-1.4Z" />
+          </svg>
+        </button>
+      </div>
+
+      @if (projectsOpen()) {
+        <div class="sidebar-submenu">
+          @for (project of visibleProjects(); track project.id) {
+            <a
+              class="sidebar-submenu-item"
+              [routerLink]="['/app/projects', project.id, 'tasks']"
+              routerLinkActive="sidebar-submenu-item-active"
+            >
+              <span class="sidebar-dot project-dot"></span>
+
+              <span class="sidebar-submenu-text">
+                {{ project.name }}
+              </span>
+            </a>
+          } @empty {
+            <a routerLink="/app/projects" class="sidebar-submenu-empty">
+              No projects in workspace
+            </a>
+          }
+        </div>
+      }
+    </div>
+
     @for (item of items; track item.label) {
       @if (item.route) {
         <a
@@ -16,11 +122,11 @@
           routerLinkActive="sidebar-link-active"
           class="sidebar-link"
         >
-          {{ item.label }}
+          <span class="sidebar-link-label">{{ item.label }}</span>
         </a>
       } @else {
         <span class="sidebar-link sidebar-link-disabled">
-          {{ item.label }}
+          <span class="sidebar-link-label">{{ item.label }}</span>
         </span>
       }
     }

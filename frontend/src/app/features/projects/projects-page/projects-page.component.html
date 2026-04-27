@@ -1,21 +1,276 @@
 <section class="page">
-  <div class="page-header">
+  <header class="page-header">
     <div class="page-header-left">
       <h1 class="page-title">Projects</h1>
       <p class="page-subtitle">
-        View and manage projects across your organizations
+        @if (selectedOrganization()) {
+          Create and manage projects inside the selected organization.
+        } @else {
+          View and manage projects across your organizations.
+        }
       </p>
     </div>
+  </header>
 
-    <div class="page-header-actions">
-      <button class="primary-button">Create project</button>
+  @if (!selectedOrganization()) {
+    <div class="state-card">
+      <p class="state-eyebrow">Organization</p>
+      <h2 class="state-title">Select a workspace first</h2>
+      <p class="state-description">
+        Choose an organization from the Organizations page to create projects in
+        that workspace.
+      </p>
     </div>
-  </div>
+  }
 
-  <div class="page-content">
-    <div class="card empty-state">
-      <h3>No projects yet</h3>
-      <p>Create your first project to start assigning tasks and tracking progress.</p>
+  @if (canCreateProject()) {
+    <section
+      class="create-project-card"
+      [class.create-project-card-open]="showCreateForm()"
+    >
+      @if (!showCreateForm()) {
+        <button
+          type="button"
+          class="create-project-trigger"
+          (click)="openCreateForm()"
+        >
+          <span class="create-project-plus"></span>
+
+          <span class="create-project-copy">
+            <span class="create-project-title">Create project</span>
+            <span class="create-project-subtitle">
+              Add a project to the selected workspace.
+            </span>
+          </span>
+        </button>
+      } @else {
+        <div class="card-header compact-card-header">
+          <div class="card-header-copy">
+            <h2 class="card-title">Create project</h2>
+            <p class="card-subtitle">
+              Add a new project to
+              <strong>{{ selectedOrganization()?.name }}</strong>.
+            </p>
+          </div>
+        </div>
+
+        <form
+          class="project-form"
+          [formGroup]="createProjectForm"
+          (ngSubmit)="createProject()"
+        >
+          <div class="form-grid">
+            <div class="field field-span-2">
+              <div class="field-head">
+                <label class="field-label" for="project-name">
+                  Project name
+                  <span class="required-mark">*</span>
+                </label>
+                <span class="field-meta">
+                  {{ createProjectForm.controls.name.value.length }}/255
+                </span>
+              </div>
+
+              <input
+                id="project-name"
+                class="input"
+                type="text"
+                formControlName="name"
+                placeholder="New internal platform"
+              />
+
+              @if (
+                createProjectForm.controls.name.invalid &&
+                createProjectForm.controls.name.touched
+              ) {
+                <p class="field-error">
+                  @if (createProjectForm.controls.name.errors?.['required']) {
+                    Project name is required.
+                  } @else if (createProjectForm.controls.name.errors?.['maxlength']) {
+                    Project name must be at most 255 characters.
+                  }
+                </p>
+              }
+            </div>
+
+            <div class="field field-span-2">
+              <div class="field-head">
+                <label class="field-label" for="project-description">
+                  Description
+                </label>
+                <span class="field-meta">Optional</span>
+              </div>
+
+              <textarea
+                id="project-description"
+                class="textarea"
+                formControlName="description"
+                rows="3"
+                placeholder="What is this project about?"
+              ></textarea>
+            </div>
+
+            <div class="field field-span-2">
+              <div class="field-head">
+                <label class="field-label" for="project-manager">
+                  Project manager
+                </label>
+                <span class="field-meta">Optional</span>
+              </div>
+
+              <select
+                id="project-manager"
+                class="input"
+                formControlName="manager"
+              >
+                <option [ngValue]="null">No manager</option>
+
+                @for (member of organizationMembers(); track member.id) {
+                  <option [ngValue]="member.id">
+                    {{ member.email }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="field field-span-2">
+              <div class="field-head">
+                <label class="field-label">Planned duration</label>
+                <span class="field-meta">Optional</span>
+              </div>
+
+              <div class="duration-row">
+                <input
+                  id="project-start-date"
+                  class="input"
+                  type="date"
+                  formControlName="start_date"
+                  aria-label="Start date"
+                />
+
+                <input
+                  id="project-end-date"
+                  class="input"
+                  type="date"
+                  formControlName="end_date"
+                  aria-label="End date"
+                />
+              </div>
+            </div>
+          </div>
+
+          @if (createError()) {
+            <p class="field-error">{{ createError() }}</p>
+          }
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="primary-button"
+              [disabled]="isCreating()"
+            >
+              {{ isCreating() ? 'Creating…' : 'Create project' }}
+            </button>
+
+            <button
+              type="button"
+              class="secondary-button"
+              [disabled]="isCreating()"
+              (click)="cancelCreateForm()"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      }
+    </section>
+  }
+
+  @if (isLoading()) {
+    <div class="state-card">
+      <p class="state-eyebrow">Loading</p>
+      <h2 class="state-title">Fetching your projects</h2>
+      <p class="state-description">
+        Please wait while we load projects from your workspaces.
+      </p>
     </div>
-  </div>
+  } @else if (errorMessage()) {
+    <div class="state-card">
+      <p class="state-eyebrow">Projects</p>
+      <h2 class="state-title">Unable to load projects</h2>
+      <p class="state-description">{{ errorMessage() }}</p>
+
+      <button type="button" class="secondary-button" (click)="reloadProjects()">
+        Try again
+      </button>
+    </div>
+  } @else if (selectedOrganization() && visibleProjects().length === 0) {
+    <div class="empty-state">
+      <div class="empty-state-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M4 6.75A2.75 2.75 0 0 1 6.75 4h10.5A2.75 2.75 0 0 1 20 6.75v10.5A2.75 2.75 0 0 1 17.25 20H6.75A2.75 2.75 0 0 1 4 17.25V6.75Zm2.75-1.25c-.69 0-1.25.56-1.25 1.25v10.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25V6.75c0-.69-.56-1.25-1.25-1.25H6.75Zm1.75 3.5h6.5a.75.75 0 1 1 0 1.5h-6.5a.75.75 0 1 1 0-1.5Zm0 3.5h6.5a.75.75 0 1 1 0 1.5h-6.5a.75.75 0 1 1 0-1.5Z"
+          />
+        </svg>
+      </div>
+
+      <h2 class="state-title">No projects yet</h2>
+      <p class="state-description">
+        There are no projects in this organization yet.
+      </p>
+    </div>
+  } @else if (selectedOrganization()) {
+    <div class="projects-grid">
+      @for (project of visibleProjects(); track project.id) {
+        <article class="project-card" [routerLink]="['/app/projects', project.id, 'tasks']">
+          <div class="project-card-main">
+            <div class="project-card-copy">
+              <h2 class="project-title">
+                {{ project.name }}
+              </h2>
+
+              <p class="project-description">
+                {{
+                  project.description?.trim()
+                    || 'No description provided for this project yet.'
+                }}
+              </p>
+            </div>
+
+            <div class="project-meta">
+              <div class="meta-chip">
+                <span class="meta-label">Project manager</span>
+                <span class="meta-value">
+                  {{ project.manager_email || 'Not assigned' }}
+                </span>
+              </div>
+
+              <div class="meta-chip">
+                <span class="meta-label">Planned duration</span>
+                <span class="meta-value">
+                  {{ formatDate(project.start_date) }} — {{ formatDate(project.end_date) }}
+                </span>
+              </div>
+            </div>
+
+            @if (canEditProject(project)) {
+              <a
+                class="project-edit-button"
+                [routerLink]="['/app/projects', project.id]"
+                (click)="$event.stopPropagation()"
+                [attr.aria-label]="'Edit project: ' + project.name"
+                title="Edit project"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M4 20h4.75L19 9.75 14.25 5 4 15.25V20Zm3.9-1.5H5.5v-2.4l8.75-8.75 2.4 2.4L7.9 18.5ZM20.7 8.05a1.2 1.2 0 0 0 0-1.7l-3.05-3.05a1.2 1.2 0 0 0-1.7 0l-.95.95 4.75 4.75.95-.95Z"
+                  />
+                </svg>
+              </a>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
 </section>

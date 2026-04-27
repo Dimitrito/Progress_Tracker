@@ -43,12 +43,15 @@ export class MyInvitationsPageComponent {
 
   protected accept(invitation: OrganizationInvitation): void {
     this.processingId.set(invitation.id);
+
     this.organizationsService
       .acceptInvitation(invitation.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.processingId.set(null);
+          this.organizationsService.decrementInvitationsCount();
+
           this.organizationContext.setSelectedOrganization({
             id: invitation.organization,
             name: invitation.organization_name,
@@ -56,7 +59,9 @@ export class MyInvitationsPageComponent {
             icon: null,
             role: 'member',
           });
+
           this.loadInvitations();
+
           void this.router.navigate([
             '/app/organizations',
             invitation.organization,
@@ -64,24 +69,30 @@ export class MyInvitationsPageComponent {
         },
         error: (error: HttpErrorResponse) => {
           this.processingId.set(null);
-          this.errorMessage.set(this.parseError(error, 'Could not accept invitation.'));
+          this.errorMessage.set(
+            this.parseError(error, 'Could not accept invitation.'),
+          );
         },
       });
   }
 
   protected decline(invitation: OrganizationInvitation): void {
     this.processingId.set(invitation.id);
+
     this.organizationsService
       .declineInvitation(invitation.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.processingId.set(null);
+          this.organizationsService.decrementInvitationsCount();
           this.loadInvitations();
         },
         error: (error: HttpErrorResponse) => {
           this.processingId.set(null);
-          this.errorMessage.set(this.parseError(error, 'Could not decline invitation.'));
+          this.errorMessage.set(
+            this.parseError(error, 'Could not decline invitation.'),
+          );
         },
       });
   }

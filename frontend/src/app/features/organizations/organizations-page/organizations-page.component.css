@@ -17,11 +17,19 @@
 }
 
 .page-header-copy {
-  flex: 1 1 auto;
-  max-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   min-width: 0;
+  flex: 1;
 }
-
+.page-subtitle {
+  margin: 0;
+  max-width: 760px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
 .page-title {
   margin: 0;
   font-size: 28px;

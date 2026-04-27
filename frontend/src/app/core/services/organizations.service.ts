@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 
@@ -76,6 +76,16 @@ export interface OrganizationJoinRequest {
 export class OrganizationsService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
+  private readonly invitationsCountSignal = signal(0);
+  readonly invitationsCount = this.invitationsCountSignal.asReadonly();
+
+  setInvitationsCount(count: number): void {
+    this.invitationsCountSignal.set(count);
+  }
+
+  decrementInvitationsCount(): void {
+    this.invitationsCountSignal.update((count) => Math.max(0, count - 1));
+  }
 
   getMyOrganizations(): Observable<OrganizationListItem[]> {
     return this.http.get<OrganizationListItem[]>(

@@ -1,0 +1,320 @@
+<section class="page">
+  @if (isLoading()) {
+    <div class="state-card">
+      <p class="state-eyebrow">Loading</p>
+      <h1 class="state-title">Fetching project</h1>
+      <p class="state-description">Loading project details and members.</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-card">
+      <p class="state-eyebrow">Project</p>
+      <h1 class="state-title">Unable to open this project</h1>
+      <p class="state-description">{{ errorMessage() }}</p>
+
+      <div class="state-actions">
+        <button type="button" class="btn btn-secondary" (click)="reload()">
+          Try again
+        </button>
+
+        <a class="btn btn-secondary" routerLink="/app/projects">
+          Back to projects
+        </a>
+      </div>
+    </div>
+  } @else if (project(); as project) {
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/app/projects" class="breadcrumb-link">Projects</a>
+      <span class="breadcrumb-sep" aria-hidden="true">/</span>
+      <span class="breadcrumb-current">{{ project.name }}</span>
+    </nav>
+
+    <header class="hero">
+     @if (selectedOrganization()?.role === 'admin') {
+        <button
+          type="button"
+          class="hero-delete-action"
+          (click)="openDeleteProjectDialog()"
+          aria-label="Delete project"
+          title="Delete project"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M7 21q-.825 0-1.412-.587T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21H7ZM17 6H7v13h10V6ZM9 17h2V8H9v9Zm4 0h2V8h-2v9Z"
+            />
+          </svg>
+        </button>
+      }
+
+      <div class="hero-main">
+        <div class="hero-copy">
+          <p class="hero-eyebrow">Project settings</p>
+
+          <h1 class="hero-title" [attr.title]="project.name">
+            {{ project.name }}
+          </h1>
+
+          <p class="hero-description">
+            {{
+              project.description?.trim()
+                || 'No description provided for this project yet.'
+            }}
+          </p>
+        </div>
+
+        <aside class="hero-side">
+          <div class="hero-side-card">
+            <span class="meta-label">Project manager</span>
+
+            @if (isEditing()) {
+              <select
+                id="project-manager"
+                class="meta-select"
+                formControlName="manager"
+              >
+                <option [ngValue]="null">Not assigned</option>
+
+                @for (member of organizationMembers(); track member.id) {
+                  <option [ngValue]="member.user">
+                    {{ member.user_email }}
+                  </option>
+                }
+              </select>
+            } @else {
+              <span class="meta-value">
+                {{ project.manager_email || 'Not assigned' }}
+              </span>
+            }
+          </div>
+
+          <div class="hero-side-card">
+            <span class="meta-label">Planned duration</span>
+            <span class="meta-value">
+              {{ formatDate(project.start_date) }} — {{ formatDate(project.end_date) }}
+            </span>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    @if (saveError()) {
+      <div class="alert alert-error">{{ saveError() }}</div>
+    }
+
+    @if (saveSuccess()) {
+      <div class="alert alert-success">{{ saveSuccess() }}</div>
+    }
+
+    <section class="card">
+      <div class="card-header">
+        <div class="card-header-copy">
+          <h2 class="card-title">Project profile</h2>
+          <p class="card-subtitle">
+            Update the project name, description, manager and planned duration.
+          </p>
+        </div>
+      </div>
+
+      <form
+        class="project-form"
+        [formGroup]="editProjectForm"
+        (ngSubmit)="saveProject()"
+      >
+        <div class="form-grid">
+          <div class="field field-span-2">
+            <div class="field-head">
+              <label class="field-label" for="project-name">
+                Project name
+                <span class="required-mark">*</span>
+              </label>
+              <span class="field-meta">
+                {{ editProjectForm.controls.name.value.length }}/255
+              </span>
+            </div>
+
+            <input
+              id="project-name"
+              class="input"
+              type="text"
+              formControlName="name"
+              placeholder="Project name"
+            />
+          </div>
+
+          <div class="field field-span-2">
+            <div class="field-head">
+              <label class="field-label" for="project-description">
+                Description
+              </label>
+              <span class="field-meta">Optional</span>
+            </div>
+
+            <textarea
+              id="project-description"
+              class="textarea"
+              rows="4"
+              formControlName="description"
+              placeholder="What is this project about?"
+            ></textarea>
+          </div>
+
+          <div class="field field-span-2">
+            <div class="field-head">
+              <label class="field-label" for="project-manager">
+                Project manager
+              </label>
+              <span class="field-meta">Optional</span>
+            </div>
+
+            <select
+              id="project-manager"
+              class="input"
+              formControlName="manager"
+            >
+              <option [ngValue]="null">No manager</option>
+
+              @for (member of projectMembers(); track member.id) {
+                <option [ngValue]="member.user">
+                  {{ member.user_email }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="field field-span-2">
+            <div class="field-head">
+              <label class="field-label">Planned duration</label>
+              <span class="field-meta">Optional</span>
+            </div>
+
+            <div class="duration-row">
+              <input
+                class="input"
+                type="date"
+                formControlName="start_date"
+                aria-label="Start date"
+              />
+
+              <input
+                class="input"
+                type="date"
+                formControlName="end_date"
+                aria-label="End date"
+              />
+            </div>
+          </div>
+        </div>
+
+        @if (
+          editProjectForm.controls.name.invalid &&
+          editProjectForm.controls.name.touched
+        ) {
+          <p class="field-error">Project name is required.</p>
+        }
+
+        <div class="form-actions">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="isSaving() || editProjectForm.invalid"
+          >
+            {{ isSaving() ? 'Saving…' : 'Save changes' }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-header card-header-row">
+        <div class="card-header-copy">
+          <h2 class="card-title">Project members</h2>
+          <p class="card-subtitle">
+            Add organization members to this project.
+          </p>
+        </div>
+      </div>
+
+      <form
+        class="add-member-form"
+        [formGroup]="addMemberForm"
+        (ngSubmit)="addMemberToProject()"
+      >
+        <div class="field add-member-field">
+          <label class="field-label" for="project-member">Add member</label>
+
+          <select
+            id="project-member"
+            class="input"
+            formControlName="user"
+          >
+            <option [ngValue]="null">Select organization member</option>
+
+            @for (member of availableOrganizationMembers(); track member.id) {
+              <option [ngValue]="member.user">
+                {{ member.user_email }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isAddingMember() || addMemberForm.invalid"
+        >
+          {{ isAddingMember() ? 'Adding…' : 'Add member' }}
+        </button>
+      </form>
+
+      @if (memberError()) {
+        <p class="field-error">{{ memberError() }}</p>
+      }
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Email</th>
+              <th scope="col">Project role</th>
+              <th scope="col">Added</th>
+              <th scope="col" class="actions-col"></th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (member of projectMembers(); track member.id) {
+              <tr>
+                <td class="cell-mono">{{ member.user_email }}</td>
+                <td>{{ member.project_role_name || 'Member' }}</td>
+                <td class="muted">{{ formatDate(member.added_at) }}</td>
+
+                <td class="table-actions-cell">
+                  @if (canRemoveProjectMember(member)) {
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      [disabled]="removingMemberId() === member.id"
+                      (click)="removeProjectMember(member)"
+                    >
+                      {{ removingMemberId() === member.id ? 'Removing…' : 'Remove' }}
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+  <app-confirm-dialog
+    [open]="deleteDialogOpen()"
+    title="Delete project"
+    message="This project will be permanently deleted. This action cannot be undone."
+    confirmText="Delete project"
+    cancelText="Cancel"
+    [danger]="true"
+    [busy]="deleteProjectBusy()"
+    (closed)="closeDeleteProjectDialog()"
+    (confirmed)="confirmDeleteProject()"
+  />
+</section>

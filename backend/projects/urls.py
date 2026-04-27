@@ -12,7 +12,7 @@ from .views import (
     TaskStatusUpdateView,
     ProjectTaskStatsView,
     ProjectHealthScoreView,
-    ProjectUserProgressView,
+    ProjectUserProgressView, ProjectDetailUpdateView, RemoveProjectMemberView,
 )
 
 urlpatterns = [
@@ -32,4 +32,7 @@ urlpatterns = [
     path("<int:project_id>/metrics/task-stats/", ProjectTaskStatsView.as_view()),
     path("<int:project_id>/metrics/health/", ProjectHealthScoreView.as_view()),
     path("<int:project_id>/metrics/user-progress/", ProjectUserProgressView.as_view()),
+
+    path("<int:project_id>/", ProjectDetailUpdateView.as_view()),
+    path("<int:project_id>/members/<int:membership_id>/remove/", RemoveProjectMemberView.as_view()),
 ]

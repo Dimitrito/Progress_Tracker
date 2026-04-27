@@ -71,6 +71,19 @@ export const routes: Routes = [
             (m) => m.ProjectsPageComponent,
           ),
       },
+      {
+        path: 'projects/:id/tasks',
+        loadComponent: () =>
+          import('./features/tasks/tasks-page/tasks-page.component').then(
+            (m) => m.TasksPageComponent,
+          ),
+      },
+      {
+        path: 'projects/:id',
+        loadComponent: () =>
+          import('./features/projects/project-detail-page/project-detail-page.component')
+            .then((m) => m.ProjectDetailPageComponent),
+      },
     ],
   },
   {
