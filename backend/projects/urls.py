@@ -6,13 +6,7 @@ from .views import (
     ProjectCreateView,
     ProjectMembersView,
     ProjectRoleCreateView,
-    ProjectRolesByProjectView,
-    TaskCreateView,
-    TasksByProjectView,
-    TaskStatusUpdateView,
-    ProjectTaskStatsView,
-    ProjectHealthScoreView,
-    ProjectUserProgressView, ProjectDetailUpdateView, RemoveProjectMemberView,
+    ProjectRolesByProjectView,  ProjectDetailUpdateView, RemoveProjectMemberView,
 )
 
 urlpatterns = [
@@ -24,14 +18,6 @@ urlpatterns = [
 
     path("members/add/", AddProjectMemberView.as_view()),
     path("<int:project_id>/members/", ProjectMembersView.as_view()),
-
-    path("tasks/create/", TaskCreateView.as_view()),
-    path("<int:project_id>/tasks/", TasksByProjectView.as_view()),
-    path("tasks/<int:pk>/status/", TaskStatusUpdateView.as_view()),
-
-    path("<int:project_id>/metrics/task-stats/", ProjectTaskStatsView.as_view()),
-    path("<int:project_id>/metrics/health/", ProjectHealthScoreView.as_view()),
-    path("<int:project_id>/metrics/user-progress/", ProjectUserProgressView.as_view()),
 
     path("<int:project_id>/", ProjectDetailUpdateView.as_view()),
     path("<int:project_id>/members/<int:membership_id>/remove/", RemoveProjectMemberView.as_view()),

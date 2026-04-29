@@ -2,8 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from organizations.models import Organization, OrganizationMembership, OrganizationRole
-from .models import Project, ProjectMembership, ProjectRole, Task, TaskStatus
-from django.utils import timezone
+from .models import Project, ProjectMembership, ProjectRole
 
 User = get_user_model()
 
@@ -241,109 +240,3 @@ class ProjectMembershipSerializer(serializers.ModelSerializer):
             "project_role_name",
             "added_at",
         )
-
-
-class TaskCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Task
-        fields = (
-            "id",
-            "project",
-            "title",
-            "description",
-            "status",
-            "assignee",
-            "story_points",
-            "deadline",
-        )
-
-    def validate(self, attrs):
-        request = self.context["request"]
-        project = attrs["project"]
-        assignee = attrs.get("assignee")
-
-        is_admin = OrganizationMembership.objects.filter(
-            user=request.user,
-            organization=project.organization,
-            role=OrganizationRole.ADMIN,
-        ).exists()
-
-        is_pm = project.manager_id == request.user.id
-
-        if not (is_admin or is_pm):
-            raise serializers.ValidationError("Only organization admin or project manager can create tasks.")
-
-        if assignee:
-            is_project_member = ProjectMembership.objects.filter(
-                project=project,
-                user=assignee,
-            ).exists()
-            if not is_project_member:
-                raise serializers.ValidationError("Assignee must be a project member.")
-
-        return attrs
-
-    def create(self, validated_data):
-        request = self.context["request"]
-        return Task.objects.create(created_by=request.user, **validated_data)
-
-
-class TaskListSerializer(serializers.ModelSerializer):
-    assignee_email = serializers.EmailField(source="assignee.email", read_only=True)
-    project_name = serializers.CharField(source="project.name", read_only=True)
-
-    class Meta:
-        model = Task
-        fields = (
-            "id",
-            "project",
-            "project_name",
-            "title",
-            "description",
-            "status",
-            "assignee",
-            "assignee_email",
-            "story_points",
-            "deadline",
-            "completed_at",
-            "created_at",
-        )
-
-
-class TaskStatusUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Task
-        fields = ("status",)
-
-    def validate(self, attrs):
-        request = self.context["request"]
-        task = self.instance
-        project = task.project
-
-        is_admin = OrganizationMembership.objects.filter(
-            user=request.user,
-            organization=project.organization,
-            role=OrganizationRole.ADMIN,
-        ).exists()
-
-        is_pm = project.manager_id == request.user.id
-        is_assignee = task.assignee_id == request.user.id
-
-        if not (is_admin or is_pm or is_assignee):
-            raise serializers.ValidationError("You do not have permission to update this task.")
-
-        return attrs
-
-    def update(self, instance, validated_data):
-        new_status = validated_data["status"]
-        old_status = instance.status
-
-        instance.status = new_status
-
-        if new_status == TaskStatus.DONE and old_status != TaskStatus.DONE:
-            instance.completed_at = timezone.now()
-        elif new_status != TaskStatus.DONE and old_status == TaskStatus.DONE:
-            instance.completed_at = None
-
-        instance.save()
-        return instance

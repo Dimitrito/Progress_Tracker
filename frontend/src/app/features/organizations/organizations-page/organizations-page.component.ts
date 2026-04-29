@@ -110,6 +110,10 @@ export class OrganizationsPageComponent {
       icon: organization.icon,
       role: organization.apiRole,
     });
+
+    void this.router.navigate(['/app/projects'], {
+      queryParams: { organization_id: organization.id },
+    });
   }
 
   openOrganizationEditor(organization: OrganizationCardViewModel): void {

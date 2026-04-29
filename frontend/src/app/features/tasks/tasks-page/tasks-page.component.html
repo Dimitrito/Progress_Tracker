@@ -1,15 +1,11 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <h1 class="page-title">Tasks</h1>
-      <p class="page-subtitle">
-        Project #{{ projectId }} task board will be here.
-      </p>
+      <h1 class="page-title">
+        {{ project()?.name || 'Project' }}
+        <span class="page-title-muted">tasks</span>
+      </h1>
     </div>
-
-    <a class="secondary-button" [routerLink]="['/app/projects', projectId]">
-      Project settings
-    </a>
   </header>
 
   <nav class="view-tabs" aria-label="Task views">
@@ -34,8 +30,259 @@
     </button>
   </nav>
 
-  <div class="empty-state">
-    <h2>No tasks yet</h2>
-    <p>Task creation and project board UI will be added next.</p>
-  </div>
+  @if (isLoading()) {
+    <div class="state-card">
+      <h2>Loading tasks</h2>
+      <p>Please wait while we load this project workspace.</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-card">
+      <h2>Unable to load tasks</h2>
+      <p>{{ errorMessage() }}</p>
+
+      <button type="button" class="secondary-button" (click)="reload()">
+        Try again
+      </button>
+    </div>
+  } @else {
+    <div
+      class="task-board"
+      cdkDropList
+      cdkDropListOrientation="horizontal"
+      [cdkDropListData]="groups()"
+      (cdkDropListDropped)="dropGroup($event)"
+    >
+      @for (group of groups(); track group.id) {
+        <section class="task-column" cdkDrag>
+          <header class="task-column-header">
+            @if (renamingGroupId() === group.id) {
+              <form
+                class="group-rename-form"
+                [formGroup]="renameGroupForm"
+                (ngSubmit)="saveGroupRename(group)"
+              >
+                <div class="rename-input-row">
+                  <span
+                    class="group-color-dot"
+                    [style.background]="selectedRenameColor() || group.color || '#64748b'"
+                  ></span>
+
+                  <input
+                    class="rename-input"
+                    type="text"
+                    formControlName="name"
+                    placeholder="Group name"
+                    autocomplete="off"
+                  />
+
+                  <button
+                    type="submit"
+                    class="rename-save-button"
+                    [disabled]="isRenamingGroup()"
+                    title="Save"
+                  >
+                    ✓
+                  </button>
+                </div>
+
+                <div class="color-popover">
+                  <p class="color-popover-title">Color</p>
+
+                  <div class="color-grid">
+                    @for (color of groupColors; track color) {
+                      <button
+                        type="button"
+                        class="color-choice"
+                        [class.color-choice-active]="selectedRenameColor() === color"
+                        [style.background]="color"
+                        (click)="selectRenameColor(color)"
+                        [attr.aria-label]="'Choose color ' + color"
+                      ></button>
+                    }
+                  </div>
+
+                  <div class="rename-actions">
+                    <button
+                      type="button"
+                      class="text-button"
+                      [disabled]="isRenamingGroup()"
+                      (click)="cancelGroupRename()"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </form>
+            } @else {
+              <div class="task-column-title-wrap">
+                <button
+                  type="button"
+                  class="group-drag-handle"
+                  cdkDragHandle
+                  title="Move group"
+                  aria-label="Move group"
+                >
+                  ⋮⋮
+                </button>
+                <span
+                  class="group-color-dot"
+                  [style.background]="group.color || '#64748b'"
+                ></span>
+
+                <h2 class="task-column-title">{{ group.name }}</h2>
+
+                <span class="task-column-count">
+                  {{ tasksForGroup(group.id).length }}
+                </span>
+              </div>
+
+              <div class="group-actions">
+                <button
+                  type="button"
+                  class="icon-button group-options-trigger"
+                  (click)="toggleGroupOptions(group.id)"
+                  title="Group options"
+                  aria-label="Group options"
+                >
+                  <span>•••</span>
+                </button>
+
+                @if (activeGroupOptionsId() === group.id) {
+                  <div class="group-options-menu">
+                    <button
+                      type="button"
+                      class="menu-item"
+                      (click)="startGroupRename(group)"
+                    >
+                      Rename
+                    </button>
+
+                    <button
+                      type="button"
+                      class="menu-item menu-item-danger"
+                      (click)="deleteGroup(group)"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </header>
+
+          <div
+            class="task-list"
+            cdkDropList
+            [id]="groupDropListId(group.id)"
+            [cdkDropListData]="tasksForGroup(group.id)"
+            [cdkDropListConnectedTo]="connectedDropLists()"
+            (cdkDropListDropped)="dropTask($event, group)"
+          >
+            @for (task of tasksForGroup(group.id); track task.id) {
+              <article
+                class="task-card"
+                cdkDrag
+                (cdkDragStarted)="startDragging()"
+                (cdkDragEnded)="stopDragging()"
+              >
+                <h3 class="task-card-title">{{ task.title }}</h3>
+
+                <ng-template cdkDragPlaceholder>
+                  <div class="task-drag-placeholder"></div>
+                </ng-template>
+
+                <ng-template cdkDragPreview>
+                  <div class="task-drag-preview">
+                    <h3 class="task-card-title">{{ task.title }}</h3>
+                  </div>
+                </ng-template>
+              </article>
+            }
+
+            @if (activeTaskGroupId() === group.id) {
+              <form
+                #taskFormElement
+                class="task-create-card"
+                [formGroup]="taskForm"
+                (ngSubmit)="createTask(group)"
+              >
+                <div class="task-create-row">
+                  <input
+                    class="task-create-input"
+                    type="text"
+                    formControlName="title"
+                    placeholder="Task name..."
+                    autocomplete="off"
+                  />
+
+                  <button
+                    type="submit"
+                    class="task-save-button"
+                    [disabled]="isCreatingTask()"
+                  >
+                    {{ isCreatingTask() ? 'Saving…' : 'Save' }}
+                  </button>
+                </div>
+              </form>
+            }
+          </div>
+
+          <button
+            type="button"
+            class="add-task-button"
+            (click)="openTaskForm(group.id, $event)"
+          >
+            <span>+</span>
+            Add task
+          </button>
+        </section>
+      }
+
+      <section class="add-group-column">
+        @if (!activeGroupForm()) {
+          <button type="button" class="add-group-button" (click)="openGroupForm()">
+            <span>+</span>
+            Add group
+          </button>
+        } @else {
+          <form
+            class="group-create-card"
+            [formGroup]="groupForm"
+            (ngSubmit)="createGroup()"
+          >
+            <input
+              class="group-create-input"
+              type="text"
+              formControlName="name"
+              placeholder="Group name..."
+              autocomplete="off"
+            />
+
+            @if (createGroupError()) {
+              <p class="field-error">{{ createGroupError() }}</p>
+            }
+
+            <div class="group-create-actions">
+              <button
+                type="submit"
+                class="primary-button"
+                [disabled]="isCreatingGroup()"
+              >
+                {{ isCreatingGroup() ? 'Saving…' : 'Save group' }}
+              </button>
+
+              <button
+                type="button"
+                class="secondary-button"
+                [disabled]="isCreatingGroup()"
+                (click)="cancelGroupForm()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        }
+      </section>
+    </div>
+  }
 </section>

@@ -2,14 +2,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .metrics import (
-    get_project_health_score,
-    get_project_task_stats,
-    get_progress_per_user,
-)
 from django.db.models import Q
 from organizations.models import OrganizationMembership, OrganizationRole
-from .models import Project, ProjectMembership, ProjectRole, Task
+from .models import Project, ProjectMembership, ProjectRole
 from .serializers import (
     ProjectCreateSerializer,
     ProjectListSerializer,
@@ -17,9 +12,6 @@ from .serializers import (
     ProjectMembershipSerializer,
     ProjectRoleCreateSerializer,
     ProjectRoleListSerializer,
-    TaskCreateSerializer,
-    TaskListSerializer,
-    TaskStatusUpdateSerializer,
     ProjectUpdateSerializer,
 )
 from rest_framework import status
@@ -184,107 +176,6 @@ class ProjectMembersView(APIView):
 
         serializer = ProjectMembershipSerializer(memberships, many=True)
         return Response(serializer.data)
-
-
-class TaskCreateView(generics.CreateAPIView):
-    serializer_class = TaskCreateSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class TasksByProjectView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, project_id):
-        project = get_object_or_404(Project, id=project_id)
-
-        has_access = (
-            ProjectMembership.objects.filter(project=project, user=request.user).exists()
-            or project.manager_id == request.user.id
-            or OrganizationMembership.objects.filter(
-                user=request.user,
-                organization=project.organization,
-            ).exists()
-        )
-
-        if not has_access:
-            return Response({"detail": "Forbidden."}, status=403)
-
-        tasks = Task.objects.filter(project=project).select_related("assignee", "project")
-        serializer = TaskListSerializer(tasks, many=True)
-        return Response(serializer.data)
-
-
-class TaskStatusUpdateView(generics.UpdateAPIView):
-    queryset = Task.objects.select_related("project", "project__organization", "assignee")
-    serializer_class = TaskStatusUpdateSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ["patch"]
-
-
-class ProjectTaskStatsView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, project_id):
-        project = get_object_or_404(Project, id=project_id)
-
-        has_access = (
-            ProjectMembership.objects.filter(project=project, user=request.user).exists()
-            or project.manager_id == request.user.id
-            or OrganizationMembership.objects.filter(
-                user=request.user,
-                organization=project.organization,
-            ).exists()
-        )
-
-        if not has_access:
-            return Response({"detail": "Forbidden."}, status=403)
-
-        stats = get_project_task_stats(project)
-        return Response(stats)
-
-
-class ProjectHealthScoreView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, project_id):
-        project = get_object_or_404(Project, id=project_id)
-
-        has_access = (
-            ProjectMembership.objects.filter(project=project, user=request.user).exists()
-            or project.manager_id == request.user.id
-            or OrganizationMembership.objects.filter(
-                user=request.user,
-                organization=project.organization,
-            ).exists()
-        )
-
-        if not has_access:
-            return Response({"detail": "Forbidden."}, status=403)
-
-        data = get_project_health_score(project)
-        return Response(data)
-
-
-class ProjectUserProgressView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, project_id):
-        project = get_object_or_404(Project, id=project_id)
-
-        has_access = (
-            ProjectMembership.objects.filter(project=project, user=request.user).exists()
-            or project.manager_id == request.user.id
-            or OrganizationMembership.objects.filter(
-                user=request.user,
-                organization=project.organization,
-            ).exists()
-        )
-
-        if not has_access:
-            return Response({"detail": "Forbidden."}, status=403)
-
-        data = get_progress_per_user(project)
-        return Response(data)
 
 
 class RemoveProjectMemberView(APIView):
