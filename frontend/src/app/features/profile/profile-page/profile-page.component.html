@@ -1,0 +1,164 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Profile</h1>
+      <p class="page-subtitle">
+        Manage your personal information, account details and profile avatar.
+      </p>
+    </div>
+  </header>
+
+  <div class="profile-shell">
+    <section class="profile-hero">
+      <div class="profile-hero-left">
+        <div class="avatar-preview">
+          @if (avatarUrl) {
+            <img
+              [src]="avatarUrl"
+              alt="Profile avatar"
+              class="avatar-image"
+            />
+          } @else {
+            <span class="avatar-fallback">{{ initials }}</span>
+          }
+        </div>
+
+        <div class="profile-identity">
+          <p class="profile-label">Personal profile</p>
+          <h2>
+            {{ form.value.first_name || 'First name' }}
+            {{ form.value.last_name || 'Last name' }}
+          </h2>
+          <p>{{ authService.user()?.email ?? 'No email provided' }}</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="profile-layout">
+      <section class="profile-card avatar-card">
+        <div class="card-header">
+          <div>
+            <p class="card-kicker">Avatar</p>
+            <h3>Profile photo</h3>
+          </div>
+        </div>
+
+        <p class="card-description">
+          Upload a clear image that will be shown across your workspace,
+          projects and assigned tasks.
+        </p>
+
+        <div class="avatar-upload-box">
+          <div class="avatar-mini">
+            @if (avatarUrl) {
+              <img
+                [src]="avatarUrl"
+                alt="Profile avatar"
+                class="avatar-image"
+              />
+            } @else {
+              <span>{{ initials }}</span>
+            }
+          </div>
+
+          <div class="avatar-upload-copy">
+            <strong>Upload image</strong>
+            <span>PNG, JPG or WEBP. Recommended size: 400×400 px.</span>
+          </div>
+        </div>
+
+        <div class="avatar-actions">
+          <label class="secondary-button file-button" [class.button-disabled]="isAvatarSaving()">
+            {{ isAvatarSaving() ? 'Uploading...' : 'Choose avatar' }}
+            <input
+              #avatarInput
+              type="file"
+              accept="image/*"
+              [disabled]="isAvatarSaving()"
+              (change)="onAvatarSelected($event)"
+            />
+          </label>
+
+          @if (hasAnyAvatar) {
+            <button
+              type="button"
+              class="ghost-button"
+              [disabled]="isAvatarSaving()"
+              (click)="clearSelectedAvatar(avatarInput)"
+            >
+              {{ isAvatarSaving() ? 'Saving...' : 'Remove' }}
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="profile-card details-card">
+        <div class="card-header">
+          <div>
+            <p class="card-kicker">Information</p>
+            <h3>Personal details</h3>
+          </div>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="submit()" class="profile-form">
+          <div class="form-grid">
+            <label class="form-field">
+              <span class="form-label">First name</span>
+              <input
+                class="form-input"
+                type="text"
+                formControlName="first_name"
+                placeholder="Enter first name"
+              />
+            </label>
+
+            <label class="form-field">
+              <span class="form-label">Last name</span>
+              <input
+                class="form-input"
+                type="text"
+                formControlName="last_name"
+                placeholder="Enter last name"
+              />
+            </label>
+          </div>
+
+          <label class="form-field">
+            <span class="form-label">Email address</span>
+            <input
+              class="form-input disabled-input"
+              type="email"
+              [value]="authService.user()?.email ?? ''"
+              disabled
+            />
+            <span class="field-hint">
+              Email is used for login and cannot be changed here.
+            </span>
+          </label>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="primary-button"
+              [disabled]="isSaving()"
+            >
+              {{ isSaving() ? 'Saving...' : 'Save changes' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="message message-error profile-message">
+        {{ errorMessage() }}
+      </p>
+    }
+
+    @if (successMessage()) {
+      <p class="message message-success profile-message">
+        {{ successMessage() }}
+      </p>
+    }
+  </div>
+</section>

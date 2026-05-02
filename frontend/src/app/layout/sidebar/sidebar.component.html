@@ -40,7 +40,21 @@
               [class.sidebar-submenu-item-active]="isSelectedOrganization(organization.id)"
               (click)="selectOrganization(organization)"
             >
-              <span class="sidebar-dot workspace-dot"></span>
+              <span class="sidebar-item-icon workspace-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M4.75 20.25V5.75A2 2 0 0 1 6.75 3.75h7.5a2 2 0 0 1 2 2v14.5"
+                  />
+                  <path
+                    d="M16.25 9.75h1A2 2 0 0 1 19.25 11.75v8.5"
+                  />
+                  <path d="M8 8h4.5" />
+                  <path d="M8 11.5h4.5" />
+                  <path d="M8 15h4.5" />
+                  <path d="M10.25 20.25v-3.5h2.5v3.5" />
+                  <path d="M3.75 20.25h16.5" />
+                </svg>
+              </span>
 
               <span class="sidebar-submenu-text">
                 {{ organization.name }}
@@ -100,7 +114,14 @@
               [routerLink]="['/app/projects', project.id, 'tasks']"
               routerLinkActive="sidebar-submenu-item-active"
             >
-              <span class="sidebar-dot project-dot"></span>
+              <span class="sidebar-item-icon project-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M3.75 7.75A2 2 0 0 1 5.75 5.75h4.05c.62 0 .96.15 1.38.62l1.03 1.13c.38.42.7.5 1.27.5h4.77a2 2 0 0 1 2 2v7.25a2 2 0 0 1-2 2H5.75a2 2 0 0 1-2-2V7.75Z"
+                  />
+                  <path d="M3.95 10.25h16.1" />
+                </svg>
+              </span>
 
               <span class="sidebar-submenu-text">
                 {{ project.name }}

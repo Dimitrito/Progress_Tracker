@@ -1,37 +1,24 @@
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from projects.models import Project
-from .models import Task, TaskGroup
+from .models import Task, TaskGroup, TaskTag
 from .permissions import can_manage_project, has_project_access
 from .serializers import (
     TaskCreateSerializer,
+    TaskDetailSerializer,
     TaskGroupCreateSerializer,
     TaskGroupSerializer,
     TaskSerializer,
+    TaskSubtaskCreateSerializer,
+    TaskSubtaskSerializer,
+    TaskTagCreateSerializer,
+    TaskTagSerializer,
     TaskUpdateSerializer,
 )
-
-
-def create_default_groups(project):
-    default_groups = [
-        ("To do", "todo"),
-        ("In progress", "progress"),
-        ("Complete", "done"),
-    ]
-
-    for index, (name, color) in enumerate(default_groups):
-        TaskGroup.objects.get_or_create(
-            project=project,
-            name=name,
-            defaults={
-                "color": color,
-                "position": index,
-            },
-        )
 
 
 class TaskGroupsByProjectView(APIView):
@@ -43,12 +30,10 @@ class TaskGroupsByProjectView(APIView):
         if not has_project_access(request.user, project):
             return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
 
-        create_default_groups(project)
-
         groups = (
             TaskGroup.objects
             .filter(project=project)
-            .annotate(task_count=Count("tasks"))
+            .annotate(task_count=Count("tasks", filter=Q(tasks__parent_task__isnull=True)))
             .order_by("position", "id")
         )
 
@@ -70,78 +55,6 @@ class TaskGroupsByProjectView(APIView):
 
         response_serializer = TaskGroupSerializer(group)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-
-
-class TasksByProjectView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, project_id):
-        project = get_object_or_404(Project, id=project_id)
-
-        if not has_project_access(request.user, project):
-            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
-
-        tasks = (
-            Task.objects
-            .filter(group__project=project)
-            .select_related("group", "assignee")
-            .order_by("position", "id")
-        )
-
-        serializer = TaskSerializer(tasks, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, project_id):
-        project = get_object_or_404(Project, id=project_id)
-
-        serializer = TaskCreateSerializer(
-            data=request.data,
-            context={
-                "request": request,
-                "project": project,
-            },
-        )
-        serializer.is_valid(raise_exception=True)
-        task = serializer.save()
-
-        response_serializer = TaskSerializer(task)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-
-
-class TaskDetailView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def patch(self, request, task_id):
-        task = get_object_or_404(
-            Task.objects.select_related("group", "group__project", "assignee"),
-            id=task_id,
-        )
-
-        serializer = TaskUpdateSerializer(
-            task,
-            data=request.data,
-            partial=True,
-            context={"request": request},
-        )
-        serializer.is_valid(raise_exception=True)
-        task = serializer.save()
-
-        response_serializer = TaskSerializer(task)
-        return Response(response_serializer.data)
-
-    def delete(self, request, task_id):
-        task = get_object_or_404(
-            Task.objects.select_related("group", "group__project"),
-            id=task_id,
-        )
-
-        project = task.group.project
-
-        if not can_manage_project(request.user, project):
-            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
-
-        task.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TaskGroupDetailView(APIView):
@@ -183,3 +96,240 @@ class TaskGroupDetailView(APIView):
 
         group.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TaskTagsByProjectView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, project_id):
+        project = get_object_or_404(Project, id=project_id)
+
+        if not has_project_access(request.user, project):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        tags = TaskTag.objects.filter(project=project).order_by("name", "id")
+        serializer = TaskTagSerializer(tags, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, project_id):
+        project = get_object_or_404(Project, id=project_id)
+
+        serializer = TaskTagCreateSerializer(
+            data=request.data,
+            context={
+                "request": request,
+                "project": project,
+            },
+        )
+        serializer.is_valid(raise_exception=True)
+        tag = serializer.save()
+
+        response_serializer = TaskTagSerializer(tag)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class TaskTagDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, tag_id):
+        tag = get_object_or_404(
+            TaskTag.objects.select_related("project"),
+            id=tag_id,
+        )
+
+        if not has_project_access(request.user, tag.project):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = TaskTagSerializer(
+            tag,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        tag = serializer.save()
+
+        return Response(TaskTagSerializer(tag).data)
+
+    def delete(self, request, tag_id):
+        tag = get_object_or_404(
+            TaskTag.objects.select_related("project"),
+            id=tag_id,
+        )
+
+        if not has_project_access(request.user, tag.project):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        tag.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TasksByProjectView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, project_id):
+        project = get_object_or_404(Project, id=project_id)
+
+        if not has_project_access(request.user, project):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        tasks = (
+            Task.objects
+            .filter(group__project=project, parent_task__isnull=True)
+            .select_related("group", "assignee")
+            .prefetch_related("tags")
+            .annotate(
+                subtasks_count=Count("subtasks", distinct=True),
+                completed_subtasks_count=Count(
+                    "subtasks",
+                    filter=Q(subtasks__is_completed=True),
+                    distinct=True,
+                ),
+            )
+            .order_by("position", "id")
+        )
+
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, project_id):
+        project = get_object_or_404(Project, id=project_id)
+
+        serializer = TaskCreateSerializer(
+            data=request.data,
+            context={
+                "request": request,
+                "project": project,
+            },
+        )
+        serializer.is_valid(raise_exception=True)
+        task = serializer.save()
+
+        task = (
+            Task.objects
+            .select_related("group", "assignee")
+            .prefetch_related("tags")
+            .annotate(
+                subtasks_count=Count("subtasks", distinct=True),
+                completed_subtasks_count=Count(
+                    "subtasks",
+                    filter=Q(subtasks__is_completed=True),
+                    distinct=True,
+                ),
+            )
+            .get(id=task.id)
+        )
+
+        response_serializer = TaskSerializer(task)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class TaskDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_task(self, task_id):
+        return get_object_or_404(
+            Task.objects
+            .select_related("group", "group__project", "assignee")
+            .prefetch_related("tags")
+            .annotate(
+                subtasks_count=Count("subtasks", distinct=True),
+                completed_subtasks_count=Count(
+                    "subtasks",
+                    filter=Q(subtasks__is_completed=True),
+                    distinct=True,
+                ),
+            ),
+            id=task_id,
+        )
+
+    def get(self, request, task_id):
+        task = self.get_task(task_id)
+        project = task.group.project
+
+        if not has_project_access(request.user, project):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = TaskDetailSerializer(task)
+        return Response(serializer.data)
+
+    def patch(self, request, task_id):
+        task = self.get_task(task_id)
+
+        serializer = TaskUpdateSerializer(
+            task,
+            data=request.data,
+            partial=True,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        task = serializer.save()
+
+        task = self.get_task(task.id)
+
+        response_serializer = TaskDetailSerializer(task)
+        return Response(response_serializer.data)
+
+    def delete(self, request, task_id):
+        task = get_object_or_404(
+            Task.objects.select_related("group", "group__project"),
+            id=task_id,
+        )
+
+        project = task.group.project
+
+        if not can_manage_project(request.user, project):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        task.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TaskSubtasksView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_parent_task(self, task_id):
+        return get_object_or_404(
+            Task.objects.select_related("group", "group__project"),
+            id=task_id,
+            parent_task__isnull=True,
+        )
+
+    def get(self, request, task_id):
+        parent_task = self.get_parent_task(task_id)
+        project = parent_task.group.project
+
+        if not has_project_access(request.user, project):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        subtasks = (
+            parent_task.subtasks
+            .select_related("group", "assignee")
+            .prefetch_related("tags")
+            .order_by("position", "id")
+        )
+
+        serializer = TaskSubtaskSerializer(subtasks, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, task_id):
+        parent_task = self.get_parent_task(task_id)
+
+        serializer = TaskSubtaskCreateSerializer(
+            data=request.data,
+            context={
+                "request": request,
+                "parent_task": parent_task,
+            },
+        )
+        serializer.is_valid(raise_exception=True)
+        subtask = serializer.save()
+
+        subtask = (
+            Task.objects
+            .select_related("group", "assignee")
+            .prefetch_related("tags")
+            .get(id=subtask.id)
+        )
+
+        response_serializer = TaskSubtaskSerializer(subtask)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)

@@ -11,6 +11,13 @@ import {
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
 
+export interface UpdateProfilePayload {
+  first_name: string;
+  last_name: string;
+  avatar?: File | null;
+  remove_avatar?: boolean;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -20,6 +27,25 @@ export class AuthService {
   private readonly currentUserSignal = signal<AuthUser | null>(null);
 
   readonly user = this.currentUserSignal.asReadonly();
+
+  updateProfile(payload: UpdateProfilePayload): Observable<AuthUser> {
+    const formData = new FormData();
+
+    formData.append('first_name', payload.first_name);
+    formData.append('last_name', payload.last_name);
+
+    if (payload.avatar) {
+      formData.append('avatar', payload.avatar);
+    }
+
+    if (payload.remove_avatar) {
+      formData.append('remove_avatar', 'true');
+    }
+
+    return this.http
+      .patch<AuthUser>(`${this.baseUrl}/auth/profile/`, formData)
+      .pipe(tap((user) => this.currentUserSignal.set(user)));
+  }
 
   login(email: string, password: string): Observable<AuthUser> {
     return this.http

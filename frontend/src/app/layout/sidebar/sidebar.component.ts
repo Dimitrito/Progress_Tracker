@@ -53,9 +53,7 @@ export class SidebarComponent {
   });
 
   protected readonly items: SidebarItem[] = [
-    { label: 'Tasks', route: null },
-    { label: 'Metrics', route: null },
-    { label: 'Profile', route: null },
+    { label: 'Profile', route: '/app/profile' },
   ];
 
   constructor() {

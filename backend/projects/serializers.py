@@ -227,6 +227,7 @@ class ProjectMembershipCreateSerializer(serializers.Serializer):
 
 class ProjectMembershipSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(source="user.email", read_only=True)
+    user_avatar = serializers.ImageField(source="user.avatar", read_only=True)
     project_role_name = serializers.CharField(source="project_role.name", read_only=True)
 
     class Meta:
@@ -236,6 +237,7 @@ class ProjectMembershipSerializer(serializers.ModelSerializer):
             "project",
             "user",
             "user_email",
+            "user_avatar",
             "project_role",
             "project_role_name",
             "added_at",

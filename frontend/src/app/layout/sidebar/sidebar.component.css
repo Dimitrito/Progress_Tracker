@@ -147,26 +147,17 @@
 .sidebar-badge {
   min-width: 20px;
   height: 20px;
-
-  display: grid;              /* ← лучше чем flex */
+  display: grid;
   place-items: center;
-
   padding: 0 6px;
   border-radius: 999px;
-
   background: var(--danger);
   color: #fff;
-
   font-size: 11px;
   font-weight: 700;
-
   line-height: 1;
-
-  /* ключевой фикс */
   font-variant-numeric: tabular-nums;
   text-align: center;
-
-  /* убираем translateY */
   transform: none;
 }
 
@@ -208,28 +199,78 @@
 }
 
 .sidebar-submenu-item-active {
-  background: color-mix(in srgb, var(--primary) 10%, var(--bg-surface-2));
-  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
   color: var(--text-primary);
 }
 
-.sidebar-dot {
-  width: 9px;
-  height: 9px;
-  flex-shrink: 0;
-  border-radius: 999px;
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, currentColor 13%, transparent),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+/* Active workspace row — blue */
+.sidebar-submenu-item-active:has(.workspace-icon) {
+  background: color-mix(in srgb, var(--primary) 10%, var(--bg-surface-2));
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
 }
 
-.workspace-dot {
-  background: #38bdf8;
-  color: #38bdf8;
+/* Active project row — green */
+.sidebar-submenu-item-active:has(.project-icon) {
+  background: color-mix(in srgb, #22c55e 10%, var(--bg-surface-2));
+  border-color: color-mix(in srgb, #22c55e 34%, var(--border));
 }
 
-.project-dot {
-  background: #22c55e;
+.sidebar-item-icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--bg-surface-2) 74%, transparent);
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.sidebar-item-icon svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.workspace-icon {
+  color: color-mix(in srgb, var(--primary) 72%, var(--text-secondary));
+}
+
+.project-icon {
+  color: color-mix(in srgb, #22c55e 70%, var(--text-secondary));
+}
+
+.sidebar-submenu-item-active .workspace-icon {
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 36%, var(--border));
+  color: var(--primary);
+}
+
+.sidebar-submenu-item-active .project-icon {
+  background: color-mix(in srgb, #22c55e 16%, transparent);
+  border-color: color-mix(in srgb, #22c55e 38%, var(--border));
+  color: #22c55e;
+}
+
+.sidebar-submenu-item:hover .workspace-icon,
+.sidebar-submenu-empty:hover .workspace-icon {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+  color: var(--primary);
+}
+
+.sidebar-submenu-item:hover .project-icon,
+.sidebar-submenu-empty:hover .project-icon {
+  background: color-mix(in srgb, #22c55e 10%, transparent);
+  border-color: color-mix(in srgb, #22c55e 28%, var(--border));
   color: #22c55e;
 }
 

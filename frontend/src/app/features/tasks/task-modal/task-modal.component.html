@@ -1,0 +1,349 @@
+<div class="task-modal-backdrop" (click)="close()">
+  <section class="task-modal" (click)="$event.stopPropagation()">
+    <button
+      type="button"
+      class="modal-close-button"
+      (click)="close()"
+      aria-label="Close task modal"
+      title="Close"
+    >
+      ×
+    </button>
+
+    @if (isLoading()) {
+      <div class="modal-state">
+        <h2>Loading task</h2>
+        <p>Please wait while we load task details.</p>
+      </div>
+    } @else if (errorMessage() && !task()) {
+      <div class="modal-state">
+        <h2>Unable to load task</h2>
+        <p>{{ errorMessage() }}</p>
+
+        <button type="button" class="secondary-button" (click)="loadTask()">
+          Try again
+        </button>
+      </div>
+    } @else if (task(); as currentTask) {
+      <div class="modal-main">
+        <div class="modal-content">
+          <header class="task-modal-header">
+            <button
+              type="button"
+              class="modal-complete-button"
+              [class.modal-complete-button-active]="currentTask.is_completed"
+              (click)="setCompleted()"
+              [title]="currentTask.is_completed ? 'Mark as not completed' : 'Mark as completed'"
+            >
+              {{ currentTask.is_completed ? '☑' : '☐' }}
+            </button>
+
+            <div class="title-field-wrap">
+              <input
+                class="task-title-input"
+                type="text"
+                [formControl]="taskForm.controls.title"
+                (blur)="saveTitle()"
+                (keydown.enter)="saveTitle(); $event.preventDefault()"
+                placeholder="Task title"
+              />
+
+              <div class="task-title-meta">
+                <span>{{ currentTask.group_name }}</span>
+
+                @if (isSaving()) {
+                  <span>Saving…</span>
+                }
+
+                @if (currentTask.is_completed && currentTask.completed_at) {
+                  <span>Completed</span>
+                }
+              </div>
+            </div>
+          </header>
+
+          @if (errorMessage()) {
+            <p class="modal-error">{{ errorMessage() }}</p>
+          }
+
+          <section class="modal-tags-section">
+            <p class="section-kicker">Tags</p>
+
+            <div class="tags-grid">
+              @for (tag of taskTags; track tag.id) {
+                <button
+                  type="button"
+                  class="tag-toggle"
+                  [class.tag-toggle-active]="hasTag(tag.id)"
+                  (click)="toggleTag(tag)"
+                >
+                  <span class="tag-dot" [style.background]="tag.color"></span>
+                  <span>{{ tag.name }}</span>
+                </button>
+              }
+
+              @if (taskTags.length === 0) {
+                <span class="empty-inline">No tags yet</span>
+              }
+            </div>
+          </section>
+
+          <section class="description-section">
+            <div class="section-header">
+              <div>
+                <p class="section-kicker">Description</p>
+                <h3>Task details</h3>
+              </div>
+
+              <button
+                type="button"
+                class="secondary-button compact-button"
+                (click)="saveDescription()"
+              >
+                Save
+              </button>
+            </div>
+
+            <textarea
+              class="description-textarea"
+              [formControl]="taskForm.controls.description"
+              placeholder="Add description..."
+              (blur)="saveDescription()"
+            ></textarea>
+          </section>
+
+          <section class="subtasks-section">
+            <div class="section-header">
+              <div>
+                <p class="section-kicker">Subtasks</p>
+                <h3>
+                  {{ currentTask.completed_subtasks_count }}/{{ currentTask.subtasks_count }}
+                  completed
+                </h3>
+              </div>
+            </div>
+
+            <div class="subtasks-progress">
+              <div
+                class="subtasks-progress-fill"
+                [style.width.%]="currentTask.subtasks_count ? (currentTask.completed_subtasks_count / currentTask.subtasks_count) * 100 : 0"
+              ></div>
+            </div>
+
+            <div class="subtasks-table">
+              <div class="subtasks-table-head">
+                <span>Name</span>
+                <span>Assignee</span>
+                <span>Priority</span>
+                <span>Points</span>
+                <span>Deadline</span>
+              </div>
+
+              @for (subtask of currentTask.subtasks; track subtask.id) {
+                <div
+                  class="subtask-row"
+                  [class.subtask-row-completed]="subtask.is_completed"
+                >
+                  <div class="subtask-name-cell">
+                    <button
+                      type="button"
+                      class="subtask-check-button"
+                      [class.subtask-check-button-active]="subtask.is_completed"
+                      (click)="toggleSubtaskCompleted(subtask)"
+                    >
+                      {{ subtask.is_completed ? '☑' : '☐' }}
+                    </button>
+
+                    <input
+                      class="subtask-title-input"
+                      type="text"
+                      [value]="subtask.title"
+                      (blur)="saveSubtaskTitle(subtask, $event)"
+                      (keydown.enter)="saveSubtaskTitle(subtask, $event); $event.preventDefault()"
+                    />
+                  </div>
+
+                  <select
+                    class="subtask-select"
+                    [value]="subtask.assignee || ''"
+                    (change)="setSubtaskAssignee(subtask, $event)"
+                  >
+                    <option value="">Unassigned</option>
+
+                    @for (member of projectMembers; track member.id) {
+                      <option [value]="member.user">
+                        {{ member.user_email }}
+                      </option>
+                    }
+                  </select>
+
+                  <select
+                    class="subtask-select"
+                    [value]="subtask.priority || ''"
+                    (change)="setSubtaskPriority(subtask, $event)"
+                  >
+                    <option value="">No priority</option>
+
+                    @for (priority of priorityOptions; track priority.value) {
+                      <option [value]="priority.value">
+                        {{ priority.label }}
+                      </option>
+                    }
+                  </select>
+
+                  <input
+                    class="subtask-points-input"
+                    type="number"
+                    min="0"
+                    step="1"
+                    [value]="subtask.story_points || ''"
+                    (change)="setSubtaskStoryPoints(subtask, $event)"
+                  />
+
+                  <input
+                    class="subtask-date-input"
+                    type="date"
+                    [value]="subtask.deadline || ''"
+                    (change)="setSubtaskDeadline(subtask, $event)"
+                  />
+                </div>
+              }
+
+              @if (currentTask.subtasks.length === 0) {
+                <div class="subtasks-empty">
+                  <p>No subtasks yet.</p>
+                </div>
+              }
+            </div>
+
+            <form
+              class="subtask-create-form"
+              [formGroup]="subtaskForm"
+              (ngSubmit)="createSubtask()"
+            >
+              <input
+                class="subtask-create-input"
+                type="text"
+                formControlName="title"
+                placeholder="Add subtask..."
+                autocomplete="off"
+              />
+
+              <button
+                type="submit"
+                class="primary-button compact-button"
+                [disabled]="isCreatingSubtask()"
+              >
+                {{ isCreatingSubtask() ? 'Adding…' : 'Add' }}
+              </button>
+            </form>
+          </section>
+        </div>
+
+        <aside class="modal-sidebar">
+          <div class="sidebar-card">
+            <p class="sidebar-card-title">Properties</p>
+
+            <label class="property-field">
+              <span>Assignee</span>
+
+              <select
+                [value]="currentTask.assignee || ''"
+                (change)="setAssignee($event)"
+              >
+                <option value="">Unassigned</option>
+
+                @for (member of projectMembers; track member.id) {
+                  <option [value]="member.user">
+                    {{ member.user_email }}
+                  </option>
+                }
+              </select>
+            </label>
+
+            <label class="property-field">
+              <span>Priority</span>
+
+              <select
+                [value]="currentTask.priority || ''"
+                (change)="setPriority($event)"
+              >
+                <option value="">No priority</option>
+
+                @for (priority of priorityOptions; track priority.value) {
+                  <option [value]="priority.value">
+                    {{ priority.icon }} {{ priority.label }}
+                  </option>
+                }
+              </select>
+            </label>
+
+            <label class="property-field">
+              <span>Deadline</span>
+
+              <input
+                type="date"
+                [value]="currentTask.deadline || ''"
+                (change)="setDeadline($event)"
+              />
+            </label>
+
+            @if (currentTask.deadline) {
+              <button
+                type="button"
+                class="danger-text-button"
+                (click)="clearDeadline()"
+              >
+                Clear deadline
+              </button>
+            }
+
+            <label class="property-field">
+              <span>Story points</span>
+
+              <input
+                type="number"
+                min="0"
+                step="1"
+                [value]="currentTask.story_points || ''"
+                (change)="setStoryPoints($event)"
+                placeholder="0"
+              />
+            </label>
+
+            @if (shouldShowStoryPoints(currentTask)) {
+              <button
+                type="button"
+                class="danger-text-button"
+                (click)="clearStoryPoints()"
+              >
+                Clear points
+              </button>
+            }
+          </div>
+
+          <div class="sidebar-card">
+            <p class="sidebar-card-title">Summary</p>
+
+            <div class="summary-row">
+              <span>Status</span>
+              <strong>{{ currentTask.is_completed ? 'Completed' : 'Open' }}</strong>
+            </div>
+
+            <div class="summary-row">
+              <span>Subtasks</span>
+              <strong>
+                {{ currentTask.completed_subtasks_count }}/{{ currentTask.subtasks_count }}
+              </strong>
+            </div>
+
+            <div class="summary-row">
+              <span>Points</span>
+              <strong>{{ currentTask.story_points || '—' }}</strong>
+            </div>
+          </div>
+        </aside>
+      </div>
+    }
+  </section>
+</div>

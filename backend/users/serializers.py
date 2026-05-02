@@ -32,3 +32,29 @@ class UserMeSerializer(serializers.ModelSerializer):
             "is_active",
             "date_joined",
         )
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    remove_avatar = serializers.BooleanField(write_only=True, required=False)
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "full_name",
+            "avatar",
+            "remove_avatar",
+        )
+        read_only_fields = ("id", "email", "full_name")
+
+    def update(self, instance, validated_data):
+        remove_avatar = validated_data.pop("remove_avatar", False)
+
+        if remove_avatar and instance.avatar:
+            instance.avatar.delete(save=False)
+            instance.avatar = None
+
+        return super().update(instance, validated_data)

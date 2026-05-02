@@ -39,6 +39,7 @@ export interface ProjectMembership {
   project: number;
   user: number;
   user_email: string;
+  user_avatar: string | null;
   project_role: number | null;
   project_role_name: string | null;
   added_at: string;
