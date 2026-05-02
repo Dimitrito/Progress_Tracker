@@ -88,13 +88,15 @@
 }
 
 .task-modal-header {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 14px;
+  display: flex;
   align-items: flex-start;
+  gap: 14px;
   padding-right: 42px;
 }
-
+.title-field-wrap {
+  min-width: 0;
+  flex: 1;
+}
 .modal-complete-button,
 .subtask-check-button {
   display: grid;
@@ -109,9 +111,53 @@
 }
 
 .modal-complete-button {
-  width: 34px;
-  height: 34px;
-  font-size: 16px;
+  width: 40px;
+  height: 40px;
+  position: relative;
+  flex-shrink: 0;
+  font-size: 0;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg-surface-2) 88%, transparent);
+}
+
+.modal-complete-check {
+  width: 15px;
+  height: 15px;
+  display: block;
+  border: 2px solid color-mix(in srgb, var(--text-secondary) 78%, transparent);
+  border-radius: 4px;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.modal-complete-button:hover .modal-complete-check {
+  border-color: var(--success);
+}
+
+.modal-complete-button-active {
+  border-color: color-mix(in srgb, var(--success) 60%, var(--border));
+  background: color-mix(in srgb, var(--success) 14%, var(--bg-surface-2));
+  color: var(--success);
+}
+
+.modal-complete-button-active .modal-complete-check::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.modal-complete-button-active .modal-complete-check {
+  position: relative;
+  border-color: var(--success);
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 14%, transparent);
 }
 
 .subtask-check-button {
@@ -341,6 +387,7 @@
 
 .subtask-name-cell {
   min-width: 0;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -364,6 +411,9 @@
 
 .subtask-title-input {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .subtask-select,
@@ -573,5 +623,147 @@ button:disabled {
   .subtask-row {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+}
+.tag-create-inline-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tag-create-inline-input {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  outline: none;
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tag-create-inline-input:focus {
+  border-color: color-mix(in srgb, var(--primary) 46%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 10%, transparent);
+}
+.modal-back-button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.modal-back-button:hover {
+  border-color: color-mix(in srgb, var(--primary) 44%, var(--border));
+  color: var(--text-primary);
+}
+
+.subtasks-collapse-button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.subtasks-collapse-button:hover {
+  border-color: color-mix(in srgb, var(--primary) 44%, var(--border));
+  color: var(--text-primary);
+}
+
+.subtask-row {
+  cursor: pointer;
+}
+
+.subtask-row:hover {
+  background: color-mix(in srgb, var(--primary) 7%, var(--bg-surface-2));
+}
+
+.subtask-indent {
+  width: calc(var(--subtask-level, 0) * 24px);
+  flex: 0 0 calc(var(--subtask-level, 0) * 24px);
+}
+.subtask-expand-button,
+.subtask-expand-spacer {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+}
+
+.subtask-expand-button {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    background 140ms ease;
+}
+
+.subtask-expand-button:hover {
+  border-color: color-mix(in srgb, var(--primary) 44%, var(--border));
+  background: color-mix(in srgb, var(--primary) 9%, var(--bg-surface));
+  color: var(--text-primary);
+}
+
+.subtask-expand-button-collapsed {
+  transform: rotate(-90deg);
+}
+
+.subtask-expand-spacer {
+  display: block;
+}
+.subtask-row {
+  position: relative;
+}
+
+.subtask-row::before {
+  content: '';
+  position: absolute;
+  left: calc(58px + var(--subtask-level, 0) * 24px);
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  opacity: calc(var(--subtask-level, 0) * 0.32);
+  pointer-events: none;
+}
+
+.subtask-row:hover {
+  background: color-mix(in srgb, var(--primary) 7%, var(--bg-surface-2));
+}
+@media (max-width: 980px) {
+  .subtask-indent {
+    width: calc(var(--subtask-level, 0) * 18px);
+    flex-basis: calc(var(--subtask-level, 0) * 18px);
+  }
+
+  .subtask-row::before {
+    left: calc(46px + var(--subtask-level, 0) * 18px);
   }
 }

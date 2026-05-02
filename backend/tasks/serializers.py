@@ -4,7 +4,7 @@ from rest_framework import serializers
 from projects.models import ProjectMembership
 from .models import Task, TaskGroup, TaskTag
 from .permissions import can_manage_project, has_project_access
-
+from .functions import get_task_metrics
 
 class TaskGroupSerializer(serializers.ModelSerializer):
     task_count = serializers.IntegerField(read_only=True)
@@ -88,8 +88,18 @@ class TaskSerializer(serializers.ModelSerializer):
     assignee_avatar = serializers.ImageField(source="assignee.avatar", read_only=True)
     tags = TaskTagSerializer(many=True, read_only=True)
 
-    subtasks_count = serializers.IntegerField(read_only=True)
-    completed_subtasks_count = serializers.IntegerField(read_only=True)
+    subtasks_count = serializers.SerializerMethodField()
+    completed_subtasks_count = serializers.SerializerMethodField()
+    active_story_points = serializers.SerializerMethodField()
+
+    def get_subtasks_count(self, obj):
+        return get_task_metrics(obj)["subtasks_count"]
+
+    def get_completed_subtasks_count(self, obj):
+        return get_task_metrics(obj)["completed_subtasks_count"]
+
+    def get_active_story_points(self, obj):
+        return get_task_metrics(obj)["active_story_points"]
 
     class Meta:
         model = Task
@@ -107,6 +117,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "assignee_avatar",
             "tags",
             "story_points",
+            "active_story_points",
             "deadline",
             "position",
             "is_completed",
@@ -115,24 +126,25 @@ class TaskSerializer(serializers.ModelSerializer):
             "completed_subtasks_count",
             "created_at",
         )
-        read_only_fields = (
-            "id",
-            "project",
-            "group_name",
-            "parent_task",
-            "assignee_email",
-            "assignee_avatar",
-            "tags",
-            "completed_at",
-            "subtasks_count",
-            "completed_subtasks_count",
-            "created_at",
-        )
 
 
 class TaskSubtaskSerializer(TaskSerializer):
+    subtasks = serializers.SerializerMethodField()
+
     class Meta(TaskSerializer.Meta):
-        fields = TaskSerializer.Meta.fields
+        fields = TaskSerializer.Meta.fields + (
+            "subtasks",
+        )
+
+    def get_subtasks(self, obj):
+        subtasks = (
+            obj.subtasks
+            .select_related("group", "assignee")
+            .prefetch_related("tags")
+            .order_by("position", "id")
+        )
+
+        return TaskSubtaskSerializer(subtasks, many=True).data
 
 
 class TaskDetailSerializer(TaskSerializer):
@@ -263,11 +275,6 @@ class TaskSubtaskCreateSerializer(serializers.ModelSerializer):
 
         assignee = attrs.get("assignee")
         tag_ids = attrs.get("tag_ids", [])
-
-        if parent_task.parent_task_id:
-            raise serializers.ValidationError(
-                "Nested subtasks are not supported."
-            )
 
         if not has_project_access(request.user, project):
             raise serializers.ValidationError("You do not have access to this project.")

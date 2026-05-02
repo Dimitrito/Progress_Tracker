@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   Component,
@@ -13,9 +13,13 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 
-import { environment } from '../../../../environments/environment';
 import { ProjectMembership } from '../../../core/services/projects.service';
 import {
   TaskDetailItem,
@@ -26,10 +30,14 @@ import {
   UpdateTaskPayload,
 } from '../../../core/services/tasks.service';
 
+type ModalTaskItem = TaskItem & {
+  subtasks?: ModalTaskItem[];
+};
+
 @Component({
   selector: 'app-task-modal',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormsModule, NgTemplateOutlet],
   templateUrl: './task-modal.component.html',
   styleUrl: './task-modal.component.css',
 })
@@ -41,17 +49,23 @@ export class TaskModalComponent implements OnChanges {
   @Output() closed = new EventEmitter<void>();
   @Output() taskUpdated = new EventEmitter<TaskItem>();
   @Output() taskDeleted = new EventEmitter<number>();
+  @Output() tagCreated = new EventEmitter<TaskTag>();
 
   private readonly tasksService = inject(TasksService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
-  private readonly document = inject(DOCUMENT);
 
   protected readonly task = signal<TaskDetailItem | null>(null);
+  protected readonly currentTaskId = signal<number | null>(null);
+  protected readonly previousTaskIds = signal<number[]>([]);
+
   protected readonly isLoading = signal(true);
   protected readonly isSaving = signal(false);
   protected readonly isCreatingSubtask = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly localTaskTags = signal<TaskTag[]>([]);
+
+  protected readonly collapsedSubtaskIds = signal<Set<number>>(new Set<number>());
 
   protected readonly priorityOptions = [
     { value: 'urgent', label: 'Urgent', icon: '🚩' },
@@ -74,9 +88,20 @@ export class TaskModalComponent implements OnChanges {
     title: ['', [Validators.required, Validators.maxLength(255)]],
   });
 
+  protected readonly taskTagForm = this.fb.nonNullable.group({
+    name: [''],
+  });
+
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['taskTags']) {
+      this.localTaskTags.set([...this.taskTags]);
+    }
+
     if (changes['taskId'] && this.taskId) {
-      this.loadTask();
+      this.currentTaskId.set(this.taskId);
+      this.previousTaskIds.set([]);
+      this.collapsedSubtaskIds.set(new Set<number>());
+      this.loadTaskById(this.taskId);
     }
   }
 
@@ -90,26 +115,84 @@ export class TaskModalComponent implements OnChanges {
   }
 
   protected loadTask(): void {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
+    const taskId = this.currentTaskId() ?? this.taskId;
+    this.loadTaskById(taskId);
+  }
 
-    this.tasksService
-      .getTask(this.taskId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (task) => {
-          this.task.set(task);
-          this.patchForm(task);
-          this.isLoading.set(false);
-        },
-        error: (error: HttpErrorResponse) => {
-          this.errorMessage.set(this.parseError(error, 'Could not load task.'));
-          this.isLoading.set(false);
-        },
-      });
+  protected openSubtask(subtask: TaskItem): void {
+    const current = this.task();
+
+    if (!current) {
+      return;
+    }
+
+    this.previousTaskIds.update((ids) => [...ids, current.id]);
+    this.loadTaskById(subtask.id);
+  }
+
+  protected goBackToPreviousTask(): void {
+    const history = this.previousTaskIds();
+
+    if (!history.length) {
+      return;
+    }
+
+    const previousTaskId = history[history.length - 1];
+
+    this.previousTaskIds.set(history.slice(0, -1));
+    this.loadTaskById(previousTaskId);
+  }
+
+  protected canGoBack(): boolean {
+    return this.previousTaskIds().length > 0;
+  }
+
+  protected getSubtasks(
+    task: TaskItem | TaskDetailItem | ModalTaskItem,
+  ): ModalTaskItem[] {
+    return ((task as ModalTaskItem).subtasks ?? []) as ModalTaskItem[];
+  }
+
+  protected hasNestedSubtasks(
+    task: TaskItem | TaskDetailItem | ModalTaskItem,
+  ): boolean {
+    return this.getSubtasks(task).length > 0;
+  }
+
+  protected isSubtaskCollapsed(subtask: TaskItem | ModalTaskItem): boolean {
+    return this.collapsedSubtaskIds().has(subtask.id);
+  }
+
+  protected toggleSubtaskCollapsed(
+    subtask: TaskItem | ModalTaskItem,
+    event: Event,
+  ): void {
+    event.stopPropagation();
+
+    if (!this.hasNestedSubtasks(subtask)) {
+      return;
+    }
+
+    this.collapsedSubtaskIds.update((ids) => {
+      const next = new Set(ids);
+
+      if (next.has(subtask.id)) {
+        next.delete(subtask.id);
+      } else {
+        next.add(subtask.id);
+      }
+
+      return next;
+    });
   }
 
   protected saveTitle(): void {
+    const current = this.task();
+
+    if (!current) {
+      return;
+    }
+
     const title = this.taskForm.controls.title.value.trim();
 
     if (!title) {
@@ -117,13 +200,46 @@ export class TaskModalComponent implements OnChanges {
       return;
     }
 
+    if (title === current.title) {
+      return;
+    }
+
     this.updateCurrentTask({ title });
   }
 
   protected saveDescription(): void {
-    this.updateCurrentTask({
-      description: this.taskForm.controls.description.value.trim(),
-    });
+    const current = this.task();
+
+    if (!current) {
+      return;
+    }
+
+    const description = this.taskForm.controls.description.value.trim();
+
+    if (description === (current.description || '')) {
+      return;
+    }
+
+    this.updateCurrentTask({ description });
+  }
+
+  protected getSelectedAssignee(task: TaskItem | TaskDetailItem): number | null {
+    return task.assignee ?? null;
+  }
+
+  protected setAssigneeValue(value: number | null): void {
+    this.updateCurrentTask({ assignee: value });
+  }
+
+  protected setSubtaskAssigneeValue(
+    subtask: TaskItem,
+    value: number | null,
+  ): void {
+    this.updateSubtask(subtask, { assignee: value });
+  }
+
+  protected getActiveStoryPoints(task: TaskDetailItem): number {
+    return this.normalizeStoryPoints(task.active_story_points);
   }
 
   protected setCompleted(): void {
@@ -136,13 +252,6 @@ export class TaskModalComponent implements OnChanges {
     this.updateCurrentTask({
       is_completed: !current.is_completed,
     });
-  }
-
-  protected setAssignee(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    const assignee = select.value ? Number(select.value) : null;
-
-    this.updateCurrentTask({ assignee });
   }
 
   protected setPriority(event: Event): void {
@@ -195,6 +304,46 @@ export class TaskModalComponent implements OnChanges {
     return this.task()?.tags.some((tag) => tag.id === tagId) ?? false;
   }
 
+  protected createAndAttachTagToTask(): void {
+    const current = this.task();
+
+    if (!current) {
+      return;
+    }
+
+    const name = this.taskTagForm.controls.name.value.trim();
+
+    if (!name) {
+      return;
+    }
+
+    const existingTag = this.findExistingTag(name);
+
+    if (existingTag) {
+      this.attachTagToTask(existingTag);
+      this.taskTagForm.reset({ name: '' }, { emitEvent: false });
+      return;
+    }
+
+    this.tasksService
+      .createTag(current.project, {
+        name,
+        color: '#64748b',
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (tag) => {
+          this.localTaskTags.update((tags) => [...tags, tag]);
+          this.tagCreated.emit(tag);
+          this.attachTagToTask(tag);
+          this.taskTagForm.reset({ name: '' }, { emitEvent: false });
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage.set(this.parseError(error, 'Could not create tag.'));
+        },
+      });
+  }
+
   protected createSubtask(): void {
     const current = this.task();
 
@@ -218,9 +367,9 @@ export class TaskModalComponent implements OnChanges {
         description: '',
         assignee: null,
         priority: null,
-        story_points: null,
+        story_points: 0,
         deadline: null,
-        position: current.subtasks.length,
+        position: this.getSubtasks(current).length,
         is_completed: false,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -231,7 +380,9 @@ export class TaskModalComponent implements OnChanges {
           this.reloadTaskAndEmit();
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage.set(this.parseError(error, 'Could not create subtask.'));
+          this.errorMessage.set(
+            this.parseError(error, 'Could not create subtask.'),
+          );
           this.isCreatingSubtask.set(false);
         },
       });
@@ -253,14 +404,6 @@ export class TaskModalComponent implements OnChanges {
     }
 
     this.updateSubtask(subtask, { title });
-  }
-
-  protected setSubtaskAssignee(subtask: TaskItem, event: Event): void {
-    const select = event.target as HTMLSelectElement;
-
-    this.updateSubtask(subtask, {
-      assignee: select.value ? Number(select.value) : null,
-    });
   }
 
   protected setSubtaskPriority(subtask: TaskItem, event: Event): void {
@@ -291,47 +434,49 @@ export class TaskModalComponent implements OnChanges {
     return this.normalizeStoryPoints(task.story_points) > 0;
   }
 
-  protected formatPriority(priority: TaskPriority | null): string {
-    if (!priority) {
-      return 'No priority';
-    }
+  private loadTaskById(taskId: number): void {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+    this.currentTaskId.set(taskId);
 
-    return this.priorityOptions.find((item) => item.value === priority)?.label ?? 'No priority';
+    this.tasksService
+      .getTask(taskId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (task) => {
+          this.task.set(task);
+          this.patchForm(task);
+          this.isLoading.set(false);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage.set(this.parseError(error, 'Could not load task.'));
+          this.isLoading.set(false);
+        },
+      });
   }
 
-  protected getPriorityIcon(priority: TaskPriority | null): string {
-    if (!priority) {
-      return '⚑';
-    }
-
-    return this.priorityOptions.find((item) => item.value === priority)?.icon ?? '⚑';
+  private findExistingTag(name: string): TaskTag | undefined {
+    return this.localTaskTags().find(
+      (tag) => tag.name.toLowerCase() === name.toLowerCase(),
+    );
   }
 
-  protected buildUserInitials(email: string | null): string {
-    if (!email) {
-      return '—';
+  private attachTagToTask(tag: TaskTag): void {
+    const current = this.task();
+
+    if (!current) {
+      return;
     }
 
-    return email.slice(0, 2).toUpperCase();
-  }
+    const currentIds = current.tags.map((item) => item.id);
 
-  protected resolveMediaUrl(url: string | null | undefined): string | null {
-    if (!url) {
-      return null;
+    if (currentIds.includes(tag.id)) {
+      return;
     }
 
-    if (
-      url.startsWith('http://') ||
-      url.startsWith('https://') ||
-      url.startsWith('blob:') ||
-      url.startsWith('data:')
-    ) {
-      return url;
-    }
-
-    const apiHost = environment.apiUrl.replace(/\/api\/?$/, '');
-
-    return `${apiHost}${url}`;
+    this.updateCurrentTask({
+      tag_ids: [...currentIds, tag.id],
+    });
   }
 
   private updateCurrentTask(payload: UpdateTaskPayload): void {
@@ -350,11 +495,13 @@ export class TaskModalComponent implements OnChanges {
         next: (updatedTask) => {
           this.task.set(updatedTask);
           this.patchForm(updatedTask);
-          this.taskUpdated.emit(updatedTask);
+          this.emitBoardRelevantTask(updatedTask);
           this.isSaving.set(false);
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage.set(this.parseError(error, 'Could not update task.'));
+          this.errorMessage.set(
+            this.parseError(error, 'Could not update task.'),
+          );
           this.isSaving.set(false);
           this.loadTask();
         },
@@ -368,24 +515,62 @@ export class TaskModalComponent implements OnChanges {
       .subscribe({
         next: () => this.reloadTaskAndEmit(),
         error: (error: HttpErrorResponse) => {
-          this.errorMessage.set(this.parseError(error, 'Could not update subtask.'));
+          this.errorMessage.set(
+            this.parseError(error, 'Could not update subtask.'),
+          );
           this.loadTask();
         },
       });
   }
 
   private reloadTaskAndEmit(): void {
+    const currentId = this.currentTaskId() ?? this.taskId;
+
     this.tasksService
-      .getTask(this.taskId)
+      .getTask(currentId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (task) => {
           this.task.set(task);
           this.patchForm(task);
-          this.taskUpdated.emit(task);
+          this.emitBoardRelevantTask(task);
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage.set(this.parseError(error, 'Could not reload task.'));
+          this.errorMessage.set(
+            this.parseError(error, 'Could not reload task.'),
+          );
+        },
+      });
+  }
+
+  private emitBoardRelevantTask(task: TaskDetailItem): void {
+    if (!task.parent_task) {
+      this.taskUpdated.emit(task);
+      return;
+    }
+
+    this.loadRootTaskAndEmit(task.parent_task);
+  }
+
+  private loadRootTaskAndEmit(taskId: number): void {
+    this.tasksService
+      .getTask(taskId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (parentTask) => {
+          if (parentTask.parent_task) {
+            this.loadRootTaskAndEmit(parentTask.parent_task);
+            return;
+          }
+
+          this.taskUpdated.emit(parentTask);
+        },
+        error: () => {
+          const current = this.task();
+
+          if (current) {
+            this.taskUpdated.emit(current);
+          }
         },
       });
   }
@@ -413,6 +598,10 @@ export class TaskModalComponent implements OnChanges {
     }
 
     return Math.floor(normalized);
+  }
+
+  protected getVisibleSubtaskLevel(level: number): number {
+    return Math.min(level, 3);
   }
 
   private parseError(error: HttpErrorResponse, fallback: string): string {

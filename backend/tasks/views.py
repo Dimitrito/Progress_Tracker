@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from projects.models import Project
+
+from .functions import with_task_metrics
 from .models import Task, TaskGroup, TaskTag
 from .permissions import can_manage_project, has_project_access
 from .serializers import (
@@ -173,17 +175,11 @@ class TasksByProjectView(APIView):
             return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
 
         tasks = (
-            Task.objects
-            .filter(group__project=project, parent_task__isnull=True)
-            .select_related("group", "assignee")
-            .prefetch_related("tags")
-            .annotate(
-                subtasks_count=Count("subtasks", distinct=True),
-                completed_subtasks_count=Count(
-                    "subtasks",
-                    filter=Q(subtasks__is_completed=True),
-                    distinct=True,
-                ),
+            with_task_metrics(
+                Task.objects
+                .filter(group__project=project, parent_task__isnull=True)
+                .select_related("group", "assignee")
+                .prefetch_related("tags")
             )
             .order_by("position", "id")
         )
@@ -204,20 +200,11 @@ class TasksByProjectView(APIView):
         serializer.is_valid(raise_exception=True)
         task = serializer.save()
 
-        task = (
+        task = with_task_metrics(
             Task.objects
             .select_related("group", "assignee")
             .prefetch_related("tags")
-            .annotate(
-                subtasks_count=Count("subtasks", distinct=True),
-                completed_subtasks_count=Count(
-                    "subtasks",
-                    filter=Q(subtasks__is_completed=True),
-                    distinct=True,
-                ),
-            )
-            .get(id=task.id)
-        )
+        ).get(id=task.id)
 
         response_serializer = TaskSerializer(task)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -228,16 +215,10 @@ class TaskDetailView(APIView):
 
     def get_task(self, task_id):
         return get_object_or_404(
-            Task.objects
-            .select_related("group", "group__project", "assignee")
-            .prefetch_related("tags")
-            .annotate(
-                subtasks_count=Count("subtasks", distinct=True),
-                completed_subtasks_count=Count(
-                    "subtasks",
-                    filter=Q(subtasks__is_completed=True),
-                    distinct=True,
-                ),
+            with_task_metrics(
+                Task.objects
+                .select_related("group", "group__project", "assignee")
+                .prefetch_related("tags")
             ),
             id=task_id,
         )
@@ -291,7 +272,6 @@ class TaskSubtasksView(APIView):
         return get_object_or_404(
             Task.objects.select_related("group", "group__project"),
             id=task_id,
-            parent_task__isnull=True,
         )
 
     def get(self, request, task_id):
@@ -324,12 +304,11 @@ class TaskSubtasksView(APIView):
         serializer.is_valid(raise_exception=True)
         subtask = serializer.save()
 
-        subtask = (
+        subtask = with_task_metrics(
             Task.objects
             .select_related("group", "assignee")
             .prefetch_related("tags")
-            .get(id=subtask.id)
-        )
+        ).get(id=subtask.id)
 
         response_serializer = TaskSubtaskSerializer(subtask)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)

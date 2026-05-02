@@ -28,6 +28,18 @@
       <div class="modal-main">
         <div class="modal-content">
           <header class="task-modal-header">
+            @if (canGoBack()) {
+              <button
+                type="button"
+                class="modal-back-button"
+                (click)="goBackToPreviousTask()"
+                title="Back"
+                aria-label="Back"
+              >
+                ←
+              </button>
+            }
+
             <button
               type="button"
               class="modal-complete-button"
@@ -35,7 +47,7 @@
               (click)="setCompleted()"
               [title]="currentTask.is_completed ? 'Mark as not completed' : 'Mark as completed'"
             >
-              {{ currentTask.is_completed ? '☑' : '☐' }}
+              <span class="modal-complete-check"></span>
             </button>
 
             <div class="title-field-wrap">
@@ -50,6 +62,12 @@
 
               <div class="task-title-meta">
                 <span>{{ currentTask.group_name }}</span>
+
+                @if (currentTask.parent_task) {
+                  <span>Subtask</span>
+                } @else {
+                  <span>Task</span>
+                }
 
                 @if (isSaving()) {
                   <span>Saving…</span>
@@ -67,10 +85,15 @@
           }
 
           <section class="modal-tags-section">
-            <p class="section-kicker">Tags</p>
+            <div class="section-header">
+              <div>
+                <p class="section-kicker">Tags</p>
+                <h3>Classification</h3>
+              </div>
+            </div>
 
             <div class="tags-grid">
-              @for (tag of taskTags; track tag.id) {
+              @for (tag of localTaskTags(); track tag.id) {
                 <button
                   type="button"
                   class="tag-toggle"
@@ -82,10 +105,28 @@
                 </button>
               }
 
-              @if (taskTags.length === 0) {
+              @if (localTaskTags().length === 0) {
                 <span class="empty-inline">No tags yet</span>
               }
             </div>
+
+            <form
+              class="tag-create-inline-form"
+              [formGroup]="taskTagForm"
+              (ngSubmit)="createAndAttachTagToTask()"
+            >
+              <input
+                class="tag-create-inline-input"
+                type="text"
+                formControlName="name"
+                placeholder="Create and attach tag..."
+                autocomplete="off"
+              />
+
+              <button type="submit" class="secondary-button compact-button">
+                Add tag
+              </button>
+            </form>
           </section>
 
           <section class="description-section">
@@ -139,77 +180,11 @@
                 <span>Deadline</span>
               </div>
 
-              @for (subtask of currentTask.subtasks; track subtask.id) {
-                <div
-                  class="subtask-row"
-                  [class.subtask-row-completed]="subtask.is_completed"
-                >
-                  <div class="subtask-name-cell">
-                    <button
-                      type="button"
-                      class="subtask-check-button"
-                      [class.subtask-check-button-active]="subtask.is_completed"
-                      (click)="toggleSubtaskCompleted(subtask)"
-                    >
-                      {{ subtask.is_completed ? '☑' : '☐' }}
-                    </button>
+              <ng-container
+                *ngTemplateOutlet="subtaskTree; context: { $implicit: getSubtasks(currentTask), level: 0 }"
+              ></ng-container>
 
-                    <input
-                      class="subtask-title-input"
-                      type="text"
-                      [value]="subtask.title"
-                      (blur)="saveSubtaskTitle(subtask, $event)"
-                      (keydown.enter)="saveSubtaskTitle(subtask, $event); $event.preventDefault()"
-                    />
-                  </div>
-
-                  <select
-                    class="subtask-select"
-                    [value]="subtask.assignee || ''"
-                    (change)="setSubtaskAssignee(subtask, $event)"
-                  >
-                    <option value="">Unassigned</option>
-
-                    @for (member of projectMembers; track member.id) {
-                      <option [value]="member.user">
-                        {{ member.user_email }}
-                      </option>
-                    }
-                  </select>
-
-                  <select
-                    class="subtask-select"
-                    [value]="subtask.priority || ''"
-                    (change)="setSubtaskPriority(subtask, $event)"
-                  >
-                    <option value="">No priority</option>
-
-                    @for (priority of priorityOptions; track priority.value) {
-                      <option [value]="priority.value">
-                        {{ priority.label }}
-                      </option>
-                    }
-                  </select>
-
-                  <input
-                    class="subtask-points-input"
-                    type="number"
-                    min="0"
-                    step="1"
-                    [value]="subtask.story_points || ''"
-                    (change)="setSubtaskStoryPoints(subtask, $event)"
-                  />
-
-                  <input
-                    class="subtask-date-input"
-                    type="date"
-                    [value]="subtask.deadline || ''"
-                    (change)="setSubtaskDeadline(subtask, $event)"
-                  />
-                </div>
-              }
-
-              @if (currentTask.subtasks.length === 0) {
+              @if (getSubtasks(currentTask).length === 0) {
                 <div class="subtasks-empty">
                   <p>No subtasks yet.</p>
                 </div>
@@ -248,13 +223,14 @@
               <span>Assignee</span>
 
               <select
-                [value]="currentTask.assignee || ''"
-                (change)="setAssignee($event)"
+                [ngModel]="getSelectedAssignee(currentTask)"
+                (ngModelChange)="setAssigneeValue($event)"
+                [ngModelOptions]="{ standalone: true }"
               >
-                <option value="">Unassigned</option>
+                <option [ngValue]="null">Unassigned</option>
 
                 @for (member of projectMembers; track member.id) {
-                  <option [value]="member.user">
+                  <option [ngValue]="member.user">
                     {{ member.user_email }}
                   </option>
                 }
@@ -339,7 +315,7 @@
 
             <div class="summary-row">
               <span>Points</span>
-              <strong>{{ currentTask.story_points || '—' }}</strong>
+              <strong>{{ getActiveStoryPoints(currentTask) || '—' }}</strong>
             </div>
           </div>
         </aside>
@@ -347,3 +323,106 @@
     }
   </section>
 </div>
+
+<ng-template #subtaskTree let-items let-level="level">
+  @for (subtask of items; track subtask.id) {
+    <div
+      class="subtask-row"
+      [class.subtask-row-completed]="subtask.is_completed"
+      [style.--subtask-level]="getVisibleSubtaskLevel(level)"
+      (click)="openSubtask(subtask)"
+    >
+      <div class="subtask-name-cell">
+        <span class="subtask-indent"></span>
+
+        @if (hasNestedSubtasks(subtask)) {
+          <button
+            type="button"
+            class="subtask-expand-button"
+            [class.subtask-expand-button-collapsed]="isSubtaskCollapsed(subtask)"
+            (click)="toggleSubtaskCollapsed(subtask, $event)"
+            [title]="isSubtaskCollapsed(subtask) ? 'Expand subtasks' : 'Collapse subtasks'"
+            [attr.aria-label]="isSubtaskCollapsed(subtask) ? 'Expand subtasks' : 'Collapse subtasks'"
+          >
+            ▾
+          </button>
+        } @else {
+          <span class="subtask-expand-spacer"></span>
+        }
+
+        <button
+          type="button"
+          class="subtask-check-button"
+          [class.subtask-check-button-active]="subtask.is_completed"
+          (click)="toggleSubtaskCompleted(subtask); $event.stopPropagation()"
+        >
+          {{ subtask.is_completed ? '☑' : '☐' }}
+        </button>
+
+        <input
+          class="subtask-title-input"
+          type="text"
+          [value]="subtask.title"
+          (click)="$event.stopPropagation()"
+          (blur)="saveSubtaskTitle(subtask, $event)"
+          (keydown.enter)="saveSubtaskTitle(subtask, $event); $event.preventDefault(); $event.stopPropagation()"
+        />
+      </div>
+
+      <select
+        class="subtask-select"
+        [ngModel]="getSelectedAssignee(subtask)"
+        (click)="$event.stopPropagation()"
+        (ngModelChange)="setSubtaskAssigneeValue(subtask, $event)"
+        [ngModelOptions]="{ standalone: true }"
+      >
+        <option [ngValue]="null">Unassigned</option>
+
+        @for (member of projectMembers; track member.id) {
+          <option [ngValue]="member.user">
+            {{ member.user_email }}
+          </option>
+        }
+      </select>
+
+      <select
+        class="subtask-select"
+        [value]="subtask.priority || ''"
+        (click)="$event.stopPropagation()"
+        (change)="setSubtaskPriority(subtask, $event)"
+      >
+        <option value="">No priority</option>
+
+        @for (priority of priorityOptions; track priority.value) {
+          <option [value]="priority.value">
+            {{ priority.label }}
+          </option>
+        }
+      </select>
+
+      <input
+        class="subtask-points-input"
+        type="number"
+        min="0"
+        step="1"
+        [value]="subtask.story_points || ''"
+        (click)="$event.stopPropagation()"
+        (change)="setSubtaskStoryPoints(subtask, $event)"
+      />
+
+      <input
+        class="subtask-date-input"
+        type="date"
+        [value]="subtask.deadline || ''"
+        (click)="$event.stopPropagation()"
+        (change)="setSubtaskDeadline(subtask, $event)"
+      />
+    </div>
+
+    @if (getSubtasks(subtask).length > 0 && !isSubtaskCollapsed(subtask)) {
+      <ng-container
+        *ngTemplateOutlet="subtaskTree; context: { $implicit: getSubtasks(subtask), level: level + 1 }"
+      ></ng-container>
+    }
+  }
+</ng-template>

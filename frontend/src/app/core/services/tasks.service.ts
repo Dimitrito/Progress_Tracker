@@ -38,6 +38,7 @@ export interface TaskItem {
   priority: TaskPriority | null;
   tags: TaskTag[];
   story_points: number | null;
+  active_story_points: number;
   deadline: string | null;
   position: number;
   is_completed: boolean;

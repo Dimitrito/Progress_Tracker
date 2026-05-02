@@ -36,6 +36,7 @@ import {
 } from '../../../core/services/tasks.service';
 
 type TaskPopoverType = 'assignee' | 'deadline' | 'tags' | 'priority' | 'points';
+type TaskPopoverPlacement = 'down' | 'up';
 
 @Component({
   selector: 'app-tasks-page',
@@ -80,6 +81,26 @@ export class TasksPageComponent {
     taskId: number;
     type: TaskPopoverType;
   } | null>(null);
+
+  protected readonly taskPopoverPosition = signal<{
+    left: number;
+    top: number;
+    placement: TaskPopoverPlacement;
+  }>({
+    left: 0,
+    top: 0,
+    placement: 'down',
+  });
+
+  protected readonly createTaskPopoverPosition = signal<{
+    left: number;
+    top: number;
+    placement: TaskPopoverPlacement;
+  }>({
+    left: 0,
+    top: 0,
+    placement: 'down',
+  });
 
   protected readonly isCreatingTask = signal(false);
   protected readonly isCreatingGroup = signal(false);
@@ -220,6 +241,13 @@ export class TasksPageComponent {
     this.activeTaskPopover.set(null);
   }
 
+  @HostListener('window:resize')
+  protected handleWindowResize(): void {
+    this.activeTaskPopover.set(null);
+    this.activeCreateTaskPopover.set(null);
+    this.activeGroupOptionsId.set(null);
+  }
+
   protected resolveMediaUrl(url: string | null | undefined): string | null {
     if (!url) {
       return null;
@@ -258,6 +286,12 @@ export class TasksPageComponent {
 
   protected tasksForGroup(groupId: number): TaskItem[] {
     return this.groupedTasks().get(groupId) ?? [];
+  }
+
+  protected handleModalTagCreated(tag: TaskTag): void {
+    this.taskTags.update((tags) =>
+      tags.some((item) => item.id === tag.id) ? tags : [...tags, tag],
+    );
   }
 
   protected dropTask(
@@ -450,9 +484,52 @@ export class TasksPageComponent {
   protected toggleCreateTaskPopover(type: TaskPopoverType, event: Event): void {
     event.stopPropagation();
 
-    this.activeCreateTaskPopover.update((current) =>
-      current === type ? null : type,
+    const nextType = this.activeCreateTaskPopover() === type ? null : type;
+    this.activeCreateTaskPopover.set(nextType);
+    this.activeTaskPopover.set(null);
+    this.activeGroupOptionsId.set(null);
+
+    if (nextType) {
+      this.updateCreateTaskPopoverPosition(event, nextType);
+    }
+  }
+
+  private updateCreateTaskPopoverPosition(event: Event, type: TaskPopoverType): void {
+    const trigger = event.currentTarget as HTMLElement | null;
+
+    if (!trigger) {
+      return;
+    }
+
+    const rect = trigger.getBoundingClientRect();
+    const width = this.getTaskPopoverWidth(type);
+    const height = this.getTaskPopoverEstimatedHeight(type);
+    const gap = 10;
+    const viewportPadding = 12;
+
+    const availableBelow = window.innerHeight - rect.bottom - viewportPadding;
+    const availableAbove = rect.top - viewportPadding;
+    const shouldOpenUp = availableBelow < height && availableAbove > availableBelow;
+
+    const left = Math.min(
+      Math.max(rect.left, viewportPadding),
+      window.innerWidth - width - viewportPadding,
     );
+
+    const rawTop = shouldOpenUp
+      ? rect.top - height - gap
+      : rect.bottom + gap;
+
+    const top = Math.min(
+      Math.max(rawTop, viewportPadding),
+      window.innerHeight - Math.min(height, window.innerHeight - viewportPadding * 2) - viewportPadding,
+    );
+
+    this.createTaskPopoverPosition.set({
+      left,
+      top,
+      placement: shouldOpenUp ? 'up' : 'down',
+    });
   }
 
   protected setCreateAssignee(userId: number | null): void {
@@ -598,7 +675,11 @@ export class TasksPageComponent {
   }
 
   protected shouldShowStoryPoints(task: TaskItem): boolean {
-    return this.normalizeStoryPoints(task.story_points) > 0;
+    return this.normalizeStoryPoints(task.active_story_points) > 0;
+  }
+
+  protected getActiveStoryPoints(task: TaskItem): number {
+    return this.normalizeStoryPoints(task.active_story_points);
   }
 
   protected setTaskStoryPoints(task: TaskItem, event: Event): void {
@@ -721,6 +802,16 @@ export class TasksPageComponent {
     return active?.taskId === task.id && active.type === type;
   }
 
+  protected getActiveTaskPopoverTask(): TaskItem | null {
+    const active = this.activeTaskPopover();
+
+    if (!active) {
+      return null;
+    }
+
+    return this.tasks().find((task) => task.id === active.taskId) ?? null;
+  }
+
   protected toggleTaskPopover(
     task: TaskItem,
     type: TaskPopoverType,
@@ -737,7 +828,72 @@ export class TasksPageComponent {
 
     this.activeTaskPopover.set({ taskId: task.id, type });
     this.activeGroupOptionsId.set(null);
+    this.activeCreateTaskPopover.set(null);
     this.tagForm.reset({ name: '' }, { emitEvent: false });
+    this.updateTaskPopoverPosition(event, type);
+  }
+
+  private updateTaskPopoverPosition(event: Event, type: TaskPopoverType): void {
+    const trigger = event.currentTarget as HTMLElement | null;
+
+    if (!trigger) {
+      return;
+    }
+
+    const rect = trigger.getBoundingClientRect();
+    const width = this.getTaskPopoverWidth(type);
+    const height = this.getTaskPopoverEstimatedHeight(type);
+    const gap = 10;
+    const viewportPadding = 12;
+
+    const availableBelow = window.innerHeight - rect.bottom - viewportPadding;
+    const availableAbove = rect.top - viewportPadding;
+    const shouldOpenUp = availableBelow < height && availableAbove > availableBelow;
+
+    const left = Math.min(
+      Math.max(rect.left, viewportPadding),
+      window.innerWidth - width - viewportPadding,
+    );
+
+    const rawTop = shouldOpenUp
+      ? rect.top - height - gap
+      : rect.bottom + gap;
+
+    const top = Math.min(
+      Math.max(rawTop, viewportPadding),
+      window.innerHeight - Math.min(height, window.innerHeight - viewportPadding * 2) - viewportPadding,
+    );
+
+    this.taskPopoverPosition.set({
+      left,
+      top,
+      placement: shouldOpenUp ? 'up' : 'down',
+    });
+  }
+
+  private getTaskPopoverWidth(type: TaskPopoverType): number {
+    if (type === 'tags') {
+      return 286;
+    }
+
+    return 264;
+  }
+
+  private getTaskPopoverEstimatedHeight(type: TaskPopoverType): number {
+    switch (type) {
+      case 'assignee':
+        return Math.min(320, 74 + this.projectMembers().length * 42);
+      case 'tags':
+        return Math.min(360, 92 + this.taskTags().length * 42);
+      case 'priority':
+        return 238;
+      case 'points':
+        return 168;
+      case 'deadline':
+        return 142;
+      default:
+        return 220;
+    }
   }
 
   protected setTaskAssignee(task: TaskItem, userId: number | null): void {
