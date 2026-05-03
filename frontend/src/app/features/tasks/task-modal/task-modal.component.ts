@@ -19,7 +19,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { ProjectMembership } from '../../../core/services/projects.service';
 import {
   TaskDetailItem,
@@ -37,7 +37,12 @@ type ModalTaskItem = TaskItem & {
 @Component({
   selector: 'app-task-modal',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, NgTemplateOutlet],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    NgTemplateOutlet,
+    ConfirmDialogComponent,
+  ],
   templateUrl: './task-modal.component.html',
   styleUrl: './task-modal.component.css',
 })
@@ -62,6 +67,8 @@ export class TaskModalComponent implements OnChanges {
   protected readonly isLoading = signal(true);
   protected readonly isSaving = signal(false);
   protected readonly isCreatingSubtask = signal(false);
+  protected readonly isDeleting = signal(false);
+  protected readonly isDeleteConfirmOpen = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly localTaskTags = signal<TaskTag[]>([]);
 
@@ -161,6 +168,18 @@ export class TaskModalComponent implements OnChanges {
 
   protected isSubtaskCollapsed(subtask: TaskItem | ModalTaskItem): boolean {
     return this.collapsedSubtaskIds().has(subtask.id);
+  }
+
+  protected openDeleteConfirm(): void {
+    this.isDeleteConfirmOpen.set(true);
+  }
+
+  protected closeDeleteConfirm(): void {
+    if (this.isDeleting()) {
+      return;
+    }
+
+    this.isDeleteConfirmOpen.set(false);
   }
 
   protected toggleSubtaskCollapsed(
@@ -283,6 +302,37 @@ export class TaskModalComponent implements OnChanges {
 
   protected clearStoryPoints(): void {
     this.updateCurrentTask({ story_points: 0 });
+  }
+
+  protected deleteTask(): void {
+    const current = this.task();
+
+    if (!current) {
+      return;
+    }
+
+    const deletedTaskId = current.id;
+
+    this.isDeleting.set(true);
+    this.errorMessage.set(null);
+
+    this.tasksService
+      .deleteTask(deletedTaskId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.taskDeleted.emit(deletedTaskId);
+
+          this.isDeleting.set(false);
+          this.isDeleteConfirmOpen.set(false);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage.set(
+            this.parseError(error, 'Could not delete task.'),
+          );
+          this.isDeleting.set(false);
+        },
+      });
   }
 
   protected toggleTag(tag: TaskTag): void {

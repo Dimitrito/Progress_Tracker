@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+import { DOCUMENT, NgStyle } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   Component,
@@ -22,6 +22,7 @@ import {
 } from '@angular/cdk/drag-drop';
 import { environment } from '../../../../environments/environment';
 import { TaskModalComponent } from '../task-modal/task-modal.component';
+import { TaskCardComponent, TaskCardPopoverType } from '../task-card/task-card.component';
 
 import {
   ProjectListItem,
@@ -35,13 +36,13 @@ import {
   TasksService, TaskPriority,
 } from '../../../core/services/tasks.service';
 
-type TaskPopoverType = 'assignee' | 'deadline' | 'tags' | 'priority' | 'points';
-type TaskPopoverPlacement = 'down' | 'up';
+type TaskPopoverType = TaskCardPopoverType;
+type TaskPopoverDirection = 'up' | 'down';
 
 @Component({
   selector: 'app-tasks-page',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, DragDropModule, TaskModalComponent],
+  imports: [RouterLink, ReactiveFormsModule, DragDropModule, NgStyle, TaskModalComponent, TaskCardComponent],
   templateUrl: './tasks-page.component.html',
   styleUrl: './tasks-page.component.css',
 })
@@ -80,27 +81,11 @@ export class TasksPageComponent {
   protected readonly activeTaskPopover = signal<{
     taskId: number;
     type: TaskPopoverType;
+    top: number | null;
+    bottom: number | null;
+    left: number;
+    direction: TaskPopoverDirection;
   } | null>(null);
-
-  protected readonly taskPopoverPosition = signal<{
-    left: number;
-    top: number;
-    placement: TaskPopoverPlacement;
-  }>({
-    left: 0,
-    top: 0,
-    placement: 'down',
-  });
-
-  protected readonly createTaskPopoverPosition = signal<{
-    left: number;
-    top: number;
-    placement: TaskPopoverPlacement;
-  }>({
-    left: 0,
-    top: 0,
-    placement: 'down',
-  });
 
   protected readonly isCreatingTask = signal(false);
   protected readonly isCreatingGroup = signal(false);
@@ -150,8 +135,17 @@ export class TasksPageComponent {
   }
 
   protected handleModalTaskDeleted(taskId: number): void {
+    this.selectedTaskId.set(null);
+    this.activeTaskPopover.set(null);
+    this.activeGroupOptionsId.set(null);
+
     this.tasks.update((tasks) => tasks.filter((task) => task.id !== taskId));
-    this.closeTaskModal();
+
+    this.loadBoard();
+  }
+
+  protected refreshBoardAfterModalAction(): void {
+    this.loadBoard();
   }
 
   protected readonly taskForm = this.fb.nonNullable.group({
@@ -239,13 +233,6 @@ export class TasksPageComponent {
 
     this.activeGroupOptionsId.set(null);
     this.activeTaskPopover.set(null);
-  }
-
-  @HostListener('window:resize')
-  protected handleWindowResize(): void {
-    this.activeTaskPopover.set(null);
-    this.activeCreateTaskPopover.set(null);
-    this.activeGroupOptionsId.set(null);
   }
 
   protected resolveMediaUrl(url: string | null | undefined): string | null {
@@ -484,52 +471,9 @@ export class TasksPageComponent {
   protected toggleCreateTaskPopover(type: TaskPopoverType, event: Event): void {
     event.stopPropagation();
 
-    const nextType = this.activeCreateTaskPopover() === type ? null : type;
-    this.activeCreateTaskPopover.set(nextType);
-    this.activeTaskPopover.set(null);
-    this.activeGroupOptionsId.set(null);
-
-    if (nextType) {
-      this.updateCreateTaskPopoverPosition(event, nextType);
-    }
-  }
-
-  private updateCreateTaskPopoverPosition(event: Event, type: TaskPopoverType): void {
-    const trigger = event.currentTarget as HTMLElement | null;
-
-    if (!trigger) {
-      return;
-    }
-
-    const rect = trigger.getBoundingClientRect();
-    const width = this.getTaskPopoverWidth(type);
-    const height = this.getTaskPopoverEstimatedHeight(type);
-    const gap = 10;
-    const viewportPadding = 12;
-
-    const availableBelow = window.innerHeight - rect.bottom - viewportPadding;
-    const availableAbove = rect.top - viewportPadding;
-    const shouldOpenUp = availableBelow < height && availableAbove > availableBelow;
-
-    const left = Math.min(
-      Math.max(rect.left, viewportPadding),
-      window.innerWidth - width - viewportPadding,
+    this.activeCreateTaskPopover.update((current) =>
+      current === type ? null : type,
     );
-
-    const rawTop = shouldOpenUp
-      ? rect.top - height - gap
-      : rect.bottom + gap;
-
-    const top = Math.min(
-      Math.max(rawTop, viewportPadding),
-      window.innerHeight - Math.min(height, window.innerHeight - viewportPadding * 2) - viewportPadding,
-    );
-
-    this.createTaskPopoverPosition.set({
-      left,
-      top,
-      placement: shouldOpenUp ? 'up' : 'down',
-    });
   }
 
   protected setCreateAssignee(userId: number | null): void {
@@ -802,7 +746,13 @@ export class TasksPageComponent {
     return active?.taskId === task.id && active.type === type;
   }
 
-  protected getActiveTaskPopoverTask(): TaskItem | null {
+  protected getTaskPopoverType(task: TaskItem): TaskPopoverType | null {
+    const active = this.activeTaskPopover();
+
+    return active?.taskId === task.id ? active.type : null;
+  }
+
+  protected getActivePopoverTask(): TaskItem | null {
     const active = this.activeTaskPopover();
 
     if (!active) {
@@ -810,6 +760,28 @@ export class TasksPageComponent {
     }
 
     return this.tasks().find((task) => task.id === active.taskId) ?? null;
+  }
+
+  protected getTaskPopoverStyle(): Record<string, string> {
+    const active = this.activeTaskPopover();
+
+    if (!active) {
+      return {};
+    }
+
+    const style: Record<string, string> = {
+      left: `${active.left}px`,
+    };
+
+    if (active.top !== null) {
+      style['top'] = `${active.top}px`;
+    }
+
+    if (active.bottom !== null) {
+      style['bottom'] = `${active.bottom}px`;
+    }
+
+    return style;
   }
 
   protected toggleTaskPopover(
@@ -826,73 +798,68 @@ export class TasksPageComponent {
       return;
     }
 
-    this.activeTaskPopover.set({ taskId: task.id, type });
-    this.activeGroupOptionsId.set(null);
-    this.activeCreateTaskPopover.set(null);
-    this.tagForm.reset({ name: '' }, { emitEvent: false });
-    this.updateTaskPopoverPosition(event, type);
-  }
-
-  private updateTaskPopoverPosition(event: Event, type: TaskPopoverType): void {
     const trigger = event.currentTarget as HTMLElement | null;
+    const rect = trigger?.getBoundingClientRect();
+    const viewport = this.document.defaultView;
 
-    if (!trigger) {
+    if (!rect || !viewport) {
+      this.activeTaskPopover.set({
+        taskId: task.id,
+        type,
+        top: 120,
+        bottom: null,
+        left: 120,
+        direction: 'down',
+      });
       return;
     }
 
-    const rect = trigger.getBoundingClientRect();
-    const width = this.getTaskPopoverWidth(type);
-    const height = this.getTaskPopoverEstimatedHeight(type);
-    const gap = 10;
-    const viewportPadding = 12;
+    const width = this.getPopoverWidth(type);
+    const height = this.getPopoverEstimatedHeight(type);
+    const gap = 8;
+    const edgeGap = 12;
 
-    const availableBelow = window.innerHeight - rect.bottom - viewportPadding;
-    const availableAbove = rect.top - viewportPadding;
-    const shouldOpenUp = availableBelow < height && availableAbove > availableBelow;
+    const spaceBelow = viewport.innerHeight - rect.bottom - edgeGap;
+    const spaceAbove = rect.top - edgeGap;
+
+    const direction: TaskPopoverDirection =
+      spaceBelow < height + gap && spaceAbove > spaceBelow ? 'up' : 'down';
 
     const left = Math.min(
-      Math.max(rect.left, viewportPadding),
-      window.innerWidth - width - viewportPadding,
+      Math.max(rect.left, edgeGap),
+      Math.max(edgeGap, viewport.innerWidth - width - edgeGap),
     );
 
-    const rawTop = shouldOpenUp
-      ? rect.top - height - gap
-      : rect.bottom + gap;
-
-    const top = Math.min(
-      Math.max(rawTop, viewportPadding),
-      window.innerHeight - Math.min(height, window.innerHeight - viewportPadding * 2) - viewportPadding,
-    );
-
-    this.taskPopoverPosition.set({
+    this.activeTaskPopover.set({
+      taskId: task.id,
+      type,
       left,
-      top,
-      placement: shouldOpenUp ? 'up' : 'down',
+      top: direction === 'down' ? rect.bottom + gap : null,
+      bottom: direction === 'up' ? viewport.innerHeight - rect.top + gap : null,
+      direction,
     });
+    this.activeGroupOptionsId.set(null);
+    this.tagForm.reset({ name: '' }, { emitEvent: false });
   }
 
-  private getTaskPopoverWidth(type: TaskPopoverType): number {
-    if (type === 'tags') {
-      return 286;
-    }
-
-    return 264;
+  private getPopoverWidth(type: TaskPopoverType): number {
+    return type === 'assignee' || type === 'tags' ? 284 : 264;
   }
 
-  private getTaskPopoverEstimatedHeight(type: TaskPopoverType): number {
+  private getPopoverEstimatedHeight(type: TaskPopoverType): number {
     switch (type) {
       case 'assignee':
-        return Math.min(320, 74 + this.projectMembers().length * 42);
+        return 260;
       case 'tags':
-        return Math.min(360, 92 + this.taskTags().length * 42);
+        return 320;
       case 'priority':
-        return 238;
+        return 232;
       case 'points':
-        return 168;
+        return 172;
       case 'deadline':
-        return 142;
+        return 156;
       default:
-        return 220;
+        return 240;
     }
   }
 

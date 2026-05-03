@@ -186,16 +186,33 @@
 
 .task-title-input {
   width: 100%;
-  min-height: 42px;
-  border: 0;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  border-radius: 14px;
   outline: none;
-  background: transparent;
+  background: color-mix(in srgb, var(--bg-surface-2) 84%, transparent);
   color: var(--text-primary);
   font: inherit;
   font-size: 25px;
   font-weight: 850;
   line-height: 1.18;
   letter-spacing: -0.035em;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.task-title-input:hover {
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
+  background: color-mix(in srgb, var(--bg-surface-2) 94%, white 3%);
+}
+
+.task-title-input:focus {
+  border-color: color-mix(in srgb, var(--primary) 58%, var(--border));
+  background: var(--bg-surface-2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
 }
 
 .task-title-input::placeholder {
@@ -766,4 +783,43 @@ button:disabled {
   .subtask-row::before {
     left: calc(46px + var(--subtask-level, 0) * 18px);
   }
+}
+.delete-task-button {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--danger) 42%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--danger) 8%, var(--bg-surface));
+  color: var(--danger);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.delete-task-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--danger) 72%, var(--border));
+  background: color-mix(in srgb, var(--danger) 13%, var(--bg-surface));
+}
+
+.delete-task-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.delete-task-button:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }

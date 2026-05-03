@@ -191,6 +191,12 @@ export class TasksService {
     );
   }
 
+  deleteTask(taskId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.baseUrl}/tasks/${taskId}/`,
+    );
+  }
+
   createTag(
     projectId: number,
     payload: CreateTaskTagPayload,

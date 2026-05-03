@@ -318,9 +318,29 @@
               <strong>{{ getActiveStoryPoints(currentTask) || '—' }}</strong>
             </div>
           </div>
+
+          <button
+            type="button"
+            class="delete-task-button"
+            [disabled]="isDeleting()"
+            (click)="openDeleteConfirm()"
+          >
+            Delete task
+          </button>
         </aside>
       </div>
     }
+    <app-confirm-dialog
+      [open]="isDeleteConfirmOpen()"
+      title="Delete task?"
+      [message]="'This will permanently delete “' + (task()?.title || 'this task') + '” and all nested subtasks. This action cannot be undone.'"
+      confirmText="Delete task"
+      cancelText="Cancel"
+      [danger]="true"
+      [busy]="isDeleting()"
+      (confirmed)="deleteTask()"
+      (closed)="closeDeleteConfirm()"
+    />
   </section>
 </div>
 

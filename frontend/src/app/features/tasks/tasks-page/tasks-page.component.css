@@ -1122,54 +1122,53 @@ button:disabled {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
 }
 
-
 .task-action-popover-floating {
   position: fixed;
-  z-index: 5000;
-  top: auto;
-  left: auto;
+  z-index: 2500;
+  left: 0;
+  top: 0;
   width: 264px;
+  max-height: min(420px, calc(100vh - 24px));
+  overflow-y: auto;
+}
+
+.task-action-popover-floating.assignee-popover,
+.task-action-popover-floating.tags-popover {
+  width: 284px;
+}
+
+.task-action-popover-floating.task-action-popover-up {
+  transform-origin: bottom left;
+}
+
+.task-action-popover-floating:not(.task-action-popover-up) {
+  transform-origin: top left;
+}
+.task-action-popover.task-action-popover-floating {
+  position: fixed;
+  z-index: 3000;
+  top: auto;
+  bottom: auto;
+  left: auto;
   max-height: min(360px, calc(100vh - 24px));
   overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--border) 72%, white 12%) transparent;
 }
 
+.task-action-popover-floating.task-action-popover-up {
+  transform-origin: bottom left;
+}
+
+.task-action-popover-floating.task-action-popover-down {
+  transform-origin: top left;
+}
+
+.task-action-popover-floating.assignee-popover,
 .task-action-popover-floating.tags-popover {
-  width: 286px;
+  width: 284px;
 }
 
-.task-action-popover-floating::before {
-  content: '';
-  position: absolute;
-  left: 18px;
-  top: -6px;
-  width: 10px;
-  height: 10px;
-  border-left: 1px solid var(--border);
-  border-top: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg-surface) 97%, black 3%);
-  transform: rotate(45deg);
-}
-
-.task-action-popover-floating-up::before {
-  top: auto;
-  bottom: -6px;
-  transform: rotate(225deg);
-}
-
-.task-action-popover-floating::-webkit-scrollbar {
-  width: 8px;
-}
-
-.task-action-popover-floating::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.task-action-popover-floating::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--border) 78%, white 14%);
-  background-clip: padding-box;
+.task-action-popover-floating.deadline-popover,
+.task-action-popover-floating.priority-popover,
+.task-action-popover-floating.points-popover {
+  width: 264px;
 }
