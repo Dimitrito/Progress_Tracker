@@ -44,6 +44,12 @@ export const routes: Routes = [
         redirectTo: 'organizations',
       },
       {
+        path: 'my-tasks',
+        loadComponent: () =>
+          import('./features/projects/my-tasks/my-tasks.component')
+            .then((m) => m.MyTasksComponent),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./features/profile/profile-page/profile-page.component').then(

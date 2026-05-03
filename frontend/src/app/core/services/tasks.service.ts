@@ -185,6 +185,12 @@ export class TasksService {
     );
   }
 
+  getMyTasks(): Observable<TaskItem[]> {
+    return this.http.get<TaskItem[]>(
+      `${this.baseUrl}/tasks/my/`,
+    );
+  }
+
   getProjectTags(projectId: number): Observable<TaskTag[]> {
     return this.http.get<TaskTag[]>(
       `${this.baseUrl}/tasks/projects/${projectId}/tags/`,

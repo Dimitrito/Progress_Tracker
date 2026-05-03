@@ -1,0 +1,628 @@
+@if (isLoading()) {
+  <div class="state-card">
+    <h2>Loading tasks</h2>
+    <p>Please wait while we load this project workspace.</p>
+  </div>
+} @else if (errorMessage()) {
+  <div class="state-card">
+    <h2>Unable to load tasks</h2>
+    <p>{{ errorMessage() }}</p>
+
+    <button type="button" class="secondary-button" (click)="reload()">
+      Try again
+    </button>
+  </div>
+} @else {
+  <div
+    class="task-board"
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    [cdkDropListData]="groups()"
+    (cdkDropListDropped)="dropGroup($event)"
+    [style.--drag-h.px]="dragPlaceholderHeight()"
+  >
+    @for (group of groups(); track group.id) {
+      <section class="task-column" cdkDrag>
+        <header class="task-column-header">
+          @if (renamingGroupId() === group.id) {
+            <form
+              class="group-rename-form"
+              [formGroup]="renameGroupForm"
+              (ngSubmit)="saveGroupRename(group)"
+            >
+              <div class="rename-input-row">
+                <span
+                  class="group-color-dot"
+                  [style.background]="selectedRenameColor() || group.color || '#64748b'"
+                ></span>
+
+                <input
+                  class="rename-input"
+                  type="text"
+                  formControlName="name"
+                  placeholder="Group name"
+                  autocomplete="off"
+                />
+
+                <button
+                  type="submit"
+                  class="rename-save-button"
+                  [disabled]="isRenamingGroup()"
+                  title="Save"
+                >
+                  ✓
+                </button>
+              </div>
+
+              <div class="color-popover">
+                <p class="color-popover-title">Color</p>
+
+                <div class="color-grid">
+                  @for (color of groupColors; track color) {
+                    <button
+                      type="button"
+                      class="color-choice"
+                      [class.color-choice-active]="selectedRenameColor() === color"
+                      [style.background]="color"
+                      (click)="selectRenameColor(color)"
+                      [attr.aria-label]="'Choose color ' + color"
+                    ></button>
+                  }
+                </div>
+
+                <div class="rename-actions">
+                  <button
+                    type="button"
+                    class="text-button"
+                    [disabled]="isRenamingGroup()"
+                    (click)="cancelGroupRename()"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          } @else {
+            <div class="task-column-title-wrap">
+              <button
+                type="button"
+                class="group-drag-handle"
+                cdkDragHandle
+                title="Move group"
+                aria-label="Move group"
+              >
+                ⋮⋮
+              </button>
+
+              <span
+                class="group-color-dot"
+                [style.background]="group.color || '#64748b'"
+              ></span>
+
+              <h2 class="task-column-title">{{ group.name }}</h2>
+
+              <span class="task-column-count">
+                {{ tasksForGroup(group.id).length }}
+              </span>
+            </div>
+
+            <div class="group-actions">
+              <button
+                type="button"
+                class="icon-button group-options-trigger"
+                (click)="toggleGroupOptions(group.id)"
+                title="Group options"
+                aria-label="Group options"
+              >
+                <span>•••</span>
+              </button>
+
+              @if (activeGroupOptionsId() === group.id) {
+                <div class="group-options-menu">
+                  <button
+                    type="button"
+                    class="menu-item"
+                    (click)="startGroupRename(group)"
+                  >
+                    Rename
+                  </button>
+
+                  <button
+                    type="button"
+                    class="menu-item menu-item-danger"
+                    (click)="deleteGroup(group)"
+                  >
+                    Delete
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </header>
+
+        <div
+          class="task-list"
+          cdkDropList
+          [id]="groupDropListId(group.id)"
+          [cdkDropListData]="tasksForGroup(group.id)"
+          [cdkDropListConnectedTo]="connectedDropLists()"
+          (cdkDropListDropped)="dropTask($event, group)"
+        >
+          @for (task of tasksForGroup(group.id); track task.id) {
+            <app-task-card
+              [task]="task"
+              [activePopoverType]="getTaskPopoverType(task)"
+              (opened)="openTaskModal($event)"
+              (completedToggled)="toggleTaskCompleted($event)"
+              (popoverRequested)="toggleTaskPopover($event.task, $event.type, $event.event)"
+              (dragStarted)="startDragging($event)"
+              (dragEnded)="stopDragging()"
+            />
+          }
+
+          @if (activeTaskGroupId() === group.id) {
+            <form
+              #taskFormElement
+              class="task-create-card task-create-card-expanded"
+              [formGroup]="taskForm"
+              (ngSubmit)="createTask(group)"
+            >
+              <div class="task-create-row">
+                <input
+                  class="task-create-input"
+                  type="text"
+                  formControlName="title"
+                  placeholder="Task name..."
+                  autocomplete="off"
+                />
+
+                <button
+                  type="submit"
+                  class="task-save-button"
+                  [disabled]="isCreatingTask()"
+                >
+                  {{ isCreatingTask() ? 'Saving…' : 'Save' }}
+                </button>
+              </div>
+
+              <div class="task-create-actions">
+                <button
+                  type="button"
+                  class="task-create-option"
+                  (click)="toggleCreateTaskPopover('assignee', $event)"
+                >
+                  <span>👤</span>
+                  @if (taskForm.controls.assignee.value) {
+                    <span>Assigned</span>
+                  } @else {
+                    <span>Add assignee</span>
+                  }
+                </button>
+
+                <button
+                  type="button"
+                  class="task-create-option"
+                  (click)="toggleCreateTaskPopover('deadline', $event)"
+                >
+                  <span>📅</span>
+                  <span>
+                    {{ taskForm.controls.deadline.value ? formatDeadline(taskForm.controls.deadline.value) : 'Add dates' }}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  class="task-create-option"
+                  (click)="toggleCreateTaskPopover('priority', $event)"
+                >
+                  <span>{{ getPriorityIcon(taskForm.controls.priority.value) }}</span>
+                  <span>
+                    {{ taskForm.controls.priority.value ? formatPriority(taskForm.controls.priority.value) : 'Add priority' }}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  class="task-create-option"
+                  (click)="toggleCreateTaskPopover('points', $event)"
+                >
+                  <span>◆</span>
+                  <span>
+                    {{ taskForm.controls.story_points.value ? taskForm.controls.story_points.value + ' points' : 'Add points' }}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  class="task-create-option"
+                  (click)="toggleCreateTaskPopover('tags', $event)"
+                >
+                  <span>🏷</span>
+                  <span>
+                    {{ getSelectedCreateTags().length ? getSelectedCreateTags()[0].name : 'Add tag' }}
+                  </span>
+
+                  @if (getSelectedCreateTags().length > 1) {
+                    <span class="task-tag-more">+{{ getSelectedCreateTags().length - 1 }}</span>
+                  }
+                </button>
+              </div>
+
+              @if (activeCreateTaskPopover() === 'assignee') {
+                <div class="task-action-popover create-task-popover" (pointerdown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+                  <p class="popover-title">Assign task</p>
+
+                  <button type="button" class="popover-option" (click)="setCreateAssignee(null)">
+                    No assignee
+                  </button>
+
+                  @for (member of projectMembers(); track member.id) {
+                    <button
+                      type="button"
+                      class="popover-option"
+                      (click)="setCreateAssignee(member.user)"
+                    >
+                      <span class="assignee-avatar">
+                        @if (member.user_avatar) {
+                          <img
+                            [src]="resolveMediaUrl(member.user_avatar)"
+                            alt="Member avatar"
+                            class="assignee-avatar-image"
+                          />
+                        } @else {
+                          <span class="assignee-avatar-fallback">
+                            {{ buildUserInitials(member.user_email) }}
+                          </span>
+                        }
+                      </span>
+
+                      <span>{{ member.user_email }}</span>
+                    </button>
+                  }
+                </div>
+              }
+
+              @if (activeCreateTaskPopover() === 'deadline') {
+                <div class="task-action-popover create-task-popover" (pointerdown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+                  <p class="popover-title">Set deadline</p>
+
+                  <input
+                    class="popover-date-input"
+                    type="date"
+                    [value]="taskForm.controls.deadline.value || ''"
+                    (change)="setCreateDeadline($event)"
+                  />
+
+                  @if (taskForm.controls.deadline.value) {
+                    <button
+                      type="button"
+                      class="popover-danger-option"
+                      (click)="clearCreateDeadline()"
+                    >
+                      Clear deadline
+                    </button>
+                  }
+                </div>
+              }
+
+              @if (activeCreateTaskPopover() === 'priority') {
+                <div class="task-action-popover create-task-popover" (pointerdown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+                  <p class="popover-title">Priority</p>
+
+                  @for (priority of priorityOptions; track priority.value) {
+                    <button
+                      type="button"
+                      class="popover-option"
+                      (click)="setCreatePriority(priority.value)"
+                    >
+                      <span class="priority-icon">{{ priority.icon }}</span>
+                      <span>{{ priority.label }}</span>
+                    </button>
+                  }
+
+                  <button
+                    type="button"
+                    class="popover-danger-option"
+                    (click)="setCreatePriority(null)"
+                  >
+                    Clear
+                  </button>
+                </div>
+              }
+
+              @if (activeCreateTaskPopover() === 'points') {
+                <div class="task-action-popover create-task-popover points-popover" (pointerdown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+                  <p class="popover-title">Story points</p>
+
+                  <label class="points-field">
+                    <span>Complexity estimate</span>
+                    <input
+                      class="points-input"
+                      type="number"
+                      min="0"
+                      step="1"
+                      [value]="taskForm.controls.story_points.value || ''"
+                      (change)="setCreateStoryPoints($event)"
+                      placeholder="0"
+                    />
+                  </label>
+
+                  @if (taskForm.controls.story_points.value) {
+                    <button
+                      type="button"
+                      class="popover-danger-option"
+                      (click)="clearCreateStoryPoints()"
+                    >
+                      Clear points
+                    </button>
+                  }
+                </div>
+              }
+
+              @if (activeCreateTaskPopover() === 'tags') {
+                <div class="task-action-popover create-task-popover" (pointerdown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+                  <p class="popover-title">Tags</p>
+
+                  <div class="tag-options">
+                    @for (tag of taskTags(); track tag.id) {
+                      <button
+                        type="button"
+                        class="tag-option"
+                        (click)="toggleCreateTag(tag)"
+                      >
+                        <span class="tag-color-dot" [style.background]="tag.color"></span>
+                        <span>{{ tag.name }}</span>
+
+                        @if (hasCreateTag(tag.id)) {
+                          <span class="tag-check">✓</span>
+                        }
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </form>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="add-task-button"
+          (click)="openTaskForm(group.id, $event)"
+        >
+          <span>+</span>
+          Add task
+        </button>
+      </section>
+    }
+
+    <section class="add-group-column">
+      @if (!activeGroupForm()) {
+        <button type="button" class="add-group-button" (click)="openGroupForm()">
+          <span>+</span>
+          Add group
+        </button>
+      } @else {
+        <form
+          class="group-create-card"
+          [formGroup]="groupForm"
+          (ngSubmit)="createGroup()"
+        >
+          <input
+            class="group-create-input"
+            type="text"
+            formControlName="name"
+            placeholder="Group name..."
+            autocomplete="off"
+          />
+
+          @if (createGroupError()) {
+            <p class="field-error">{{ createGroupError() }}</p>
+          }
+
+          <div class="group-create-actions">
+            <button
+              type="submit"
+              class="primary-button"
+              [disabled]="isCreatingGroup()"
+            >
+              {{ isCreatingGroup() ? 'Saving…' : 'Save group' }}
+            </button>
+
+            <button
+              type="button"
+              class="secondary-button"
+              [disabled]="isCreatingGroup()"
+              (click)="cancelGroupForm()"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      }
+    </section>
+  </div>
+}
+
+
+@if (activeTaskPopover(); as popover) {
+  @if (getActivePopoverTask(); as task) {
+    <div
+      class="task-action-popover task-action-popover-floating"
+      [class.task-action-popover-up]="popover.direction === 'up'"
+      [class.task-action-popover-down]="popover.direction === 'down'"
+      [class.assignee-popover]="popover.type === 'assignee'"
+      [class.deadline-popover]="popover.type === 'deadline'"
+      [class.priority-popover]="popover.type === 'priority'"
+      [class.points-popover]="popover.type === 'points'"
+      [class.tags-popover]="popover.type === 'tags'"
+      [ngStyle]="getTaskPopoverStyle()"
+      (pointerdown)="$event.stopPropagation()"
+      (click)="$event.stopPropagation()"
+    >
+      @if (popover.type === 'assignee') {
+        <p class="popover-title">Assign task</p>
+
+        <button
+          type="button"
+          class="popover-option"
+          (click)="setTaskAssignee(task, null)"
+        >
+          No assignee
+        </button>
+
+        @for (member of projectMembers(); track member.id) {
+          <button
+            type="button"
+            class="popover-option"
+            (click)="setTaskAssignee(task, member.user)"
+          >
+            <span class="assignee-avatar">
+              @if (member.user_avatar) {
+                <img
+                  [src]="resolveMediaUrl(member.user_avatar)"
+                  alt="Member avatar"
+                  class="assignee-avatar-image"
+                />
+              } @else {
+                <span class="assignee-avatar-fallback">
+                  {{ buildUserInitials(member.user_email) }}
+                </span>
+              }
+            </span>
+
+            <span>{{ member.user_email }}</span>
+          </button>
+        }
+      }
+
+      @if (popover.type === 'deadline') {
+        <p class="popover-title">Set deadline</p>
+
+        <input
+          class="popover-date-input"
+          type="date"
+          [value]="task.deadline || ''"
+          (change)="setTaskDeadline(task, $event)"
+        />
+
+        @if (task.deadline) {
+          <button
+            type="button"
+            class="popover-danger-option"
+            (click)="clearTaskDeadline(task)"
+          >
+            Clear deadline
+          </button>
+        }
+      }
+
+      @if (popover.type === 'priority') {
+        <p class="popover-title">Priority</p>
+
+        @for (priority of priorityOptions; track priority.value) {
+          <button
+            type="button"
+            class="popover-option"
+            (click)="setTaskPriority(task, priority.value)"
+          >
+            <span class="priority-icon">{{ priority.icon }}</span>
+            <span>{{ priority.label }}</span>
+          </button>
+        }
+
+        <button
+          type="button"
+          class="popover-danger-option"
+          (click)="setTaskPriority(task, null)"
+        >
+          Clear
+        </button>
+      }
+
+      @if (popover.type === 'points') {
+        <p class="popover-title">Story points</p>
+
+        <label class="points-field">
+          <span>Complexity estimate</span>
+          <input
+            class="points-input"
+            type="number"
+            min="0"
+            step="1"
+            [value]="task.story_points || ''"
+            (change)="setTaskStoryPoints(task, $event)"
+            placeholder="0"
+          />
+        </label>
+
+        <button
+          type="button"
+          class="popover-danger-option"
+          (click)="clearTaskStoryPoints(task)"
+        >
+          Clear points
+        </button>
+      }
+
+      @if (popover.type === 'tags') {
+        <form
+          class="tag-create-form"
+          [formGroup]="tagForm"
+          (ngSubmit)="createAndAttachTag(task)"
+        >
+          <input
+            class="tag-create-input"
+            type="text"
+            formControlName="name"
+            placeholder="Search or create tag..."
+            autocomplete="off"
+          />
+        </form>
+
+        <div class="tag-options">
+          @for (tag of taskTags(); track tag.id) {
+            <button
+              type="button"
+              class="tag-option"
+              (click)="toggleTaskTag(task, tag)"
+            >
+              <span
+                class="tag-color-dot"
+                [style.background]="tag.color"
+              ></span>
+
+              <span>{{ tag.name }}</span>
+
+              @if (hasTaskTag(task, tag.id)) {
+                <span class="tag-check">✓</span>
+              }
+            </button>
+          }
+
+          @if (tagForm.controls.name.value.trim()) {
+            <button
+              type="button"
+              class="tag-option tag-create-option"
+              (click)="createAndAttachTag(task)"
+            >
+              Create “{{ tagForm.controls.name.value.trim() }}”
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+}
+
+@if (selectedTaskId(); as taskId) {
+  <app-task-modal
+    [taskId]="taskId"
+    [projectMembers]="projectMembers()"
+    [taskTags]="taskTags()"
+    (closed)="closeTaskModal()"
+    (taskUpdated)="handleModalTaskUpdated($event)"
+    (taskDeleted)="handleModalTaskDeleted($event)"
+    (tagCreated)="handleModalTagCreated($event)"
+  />
+}

@@ -7,13 +7,15 @@ from .views import (
     TaskSubtasksView,
     TaskTagDetailView,
     TaskTagsByProjectView,
-    TasksByProjectView,
+    TasksByProjectView, MyTasksView,
 )
 
 urlpatterns = [
     path("projects/<int:project_id>/groups/", TaskGroupsByProjectView.as_view()),
     path("projects/<int:project_id>/tasks/", TasksByProjectView.as_view()),
     path("projects/<int:project_id>/tags/", TaskTagsByProjectView.as_view()),
+
+    path("my/", MyTasksView.as_view()),
 
     path("groups/<int:group_id>/", TaskGroupDetailView.as_view()),
     path("tags/<int:tag_id>/", TaskTagDetailView.as_view()),

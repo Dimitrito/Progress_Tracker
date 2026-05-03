@@ -53,6 +53,7 @@ export class SidebarComponent {
   });
 
   protected readonly items: SidebarItem[] = [
+    { label: 'My tasks', route: '/app/my-tasks' },
     { label: 'Profile', route: '/app/profile' },
   ];
 

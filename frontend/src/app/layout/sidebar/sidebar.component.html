@@ -69,20 +69,6 @@
       }
     </div>
 
-    <a
-      routerLink="/app/invitations"
-      routerLinkActive="sidebar-link-active"
-      class="sidebar-link"
-    >
-      <span class="sidebar-link-label">Invitations</span>
-
-      @if (invitationsCount() > 0) {
-        <span class="sidebar-badge">
-          {{ invitationsCount() }}
-        </span>
-      }
-    </a>
-
     <div class="sidebar-group">
       <div class="sidebar-parent">
         <a
@@ -135,6 +121,20 @@
         </div>
       }
     </div>
+
+    <a
+      routerLink="/app/invitations"
+      routerLinkActive="sidebar-link-active"
+      class="sidebar-link"
+    >
+      <span class="sidebar-link-label">Invitations</span>
+
+      @if (invitationsCount() > 0) {
+        <span class="sidebar-badge">
+          {{ invitationsCount() }}
+        </span>
+      }
+    </a>
 
     @for (item of items; track item.label) {
       @if (item.route) {

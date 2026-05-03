@@ -1,0 +1,183 @@
+<section class="my-tasks-page">
+  <header class="my-tasks-header">
+    <div>
+      <h1 class="page-title">
+        Your tasks from
+        <span class="page-title-muted">
+          {{ selectedOrganization()?.name || 'select workspace' }}
+        </span>
+      </h1>
+    </div>
+
+    <button type="button" class="secondary-button" (click)="reload()">
+      Refresh
+    </button>
+  </header>
+
+  <section class="my-tasks-toolbar">
+    <button
+      type="button"
+      class="filter-tab"
+      [class.filter-tab-active]="activeFilter() === 'open'"
+      (click)="setFilter('open')"
+    >
+      <span>Open</span>
+      <strong>{{ openTasksCount() }}</strong>
+    </button>
+
+    <button
+      type="button"
+      class="filter-tab"
+      [class.filter-tab-active]="activeFilter() === 'completed'"
+      (click)="setFilter('completed')"
+    >
+      <span>Completed</span>
+      <strong>{{ completedTasksCount() }}</strong>
+    </button>
+
+    <button
+      type="button"
+      class="filter-tab"
+      [class.filter-tab-active]="activeFilter() === 'all'"
+      (click)="setFilter('all')"
+    >
+      <span>All</span>
+      <strong>{{ allTasksCount() }}</strong>
+    </button>
+  </section>
+
+  @if (isLoading()) {
+    <div class="state-card">
+      <h2>Loading your tasks</h2>
+      <p>Please wait while we load tasks assigned to you.</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-card">
+      <h2>Unable to load my tasks</h2>
+      <p>{{ errorMessage() }}</p>
+
+      <button type="button" class="secondary-button" (click)="reload()">
+        Try again
+      </button>
+    </div>
+  } @else if (filteredTasks().length === 0) {
+    <div class="empty-state-card">
+      <div class="empty-icon">✓</div>
+
+      @if (!selectedOrganization()) {
+        <h2>Select workspace</h2>
+        <p>Choose a workspace in the sidebar to see assigned tasks.</p>
+      } @else {
+        <h2>No tasks here</h2>
+
+        @if (activeFilter() === 'open') {
+          <p>You do not have open assigned tasks in this workspace.</p>
+        } @else if (activeFilter() === 'completed') {
+          <p>You do not have completed assigned tasks in this workspace yet.</p>
+        } @else {
+          <p>No tasks are assigned to you in this workspace yet.</p>
+        }
+      }
+    </div>
+  } @else {
+    <div class="my-tasks-list">
+      @for (group of groupedByProject(); track group.projectId) {
+        <section class="project-task-section">
+          <header class="project-task-header">
+            <div>
+              <p class="project-kicker">Project</p>
+              <h2>{{ group.projectName }}</h2>
+            </div>
+
+            <span class="project-task-count">
+              {{ group.tasks.length }}
+            </span>
+          </header>
+
+          <div class="task-rows">
+            @for (task of group.tasks; track task.id) {
+              <article
+                class="my-task-row"
+                [class.my-task-row-completed]="task.is_completed"
+                (click)="openTask(task)"
+              >
+                <button
+                  type="button"
+                  class="task-check-button"
+                  [class.task-check-button-active]="task.is_completed"
+                  (click)="toggleTaskCompleted(task, $event)"
+                  [title]="task.is_completed ? 'Mark as not completed' : 'Mark as completed'"
+                >
+                  <span></span>
+                </button>
+
+                <div class="task-main">
+                  <div class="task-title-line">
+                    <h3>{{ task.title }}</h3>
+
+                    @if (task.parent_task) {
+                      <span class="subtask-badge">Subtask</span>
+                    } @else {
+                      <span class="subtask-badge">Task</span>
+                    }
+                  </div>
+
+                  @if (task.description) {
+                    <p class="task-description">
+                      {{ task.description }}
+                    </p>
+                  }
+
+                  <div class="task-tags">
+                    @for (tag of task.tags; track tag.id) {
+                      <span class="task-tag">
+                        <span
+                          class="task-tag-dot"
+                          [style.background]="tag.color"
+                        ></span>
+                        {{ tag.name }}
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <div class="task-meta">
+                  @if (shouldShowStoryPoints(task)) {
+                    <span class="meta-pill points-pill">
+                      ◆ {{ getActiveStoryPoints(task) }} points
+                    </span>
+                  }
+
+                  <span
+                    class="meta-pill"
+                    [class.meta-pill-overdue]="isOverdue(task.deadline) && !task.is_completed"
+                  >
+                    📅 {{ formatDeadline(task.deadline) }}
+                  </span>
+
+                  @if (task.priority) {
+                    <span class="meta-pill priority-pill">
+                      {{ task.priority }}
+                    </span>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  }
+
+  @if (selectedTaskId(); as taskId) {
+    <app-task-modal
+      [taskId]="taskId"
+      [projectMembers]="selectedProjectMembers()"
+      [taskTags]="selectedProjectTags()"
+      (closed)="closeTaskModal()"
+      (taskUpdated)="handleTaskUpdated($event)"
+      (taskDeleted)="handleTaskDeleted($event)"
+      (tagCreated)="handleTagCreated($event)"
+    />
+  }
+</section>

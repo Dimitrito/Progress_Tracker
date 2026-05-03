@@ -22,6 +22,23 @@ from .serializers import (
     TaskUpdateSerializer,
 )
 
+class MyTasksView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        tasks = (
+            with_task_metrics(
+                Task.objects
+                .filter(assignee=request.user)
+                .select_related("group", "group__project", "assignee")
+                .prefetch_related("tags")
+            )
+            .order_by("is_completed", "deadline", "position", "id")
+        )
+
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
+
 
 class TaskGroupsByProjectView(APIView):
     permission_classes = [permissions.IsAuthenticated]
