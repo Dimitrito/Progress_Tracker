@@ -86,6 +86,7 @@ export class TaskModalComponent implements OnChanges {
     description: [''],
     assignee: this.fb.control<number | null>(null),
     priority: this.fb.control<TaskPriority | null>(null),
+    start_date: this.fb.control<string | null>(null),
     deadline: this.fb.control<string | null>(null),
     story_points: this.fb.control<number | null>(null),
     is_completed: [false],
@@ -280,6 +281,18 @@ export class TaskModalComponent implements OnChanges {
     this.updateCurrentTask({ priority });
   }
 
+  protected setStartDate(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    this.updateCurrentTask({
+      start_date: input.value || null,
+    });
+  }
+
+  protected clearStartDate(): void {
+    this.updateCurrentTask({ start_date: null });
+  }
+
   protected setDeadline(event: Event): void {
     const input = event.target as HTMLInputElement;
 
@@ -290,6 +303,14 @@ export class TaskModalComponent implements OnChanges {
 
   protected clearDeadline(): void {
     this.updateCurrentTask({ deadline: null });
+  }
+
+  protected setSubtaskStartDate(subtask: TaskItem, event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    this.updateSubtask(subtask, {
+      start_date: input.value || null,
+    });
   }
 
   protected setStoryPoints(event: Event): void {
@@ -418,6 +439,7 @@ export class TaskModalComponent implements OnChanges {
         assignee: null,
         priority: null,
         story_points: 0,
+        start_date: null,
         deadline: null,
         position: this.getSubtasks(current).length,
         is_completed: false,
@@ -632,6 +654,7 @@ export class TaskModalComponent implements OnChanges {
         description: task.description || '',
         assignee: task.assignee,
         priority: task.priority,
+        start_date: task.start_date,
         deadline: task.deadline,
         story_points: this.normalizeStoryPoints(task.story_points) || null,
         is_completed: task.is_completed,

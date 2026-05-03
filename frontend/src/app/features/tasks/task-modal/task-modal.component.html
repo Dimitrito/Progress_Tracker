@@ -177,6 +177,7 @@
                 <span>Assignee</span>
                 <span>Priority</span>
                 <span>Points</span>
+                <span>Start</span>
                 <span>Deadline</span>
               </div>
 
@@ -253,6 +254,26 @@
                 }
               </select>
             </label>
+
+            <label class="property-field">
+              <span>Start date</span>
+
+              <input
+                type="date"
+                [value]="currentTask.start_date || ''"
+                (change)="setStartDate($event)"
+              />
+            </label>
+
+            @if (currentTask.start_date) {
+              <button
+                type="button"
+                class="danger-text-button"
+                (click)="clearStartDate()"
+              >
+                Clear start date
+              </button>
+            }
 
             <label class="property-field">
               <span>Deadline</span>
@@ -428,6 +449,14 @@
         [value]="subtask.story_points || ''"
         (click)="$event.stopPropagation()"
         (change)="setSubtaskStoryPoints(subtask, $event)"
+      />
+
+      <input
+        class="subtask-date-input"
+        type="date"
+        [value]="subtask.start_date || ''"
+        (click)="$event.stopPropagation()"
+        (change)="setSubtaskStartDate(subtask, $event)"
       />
 
       <input

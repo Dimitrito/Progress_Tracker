@@ -23,8 +23,15 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         organization = attrs["organization"]
         manager = attrs.get("manager")
+        start_date = attrs.get("start_date")
+        end_date = attrs.get("end_date")
 
         request = self.context["request"]
+
+        if start_date and end_date and start_date > end_date:
+            raise serializers.ValidationError(
+                {"end_date": "Project end date cannot be earlier than start date."}
+            )
 
         admin_membership = OrganizationMembership.objects.filter(
             user=request.user,
@@ -98,6 +105,14 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         project = self.instance
         manager = attrs.get("manager")
+
+        start_date = attrs.get("start_date", project.start_date)
+        end_date = attrs.get("end_date", project.end_date)
+
+        if start_date and end_date and start_date > end_date:
+            raise serializers.ValidationError(
+                {"end_date": "Project end date cannot be earlier than start date."}
+            )
 
         is_admin = OrganizationMembership.objects.filter(
             user=request.user,

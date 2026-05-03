@@ -1,0 +1,167 @@
+<section class="project-gantt">
+  @if (isLoading()) {
+    <div class="state-card">
+      <h2>Loading Gantt timeline</h2>
+      <p>Please wait while we build the project schedule.</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-card">
+      <h2>Unable to load Gantt</h2>
+      <p>{{ errorMessage() }}</p>
+
+      <button type="button" class="secondary-button" (click)="reload()">
+        Try again
+      </button>
+    </div>
+  } @else if (metrics(); as data) {
+    <header class="gantt-header">
+      <div>
+        <p class="gantt-kicker">Project schedule</p>
+        <h2>{{ data.project.name }}</h2>
+        <span>{{ projectDurationLabel() }}</span>
+      </div>
+
+      <button type="button" class="secondary-button" (click)="reload()">
+        Refresh
+      </button>
+    </header>
+
+    <section class="gantt-summary-grid">
+      <article class="gantt-summary-card">
+        <span>Total scheduled</span>
+        <strong>{{ ganttTasks().length }}</strong>
+        <p>Tasks with start date or deadline</p>
+      </article>
+
+      <article class="gantt-summary-card">
+        <span>Open</span>
+        <strong>{{ getOpenTasksCount() }}</strong>
+        <p>Tasks still in progress</p>
+      </article>
+
+      <article class="gantt-summary-card success-card">
+        <span>Completed</span>
+        <strong>{{ getCompletedTasksCount() }}</strong>
+        <p>Finished tasks on the timeline</p>
+      </article>
+
+      <article class="gantt-summary-card danger-card">
+        <span>Overdue</span>
+        <strong>{{ getOverdueTasksCount() }}</strong>
+        <p>Open tasks past deadline</p>
+      </article>
+    </section>
+
+    @if (ganttTasks().length === 0) {
+      <div class="empty-gantt-card">
+        <h3>No scheduled tasks yet</h3>
+        <p>Add start dates and deadlines to tasks to build the Gantt timeline.</p>
+      </div>
+    } @else {
+      <section class="gantt-shell">
+        <div class="gantt-table">
+          <div class="gantt-left-header">
+            <span>Name</span>
+          </div>
+
+          <div class="gantt-timeline-header">
+            <div class="gantt-days" [style.width.px]="timelineWidth()">
+              @for (day of timelineDays(); track day.date) {
+                <div
+                  class="gantt-day"
+                  [class.gantt-day-today]="day.isToday"
+                  [class.gantt-day-weekend]="day.isWeekend"
+                >
+                  <span>{{ day.weekday }}</span>
+                  <strong>{{ day.day }}</strong>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="gantt-left-body">
+            @for (task of ganttTasks(); track task.id) {
+              <div
+                class="gantt-task-name-row"
+                [style.--task-depth]="getTaskDepth(task)"
+              >
+                <div class="gantt-task-name-content">
+                  <span
+                    class="task-status-dot"
+                    [class.task-status-dot-completed]="task.is_completed"
+                    [class.task-status-dot-overdue]="isTaskOverdue(task)"
+                  ></span>
+
+                  <div>
+                    <strong>{{ task.title }}</strong>
+                    <span>
+                      {{ getTaskTypeLabel(task) }} · {{ task.group_name }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="gantt-timeline-body">
+            <div class="gantt-grid" [style.width.px]="timelineWidth()">
+              @for (day of timelineDays(); track day.date) {
+                <div
+                  class="gantt-grid-column"
+                  [class.gantt-grid-column-today]="day.isToday"
+                  [class.gantt-grid-column-weekend]="day.isWeekend"
+                ></div>
+              }
+
+              @if (getTodayLeft(); as todayLeft) {
+                <div
+                  class="today-marker"
+                  [style.left.px]="todayLeft"
+                >
+                  <span>Today</span>
+                </div>
+              }
+
+              @for (task of ganttTasks(); track task.id) {
+                <div class="gantt-task-bar-row">
+                  <div
+                    class="gantt-task-bar"
+                    [class.gantt-task-bar-completed]="task.is_completed"
+                    [class.gantt-task-bar-overdue]="isTaskOverdue(task)"
+                    [style.left.px]="getTaskLeft(task)"
+                    [style.width.px]="getTaskWidth(task)"
+                    [title]="task.title + ' · ' + getTaskDateRange(task)"
+                  >
+                    <span>{{ task.story_points }} pts</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="gantt-legend">
+        <span>
+          <i class="legend-dot default-dot"></i>
+          Open
+        </span>
+
+        <span>
+          <i class="legend-dot completed-dot"></i>
+          Completed
+        </span>
+
+        <span>
+          <i class="legend-dot overdue-dot"></i>
+          Overdue
+        </span>
+
+        <span>
+          <i class="legend-line today-line-legend"></i>
+          Today marker
+        </span>
+      </div>
+    }
+  }
+</section>

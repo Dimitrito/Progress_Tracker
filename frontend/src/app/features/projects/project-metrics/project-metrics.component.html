@@ -1,0 +1,437 @@
+<section class="project-metrics">
+  @if (isLoading()) {
+    <div class="state-card">
+      <h2>Loading project metrics</h2>
+      <p>Please wait while we calculate project analytics.</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-card">
+      <h2>Unable to load metrics</h2>
+      <p>{{ errorMessage() }}</p>
+
+      <button type="button" class="secondary-button" (click)="reload()">
+        Try again
+      </button>
+    </div>
+  } @else if (metrics(); as data) {
+    <header class="metrics-header">
+      <div>
+        <p class="metrics-kicker">Project analytics</p>
+        <h2>{{ data.project.name }}</h2>
+      </div>
+
+      <button type="button" class="secondary-button" (click)="reload()">
+        Refresh
+      </button>
+    </header>
+
+    <section class="metrics-top-grid">
+      <article
+        class="metric-card metric-card-hero"
+        [class]="getHealthClass(data.health.status)"
+      >
+        <div class="metric-card-header">
+          <p>Project health</p>
+          <span>{{ data.health.status }}</span>
+        </div>
+
+        <div
+          class="radial-ring health-ring"
+          [style]="getRingStyle(data.health.score, getHealthColor(data.health.status))"
+        >
+          <div class="radial-ring-inner">
+            <strong>{{ data.health.score }}%</strong>
+            <span>health score</span>
+          </div>
+        </div>
+
+        <div class="health-factor-grid">
+          <div>
+            <span>Progress</span>
+            <strong>{{ data.health.progress_percent }}%</strong>
+          </div>
+
+          <div>
+            <span>Deadlines</span>
+            <strong>{{ data.health.deadline_score }}%</strong>
+          </div>
+
+          <div>
+            <span>Assignment</span>
+            <strong>{{ data.health.assignment_score }}%</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="metric-card">
+        <div class="metric-card-header">
+          <p>Points progress</p>
+          <span>{{ data.points_progress.progress_percent }}%</span>
+        </div>
+
+        <div
+          class="radial-ring compact-ring"
+          [style]="getRingStyle(data.points_progress.progress_percent)"
+        >
+          <div class="radial-ring-inner">
+            <strong>{{ data.points_progress.completed_points }}</strong>
+            <span>/ {{ data.points_progress.total_points }} pts</span>
+          </div>
+        </div>
+
+        <div class="metric-mini-split">
+          <div>
+            <span>Remaining</span>
+            <strong>{{ data.points_progress.remaining_points }}</strong>
+          </div>
+
+          <div>
+            <span>Completed</span>
+            <strong>{{ data.points_progress.completed_points }}</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="metric-card">
+        <div class="metric-card-header">
+          <p>Task completion</p>
+          <span>{{ data.task_completion.completion_percent }}%</span>
+        </div>
+
+        <div
+          class="radial-ring compact-ring"
+          [style]="getRingStyle(data.task_completion.completion_percent, 'var(--success)')"
+        >
+          <div class="radial-ring-inner">
+            <strong>{{ data.task_completion.completed_tasks }}</strong>
+            <span>/ {{ data.task_completion.total_tasks }} tasks</span>
+          </div>
+        </div>
+
+        <div class="metric-mini-split">
+          <div>
+            <span>Open</span>
+            <strong>{{ data.task_completion.open_tasks }}</strong>
+          </div>
+
+          <div>
+            <span>Done</span>
+            <strong>{{ data.task_completion.completed_tasks }}</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="metric-card risks-summary-card">
+        <div class="metric-card-header">
+          <p>Project risks</p>
+          <span>Live</span>
+        </div>
+
+        <div class="risk-summary-list">
+          <div class="risk-summary-item risk-danger">
+            <span>Overdue</span>
+            <strong>{{ data.risks.overdue_tasks_count }}</strong>
+          </div>
+
+          <div class="risk-summary-item risk-warning">
+            <span>Due soon</span>
+            <strong>{{ data.risks.upcoming_deadlines_count }}</strong>
+          </div>
+
+          <div class="risk-summary-item">
+            <span>Unassigned</span>
+            <strong>{{ data.risks.unassigned_open_tasks_count }}</strong>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="visual-grid">
+      <article class="panel-card burndown-panel">
+        <header class="panel-header">
+          <div>
+            <p class="metrics-kicker">Burn-down chart</p>
+            <h3>Remaining work over project time</h3>
+          </div>
+
+          @if (scheduleRange(); as range) {
+            <div class="panel-period">
+              <span>{{ formatDateFromObject(range.start) }}</span>
+              <span>{{ formatDateFromObject(range.end) }}</span>
+            </div>
+          }
+        </header>
+
+        <div class="burndown-visual">
+          <div class="burndown-y-axis">
+            <span>{{ data.points_progress.total_points }}</span>
+            <span>{{ data.points_progress.remaining_points }}</span>
+            <span>0</span>
+          </div>
+
+          <div class="burndown-chart">
+            <svg viewBox="0 0 100 50" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="burndownArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="currentColor" stop-opacity="0.24" />
+                  <stop offset="100%" stop-color="currentColor" stop-opacity="0.02" />
+                </linearGradient>
+              </defs>
+
+              <line class="chart-grid-line" x1="6" y1="8" x2="96" y2="8" />
+              <line class="chart-grid-line" x1="6" y1="25" x2="96" y2="25" />
+              <line class="chart-grid-line" x1="6" y1="42" x2="96" y2="42" />
+
+              <polyline
+                class="ideal-line"
+                [attr.points]="getBurndownIdealLine()"
+              />
+
+              <polygon
+                class="actual-area"
+                [attr.points]="getBurnDownAreaPoints()"
+              />
+
+              <polyline
+                class="actual-line"
+                [attr.points]="getBurnDownActualLine()"
+              />
+
+              <line
+                class="today-line"
+                [attr.x1]="getBurnDownTodayLineX()"
+                y1="5"
+                [attr.x2]="getBurnDownTodayLineX()"
+                y2="44"
+              />
+
+              <circle
+                class="actual-point"
+                [attr.cx]="getBurndownActualPoint().x"
+                [attr.cy]="getBurndownActualPoint().y"
+                r="1.8"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <div class="chart-legend">
+          <span><i class="legend-line ideal"></i> Ideal burn-down</span>
+          <span><i class="legend-line actual"></i> Current remaining work</span>
+          <span><i class="legend-line today"></i> Today</span>
+        </div>
+
+        <div class="burndown-summary">
+          <div>
+            <span>Total points</span>
+            <strong>{{ data.points_progress.total_points }}</strong>
+          </div>
+
+          <div>
+            <span>Completed</span>
+            <strong>{{ data.points_progress.completed_points }}</strong>
+          </div>
+
+          <div>
+            <span>Remaining</span>
+            <strong>{{ data.points_progress.remaining_points }}</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel-card velocity-panel">
+        <header class="panel-header">
+          <div>
+            <p class="metrics-kicker">Velocity chart</p>
+            <h3>Completed work speed</h3>
+          </div>
+        </header>
+
+        <div class="velocity-chart">
+          <div class="velocity-row">
+            <div class="velocity-label">
+              <strong>7 days</strong>
+              <span>completed points</span>
+            </div>
+
+            <div class="velocity-track">
+              <div
+                class="velocity-bar"
+                [style.width.%]="getVelocityBarWidth(data.velocity.completed_points_last_7_days)"
+              ></div>
+            </div>
+
+            <strong class="velocity-value">
+              {{ data.velocity.completed_points_last_7_days }}
+            </strong>
+          </div>
+
+          <div class="velocity-row">
+            <div class="velocity-label">
+              <strong>30 days</strong>
+              <span>completed points</span>
+            </div>
+
+            <div class="velocity-track">
+              <div
+                class="velocity-bar"
+                [style.width.%]="getVelocityBarWidth(data.velocity.completed_points_last_30_days)"
+              ></div>
+            </div>
+
+            <strong class="velocity-value">
+              {{ data.velocity.completed_points_last_30_days }}
+            </strong>
+          </div>
+
+          <div class="velocity-row secondary-velocity">
+            <div class="velocity-label">
+              <strong>7 days</strong>
+              <span>completed tasks</span>
+            </div>
+
+            <div class="velocity-track">
+              <div
+                class="velocity-bar task-velocity-bar"
+                [style.width.%]="getVelocityBarWidth(data.velocity.completed_tasks_last_7_days)"
+              ></div>
+            </div>
+
+            <strong class="velocity-value">
+              {{ data.velocity.completed_tasks_last_7_days }}
+            </strong>
+          </div>
+
+          <div class="velocity-row secondary-velocity">
+            <div class="velocity-label">
+              <strong>30 days</strong>
+              <span>completed tasks</span>
+            </div>
+
+            <div class="velocity-track">
+              <div
+                class="velocity-bar task-velocity-bar"
+                [style.width.%]="getVelocityBarWidth(data.velocity.completed_tasks_last_30_days)"
+              ></div>
+            </div>
+
+            <strong class="velocity-value">
+              {{ data.velocity.completed_tasks_last_30_days }}
+            </strong>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="visual-grid">
+      <article class="panel-card status-panel">
+        <header class="panel-header">
+          <div>
+            <p class="metrics-kicker">Status distribution</p>
+            <h3>Workload by board group</h3>
+          </div>
+        </header>
+
+        <div class="status-stacked">
+          @for (status of data.status_distribution; track status.group_id) {
+            @if (data.task_completion.total_tasks > 0) {
+              <div
+                class="status-stacked-segment"
+                [style.width.%]="(status.tasks_count / data.task_completion.total_tasks) * 100"
+                [style.background]="status.group_color || '#64748b'"
+                [title]="status.group_name + ': ' + status.tasks_count + ' tasks'"
+              ></div>
+            }
+          }
+        </div>
+
+        <div class="status-chart">
+          @for (status of data.status_distribution; track status.group_id) {
+            <div class="status-row">
+              <div class="status-row-main">
+                <span class="status-name">
+                  <i
+                    class="status-dot"
+                    [style.background]="status.group_color || '#64748b'"
+                  ></i>
+                  {{ status.group_name }}
+                </span>
+
+                <strong>{{ status.tasks_count }}</strong>
+              </div>
+
+              <div class="horizontal-chart-track">
+                <div
+                  class="horizontal-chart-bar"
+                  [style.width.%]="getStatusTaskWidth(status.tasks_count)"
+                  [style.background]="status.group_color || '#64748b'"
+                ></div>
+
+                <div
+                  class="horizontal-chart-completed"
+                  [style.width.%]="getStatusCompletedPercent(status)"
+                ></div>
+              </div>
+
+              <div class="status-row-meta">
+                <span>{{ status.completed_tasks_count }}/{{ status.tasks_count }} completed</span>
+                <span>{{ status.completed_points }}/{{ status.total_points }} points</span>
+              </div>
+            </div>
+          } @empty {
+            <p class="empty-text">No task groups yet.</p>
+          }
+        </div>
+      </article>
+
+      <article class="panel-card risks-panel">
+        <header class="panel-header">
+          <div>
+            <p class="metrics-kicker">Deadline risks</p>
+            <h3>Tasks that need attention</h3>
+          </div>
+        </header>
+
+        <div class="risk-columns">
+          <section>
+            <h4>Overdue</h4>
+
+            <div class="compact-task-list">
+              @for (task of getPriorityTaskList(data.risks.overdue_tasks); track task.id) {
+                <div class="compact-task-item danger-task">
+                  <div>
+                    <strong>{{ task.title }}</strong>
+                    <span>{{ getTaskLabel(task) }} · {{ task.group_name }}</span>
+                  </div>
+
+                  <time>{{ formatDate(task.deadline) }}</time>
+                </div>
+              } @empty {
+                <p class="empty-text">No overdue tasks.</p>
+              }
+            </div>
+          </section>
+
+          <section>
+            <h4>Due soon</h4>
+
+            <div class="compact-task-list">
+              @for (task of getPriorityTaskList(data.risks.upcoming_deadlines); track task.id) {
+                <div class="compact-task-item warning-task">
+                  <div>
+                    <strong>{{ task.title }}</strong>
+                    <span>{{ getTaskLabel(task) }} · {{ task.group_name }}</span>
+                  </div>
+
+                  <time>{{ formatDate(task.deadline) }}</time>
+                </div>
+              } @empty {
+                <p class="empty-text">No upcoming deadlines.</p>
+              }
+            </div>
+          </section>
+        </div>
+      </article>
+    </section>
+  }
+</section>

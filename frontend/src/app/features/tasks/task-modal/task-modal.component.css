@@ -367,7 +367,7 @@
 .subtasks-table-head,
 .subtask-row {
   display: grid;
-  grid-template-columns: minmax(210px, 1fr) 150px 124px 78px 128px;
+  grid-template-columns: minmax(190px, 1fr) 142px 112px 70px 126px 126px;
   gap: 8px;
   align-items: center;
 }

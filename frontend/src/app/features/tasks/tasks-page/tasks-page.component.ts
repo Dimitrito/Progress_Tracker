@@ -3,17 +3,19 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 
 import { TaskBoardComponent } from '../task-board/task-board.component';
+import { ProjectMetricsComponent } from '../../projects/project-metrics/project-metrics.component';
+import { ProjectGanttComponent } from '../../projects/project-gantt/project-gantt.component';
 import {
   ProjectListItem,
   ProjectsService,
 } from '../../../core/services/projects.service';
 
-type TaskView = 'list' | 'board' | 'table' | 'settings';
+type TaskView = 'board' | 'project-metrics' | 'gantt' | 'table' | 'settings';
 
 @Component({
   selector: 'app-tasks-page',
   standalone: true,
-  imports: [TaskBoardComponent],
+  imports: [TaskBoardComponent, ProjectMetricsComponent, ProjectGanttComponent],
   templateUrl: './tasks-page.component.html',
   styleUrl: './tasks-page.component.css',
 })

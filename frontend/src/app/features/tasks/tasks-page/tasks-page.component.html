@@ -24,11 +24,21 @@
     <button
       type="button"
       class="view-tab"
-      [class.view-tab-active]="activeView() === 'list'"
-      disabled
+      [class.view-tab-active]="activeView() === 'project-metrics'"
+      (click)="setActiveView('project-metrics')"
     >
-      <span class="view-tab-icon">☰</span>
+      <span class="view-tab-icon">☷</span>
       <span>Project metrics</span>
+    </button>
+
+    <button
+      type="button"
+      class="view-tab"
+      [class.view-tab-active]="activeView() === 'gantt'"
+      (click)="setActiveView('gantt')"
+    >
+      <span class="view-tab-icon">▣</span>
+      <span>Gantt</span>
     </button>
 
     <button
@@ -54,5 +64,13 @@
 
   @if (activeView() === 'board') {
     <app-task-board [projectId]="projectId" />
+  }
+
+  @if (activeView() === 'project-metrics') {
+    <app-project-metrics [projectId]="projectId" />
+  }
+
+  @if (activeView() === 'gantt') {
+    <app-project-gantt [projectId]="projectId" />
   }
 </section>

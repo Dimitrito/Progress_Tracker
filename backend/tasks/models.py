@@ -86,6 +86,7 @@ class Task(models.Model):
     )
 
     story_points = models.PositiveIntegerField(default=1)
+    start_date = models.DateField(null=True, blank=True)
     deadline = models.DateField(null=True, blank=True)
     position = models.PositiveIntegerField(default=0)
 

@@ -118,6 +118,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "tags",
             "story_points",
             "active_story_points",
+            "start_date",
             "deadline",
             "position",
             "is_completed",
@@ -183,10 +184,58 @@ class TaskCreateSerializer(serializers.ModelSerializer):
             "assignee",
             "tag_ids",
             "story_points",
+            "start_date",
             "deadline",
             "position",
             "is_completed",
         )
+
+    def validate(self, attrs):
+        request = self.context["request"]
+        project = self.context["project"]
+        group = attrs["group"]
+        assignee = attrs.get("assignee")
+        tag_ids = attrs.get("tag_ids", [])
+
+        start_date = attrs.get("start_date")
+        deadline = attrs.get("deadline")
+
+        if start_date and deadline and start_date > deadline:
+            raise serializers.ValidationError(
+                {"deadline": "Deadline cannot be earlier than start date."}
+            )
+
+        if group.project_id != project.id:
+            raise serializers.ValidationError(
+                {"group": "Task group must belong to this project."}
+            )
+
+        if not has_project_access(request.user, project):
+            raise serializers.ValidationError("You do not have access to this project.")
+
+        if assignee:
+            is_project_member = ProjectMembership.objects.filter(
+                project=project,
+                user=assignee,
+            ).exists()
+
+            if not is_project_member:
+                raise serializers.ValidationError(
+                    "Assignee must be a project member."
+                )
+
+        if tag_ids:
+            valid_count = TaskTag.objects.filter(
+                project=project,
+                id__in=tag_ids,
+            ).count()
+
+            if valid_count != len(set(tag_ids)):
+                raise serializers.ValidationError(
+                    {"tag_ids": "All tags must belong to this project."}
+                )
+
+        return attrs
 
     def validate(self, attrs):
         request = self.context["request"]
@@ -263,6 +312,7 @@ class TaskSubtaskCreateSerializer(serializers.ModelSerializer):
             "assignee",
             "tag_ids",
             "story_points",
+            "start_date",
             "deadline",
             "position",
             "is_completed",
@@ -275,6 +325,14 @@ class TaskSubtaskCreateSerializer(serializers.ModelSerializer):
 
         assignee = attrs.get("assignee")
         tag_ids = attrs.get("tag_ids", [])
+
+        start_date = attrs.get("start_date")
+        deadline = attrs.get("deadline")
+
+        if start_date and deadline and start_date > deadline:
+            raise serializers.ValidationError(
+                {"deadline": "Deadline cannot be earlier than start date."}
+            )
 
         if not has_project_access(request.user, project):
             raise serializers.ValidationError("You do not have access to this project.")
@@ -350,6 +408,7 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
             "assignee",
             "tag_ids",
             "story_points",
+            "start_date",
             "deadline",
             "position",
             "is_completed",
@@ -362,6 +421,14 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         group = attrs.get("group")
         assignee = attrs.get("assignee")
         tag_ids = attrs.get("tag_ids", None)
+
+        start_date = attrs.get("start_date", task.start_date)
+        deadline = attrs.get("deadline", task.deadline)
+
+        if start_date and deadline and start_date > deadline:
+            raise serializers.ValidationError(
+                {"deadline": "Deadline cannot be earlier than start date."}
+            )
 
         if not has_project_access(request.user, project):
             raise serializers.ValidationError("You do not have access to this project.")
