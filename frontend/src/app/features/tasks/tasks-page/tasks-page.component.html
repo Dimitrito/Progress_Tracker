@@ -34,6 +34,16 @@
     <button
       type="button"
       class="view-tab"
+      [class.view-tab-active]="activeView() === 'user-metrics'"
+      (click)="setActiveView('user-metrics')"
+    >
+      <span class="view-tab-icon">◉</span>
+      <span>User metrics</span>
+    </button>
+
+    <button
+      type="button"
+      class="view-tab"
       [class.view-tab-active]="activeView() === 'gantt'"
       (click)="setActiveView('gantt')"
     >
@@ -41,25 +51,17 @@
       <span>Gantt</span>
     </button>
 
-    <button
-      type="button"
-      class="view-tab"
-      [class.view-tab-active]="activeView() === 'table'"
-      disabled
-    >
-      <span class="view-tab-icon">▣</span>
-      <span>Table</span>
-    </button>
-
-    <button
-      type="button"
-      class="view-tab"
-      [class.view-tab-active]="activeView() === 'settings'"
-      disabled
-    >
-      <span class="view-tab-icon">⚙</span>
-      <span>Settings</span>
-    </button>
+    @if (canManageProjectRoles()) {
+      <button
+        type="button"
+        class="view-tab"
+        [class.view-tab-active]="activeView() === 'roles'"
+        (click)="setActiveView('roles')"
+      >
+        <span class="view-tab-icon">◎</span>
+        <span>Roles</span>
+      </button>
+    }
   </nav>
 
   @if (activeView() === 'board') {
@@ -70,7 +72,15 @@
     <app-project-metrics [projectId]="projectId" />
   }
 
+  @if (activeView() === 'user-metrics') {
+    <app-user-metrics [projectId]="projectId" />
+  }
+
   @if (activeView() === 'gantt') {
     <app-project-gantt [projectId]="projectId" />
+  }
+
+  @if (activeView() === 'roles' && canManageProjectRoles()) {
+    <app-project-roles [projectId]="projectId" />
   }
 </section>

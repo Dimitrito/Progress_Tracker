@@ -73,6 +73,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 class ProjectListSerializer(serializers.ModelSerializer):
     organization_name = serializers.CharField(source="organization.name", read_only=True)
     manager_email = serializers.EmailField(source="manager.email", read_only=True)
+    team_roles = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -86,8 +87,24 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "manager_email",
             "start_date",
             "end_date",
+            "team_roles",
             "created_at",
         )
+
+    def get_team_roles(self, obj):
+        memberships = obj.memberships.all()
+
+        return [
+            {
+                "membership_id": membership.id,
+                "user": membership.user_id,
+                "user_email": membership.user.email,
+                "user_avatar": membership.user.avatar.url if getattr(membership.user, "avatar", None) else None,
+                "project_role": membership.project_role_id,
+                "project_role_name": membership.project_role.name if membership.project_role else None,
+            }
+            for membership in memberships
+        ]
 
 
 class ProjectUpdateSerializer(serializers.ModelSerializer):
@@ -147,6 +164,16 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def update(self, instance, validated_data):
+        project = super().update(instance, validated_data)
+
+        if project.manager:
+            ProjectMembership.objects.get_or_create(
+                project=project,
+                user=project.manager,
+            )
+
+        return project
 
 class ProjectRoleCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -175,6 +202,53 @@ class ProjectRoleListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectRole
         fields = ("id", "project", "name")
+
+
+class ProjectRoleUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectRole
+        fields = ("name",)
+
+    def validate_name(self, value):
+        name = value.strip()
+
+        if not name:
+            raise serializers.ValidationError("Role name is required.")
+
+        return name
+
+    def validate(self, attrs):
+        request = self.context["request"]
+        role = self.instance
+        project = role.project
+
+        is_admin = OrganizationMembership.objects.filter(
+            user=request.user,
+            organization=project.organization,
+            role=OrganizationRole.ADMIN,
+        ).exists()
+
+        is_pm = project.manager_id == request.user.id
+
+        if not (is_admin or is_pm):
+            raise serializers.ValidationError(
+                "Only organization admin or project manager can edit project roles."
+            )
+
+        name = attrs.get("name")
+
+        if name:
+            exists = ProjectRole.objects.filter(
+                project=project,
+                name__iexact=name,
+            ).exclude(id=role.id).exists()
+
+            if exists:
+                raise serializers.ValidationError(
+                    {"name": "Role with this name already exists in this project."}
+                )
+
+        return attrs
 
 
 class ProjectMembershipCreateSerializer(serializers.Serializer):
@@ -257,3 +331,35 @@ class ProjectMembershipSerializer(serializers.ModelSerializer):
             "project_role_name",
             "added_at",
         )
+
+
+class ProjectMembershipUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectMembership
+        fields = ("project_role",)
+
+    def validate(self, attrs):
+        request = self.context["request"]
+        membership = self.instance
+        project = membership.project
+        project_role = attrs.get("project_role")
+
+        is_admin = OrganizationMembership.objects.filter(
+            user=request.user,
+            organization=project.organization,
+            role=OrganizationRole.ADMIN,
+        ).exists()
+
+        is_pm = project.manager_id == request.user.id
+
+        if not (is_admin or is_pm):
+            raise serializers.ValidationError(
+                "Only organization admin or project manager can update member roles."
+            )
+
+        if project_role and project_role.project_id != project.id:
+            raise serializers.ValidationError(
+                {"project_role": "Project role must belong to this project."}
+            )
+
+        return attrs

@@ -4,6 +4,15 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 
+export interface ProjectTeamRolePreview {
+  membership_id: number;
+  user: number;
+  user_email: string;
+  user_avatar: string | null;
+  project_role: number | null;
+  project_role_name: string | null;
+}
+
 export interface ProjectListItem {
   id: number;
   name: string;
@@ -14,6 +23,7 @@ export interface ProjectListItem {
   manager_email: string | null;
   start_date: string | null;
   end_date: string | null;
+  team_roles?: ProjectTeamRolePreview[];
   created_at: string;
 }
 
@@ -43,6 +53,25 @@ export interface ProjectMembership {
   project_role: number | null;
   project_role_name: string | null;
   added_at: string;
+}
+
+export interface ProjectRole {
+  id: number;
+  project: number;
+  name: string;
+}
+
+export interface CreateProjectRolePayload {
+  project: number;
+  name: string;
+}
+
+export interface UpdateProjectRolePayload {
+  name: string;
+}
+
+export interface UpdateProjectMemberRolePayload {
+  project_role: number | null;
 }
 
 @Injectable({
@@ -100,13 +129,60 @@ export class ProjectsService {
     );
   }
 
-  deleteProject(projectId: number) {
-    return this.http.delete(`${this.baseUrl}/projects/${projectId}/`);
+  updateProjectMemberRole(
+    projectId: number,
+    membershipId: number,
+    payload: UpdateProjectMemberRolePayload,
+  ): Observable<ProjectMembership> {
+    return this.http.patch<ProjectMembership>(
+      `${this.baseUrl}/projects/${projectId}/members/${membershipId}/`,
+      payload,
+    );
   }
 
-  removeProjectMember(projectId: number, membershipId: number) {
-    return this.http.delete(
+  deleteProject(projectId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.baseUrl}/projects/${projectId}/`,
+    );
+  }
+
+  removeProjectMember(
+    projectId: number,
+    membershipId: number,
+  ): Observable<void> {
+    return this.http.delete<void>(
       `${this.baseUrl}/projects/${projectId}/members/${membershipId}/remove/`,
+    );
+  }
+
+  getProjectRoles(projectId: number): Observable<ProjectRole[]> {
+    return this.http.get<ProjectRole[]>(
+      `${this.baseUrl}/projects/${projectId}/roles/`,
+    );
+  }
+
+  createProjectRole(
+    payload: CreateProjectRolePayload,
+  ): Observable<ProjectRole> {
+    return this.http.post<ProjectRole>(
+      `${this.baseUrl}/projects/roles/create/`,
+      payload,
+    );
+  }
+
+  updateProjectRole(
+    roleId: number,
+    payload: UpdateProjectRolePayload,
+  ): Observable<ProjectRole> {
+    return this.http.patch<ProjectRole>(
+      `${this.baseUrl}/projects/roles/${roleId}/`,
+      payload,
+    );
+  }
+
+  deleteProjectRole(roleId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.baseUrl}/projects/roles/${roleId}/`,
     );
   }
 }

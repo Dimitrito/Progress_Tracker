@@ -1,0 +1,289 @@
+<section class="user-metrics">
+  @if (isLoading()) {
+    <div class="state-card">
+      <h2>Loading user metrics</h2>
+      <p>Please wait while we calculate contributor analytics.</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-card">
+      <h2>Unable to load user metrics</h2>
+      <p>{{ errorMessage() }}</p>
+
+      <button type="button" class="secondary-button" (click)="reload()">
+        Try again
+      </button>
+    </div>
+  } @else if (metrics(); as data) {
+    <section class="summary-grid">
+      <article class="summary-card">
+        <span>Members</span>
+        <strong>{{ data.summary.members_count }}</strong>
+        <p>Project participants</p>
+      </article>
+
+      <article class="summary-card">
+        <span>Assigned tasks</span>
+        <strong>{{ data.summary.assigned_tasks_count }}</strong>
+        <p>{{ data.summary.open_tasks_count }} open tasks</p>
+      </article>
+
+      <article class="summary-card">
+        <span>Team completion</span>
+        <strong>{{ data.summary.completion_rate }}%</strong>
+        <p>{{ data.summary.completed_tasks_count }} completed tasks</p>
+      </article>
+
+      <article class="summary-card warning-card">
+        <span>Unassigned</span>
+        <strong>{{ data.summary.unassigned_tasks_count }}</strong>
+        <p>Tasks without owner</p>
+      </article>
+    </section>
+
+    @if (topContributor(); as topUser) {
+      <section class="top-contributor-card">
+        <div class="top-contributor-profile">
+          <div class="user-avatar large-avatar">
+            @if (resolveMediaUrl(topUser.user.avatar); as avatarUrl) {
+              <img [src]="avatarUrl" alt="User avatar" />
+            } @else {
+              <span>{{ getInitials(topUser.user.email) }}</span>
+            }
+          </div>
+
+          <div>
+            <p class="metrics-kicker">Top contributor</p>
+            <h3>{{ topUser.user.email }}</h3>
+            <span>
+              {{ topUser.user.project_role_name || 'Project member' }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="contribution-score"
+          [class]="getContributionClass(topUser.contribution_score)"
+        >
+          <strong>{{ topUser.contribution_score }}%</strong>
+          <span>contribution score</span>
+        </div>
+
+        <div class="top-contributor-stats">
+          <div>
+            <span>Completed points</span>
+            <strong>{{ topUser.completed_points }}</strong>
+          </div>
+
+          <div>
+            <span>Completed tasks</span>
+            <strong>{{ topUser.completed_tasks_count }}</strong>
+          </div>
+
+          <div>
+            <span>Completion rate</span>
+            <strong>{{ topUser.completion_rate }}%</strong>
+          </div>
+        </div>
+      </section>
+    }
+
+    <section class="user-chart-panel">
+      <header class="panel-header">
+        <div>
+          <p class="metrics-kicker">Workload distribution</p>
+          <h3>Tasks and points by assignee</h3>
+        </div>
+      </header>
+
+      <div class="user-chart-list">
+        @for (user of data.users; track user.user.id) {
+          <article class="user-chart-row">
+            <div class="user-info">
+              <div class="user-avatar">
+                @if (resolveMediaUrl(user.user.avatar); as avatarUrl) {
+                  <img [src]="avatarUrl" alt="User avatar" />
+                } @else {
+                  <span>{{ getInitials(user.user.email) }}</span>
+                }
+              </div>
+
+              <div>
+                <strong>{{ user.user.email }}</strong>
+                <span>{{ user.user.project_role_name || 'Project member' }}</span>
+              </div>
+            </div>
+
+            <div class="user-bars">
+              <div class="bar-row">
+                <span>Assigned tasks</span>
+
+                <div class="bar-track">
+                  <div
+                    class="bar-fill assigned-fill"
+                    [style.width.%]="getAssignedWidth(user)"
+                  ></div>
+                </div>
+
+                <strong>{{ user.assigned_tasks_count }}</strong>
+              </div>
+
+              <div class="bar-row">
+                <span>Completed points</span>
+
+                <div class="bar-track">
+                  <div
+                    class="bar-fill completed-fill"
+                    [style.width.%]="getCompletedPointsWidth(user)"
+                  ></div>
+                </div>
+
+                <strong>{{ user.completed_points }}</strong>
+              </div>
+
+              <div class="bar-row">
+                <span>Remaining points</span>
+
+                <div class="bar-track">
+                  <div
+                    class="bar-fill remaining-fill"
+                    [style.width.%]="getRemainingPointsWidth(user)"
+                  ></div>
+                </div>
+
+                <strong>{{ user.remaining_points }}</strong>
+              </div>
+            </div>
+
+            <div
+              class="score-pill"
+              [class]="getContributionClass(user.contribution_score)"
+            >
+              {{ user.contribution_score }}%
+            </div>
+          </article>
+        } @empty {
+          <p class="empty-text">No project members yet.</p>
+        }
+      </div>
+    </section>
+
+    <section class="user-cards-grid">
+      @for (user of data.users; track user.user.id) {
+        <article class="member-card">
+          <header class="member-card-header">
+            <div class="user-avatar">
+              @if (resolveMediaUrl(user.user.avatar); as avatarUrl) {
+                <img [src]="avatarUrl" alt="User avatar" />
+              } @else {
+                <span>{{ getInitials(user.user.email) }}</span>
+              }
+            </div>
+
+            <div>
+              <h3>{{ user.user.email }}</h3>
+              <p>{{ user.user.project_role_name || 'Project member' }}</p>
+            </div>
+          </header>
+
+          <div class="member-stats-grid">
+            <div>
+              <span>Assigned</span>
+              <strong>{{ user.assigned_tasks_count }}</strong>
+            </div>
+
+            <div>
+              <span>Open</span>
+              <strong>{{ user.open_tasks_count }}</strong>
+            </div>
+
+            <div>
+              <span>Done</span>
+              <strong>{{ user.completed_tasks_count }}</strong>
+            </div>
+
+            <div>
+              <span>Rate</span>
+              <strong>{{ user.completion_rate }}%</strong>
+            </div>
+          </div>
+
+          <div class="member-points">
+            <div class="member-points-row">
+              <span>Completed points</span>
+              <strong>{{ user.completed_points }}</strong>
+            </div>
+
+            <div class="member-points-row">
+              <span>Remaining points</span>
+              <strong>{{ user.remaining_points }}</strong>
+            </div>
+
+            <div class="member-points-track">
+              <div
+                class="member-points-fill"
+                [style.width.%]="getPercent(user.completion_rate)"
+              ></div>
+            </div>
+          </div>
+
+          <div class="member-risk-row">
+            <span
+              class="risk-pill"
+              [class.risk-pill-danger]="user.overdue_tasks_count > 0"
+            >
+              {{ user.overdue_tasks_count }} overdue
+            </span>
+
+            <span
+              class="risk-pill"
+              [class.risk-pill-warning]="user.due_soon_tasks_count > 0"
+            >
+              {{ user.due_soon_tasks_count }} due soon
+            </span>
+          </div>
+
+          @if (getVisibleTasks(user.overdue_tasks).length > 0) {
+            <div class="member-task-list">
+              <h4>Overdue tasks</h4>
+
+              @for (task of getVisibleTasks(user.overdue_tasks); track task.id) {
+                <div class="member-task-item">
+                  <div>
+                    <strong>{{ task.title }}</strong>
+                    <span>{{ getTaskLabel(task) }} · {{ task.group_name }}</span>
+                  </div>
+
+                  <time>{{ formatDate(task.deadline) }}</time>
+                </div>
+              }
+            </div>
+          }
+        </article>
+      }
+    </section>
+
+    @if (data.unassigned_tasks.length > 0) {
+      <section class="unassigned-panel">
+        <header class="panel-header">
+          <div>
+            <p class="metrics-kicker">Unassigned work</p>
+            <h3>Tasks without owner</h3>
+          </div>
+        </header>
+
+        <div class="unassigned-list">
+          @for (task of data.unassigned_tasks; track task.id) {
+            <div class="unassigned-task">
+              <div>
+                <strong>{{ task.title }}</strong>
+                <span>{{ getTaskLabel(task) }} · {{ task.group_name }}</span>
+              </div>
+
+              <time>{{ formatDate(task.deadline) }}</time>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  }
+</section>

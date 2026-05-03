@@ -1,0 +1,256 @@
+<section class="project-roles">
+  @if (isLoading()) {
+    <div class="state-card">
+      <h2>Loading project roles</h2>
+      <p>Please wait while we load roles and project members.</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-card">
+      <h2>Unable to load roles</h2>
+      <p>{{ errorMessage() }}</p>
+
+      <button type="button" class="secondary-button" (click)="reload()">
+        Try again
+      </button>
+    </div>
+  } @else {
+    <section class="roles-summary-grid">
+      <article class="summary-card">
+        <span>Total roles</span>
+        <strong>{{ roles().length }}</strong>
+        <p>Custom roles in this project</p>
+      </article>
+
+      <article class="summary-card">
+        <span>Project members</span>
+        <strong>{{ members().length }}</strong>
+        <p>Users assigned to project</p>
+      </article>
+
+      <article class="summary-card">
+        <span>Assigned</span>
+        <strong>{{ assignedMembers().length }}</strong>
+        <p>Members with a project role</p>
+      </article>
+
+      <article class="summary-card warning-card">
+        <span>Without role</span>
+        <strong>{{ unassignedMembers().length }}</strong>
+        <p>Members without project role</p>
+      </article>
+    </section>
+
+    <section class="roles-layout">
+      <article class="panel-card create-role-panel">
+        <header class="panel-header">
+          <div>
+            <p class="roles-kicker">Create role</p>
+            <h3>New project role</h3>
+          </div>
+        </header>
+
+        <form
+          class="create-role-form"
+          [formGroup]="roleForm"
+          (ngSubmit)="createRole()"
+        >
+          <label class="role-field">
+            <span>Role name</span>
+
+            <input
+              type="text"
+              formControlName="name"
+              placeholder="Frontend Developer"
+              autocomplete="off"
+            />
+          </label>
+
+          @if (createError()) {
+            <p class="field-error">{{ createError() }}</p>
+          }
+
+          <button
+            type="submit"
+            class="primary-button"
+            [disabled]="isCreating()"
+          >
+            {{ isCreating() ? 'Creating…' : 'Create role' }}
+          </button>
+        </form>
+
+        <div class="roles-help">
+          <strong>Recommended examples</strong>
+
+          <div class="role-examples">
+            <span>Frontend Developer</span>
+            <span>Backend Developer</span>
+            <span>Tester</span>
+            <span>Designer</span>
+            <span>Analyst</span>
+            <span>Researcher</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel-card roles-list-panel">
+        <header class="panel-header">
+          <div>
+            <p class="roles-kicker">Roles</p>
+            <h3>Existing roles</h3>
+          </div>
+        </header>
+
+        <div class="roles-list">
+          @for (roleData of rolesWithMembers(); track roleData.role.id) {
+            <article class="role-card">
+              @if (editingRoleId() === roleData.role.id) {
+                <form
+                  class="role-edit-form"
+                  [formGroup]="editRoleForm"
+                  (ngSubmit)="saveRole(roleData.role)"
+                >
+                  <input
+                    type="text"
+                    formControlName="name"
+                    autocomplete="off"
+                  />
+
+                  <div class="role-edit-actions">
+                    <button
+                      type="submit"
+                      class="small-primary-button"
+                      [disabled]="isSavingRole()"
+                    >
+                      Save
+                    </button>
+
+                    <button
+                      type="button"
+                      class="small-secondary-button"
+                      [disabled]="isSavingRole()"
+                      (click)="cancelEditRole()"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  @if (editError()) {
+                    <p class="field-error">{{ editError() }}</p>
+                  }
+                </form>
+              } @else {
+                <div class="role-card-main">
+                  <div>
+                    <h4>{{ roleData.role.name }}</h4>
+                    <span>{{ roleData.members.length }} member(s)</span>
+                  </div>
+
+                  <div class="role-actions">
+                    <button
+                      type="button"
+                      class="icon-button"
+                      (click)="startEditRole(roleData.role)"
+                      title="Rename role"
+                    >
+                      ✎
+                    </button>
+
+                    <button
+                      type="button"
+                      class="icon-button danger-icon-button"
+                      (click)="deleteRole(roleData.role)"
+                      title="Delete role"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+
+                <div class="role-members-preview">
+                  @for (member of roleData.members.slice(0, 4); track member.id) {
+                    <span>{{ member.user_email }}</span>
+                  }
+
+                  @if (roleData.members.length > 4) {
+                    <span>+{{ roleData.members.length - 4 }} more</span>
+                  }
+
+                  @if (roleData.members.length === 0) {
+                    <span class="muted">No members yet</span>
+                  }
+                </div>
+              }
+            </article>
+          } @empty {
+            <p class="empty-text">
+              No custom roles yet. Create the first role for this project.
+            </p>
+          }
+        </div>
+      </article>
+    </section>
+
+    <section class="panel-card member-assignment-panel">
+      <header class="panel-header">
+        <div>
+          <p class="roles-kicker">Assignment</p>
+          <h3>Assign members to roles</h3>
+        </div>
+      </header>
+
+      <div class="members-table">
+        <div class="members-table-head">
+          <span>Member</span>
+          <span>Current role</span>
+          <span>Assign role</span>
+        </div>
+
+        @for (member of members(); track member.id) {
+          <div class="member-row">
+            <div class="member-cell">
+              <div class="member-avatar">
+                <span>{{ getInitials(member.user_email) }}</span>
+              </div>
+
+              <div>
+                <strong>{{ member.user_email }}</strong>
+                <span>Added to project</span>
+              </div>
+            </div>
+
+            <div class="role-cell">
+              @if (member.project_role_name) {
+                <span class="role-pill">
+                  {{ member.project_role_name }}
+                </span>
+              } @else {
+                <span class="role-pill empty-role-pill">
+                  No role
+                </span>
+              }
+            </div>
+
+            <div class="select-cell">
+              <select
+                [value]="member.project_role || ''"
+                (change)="setMemberRole(member, $event)"
+              >
+                <option value="">No role</option>
+
+                @for (role of roles(); track role.id) {
+                  <option [value]="role.id">
+                    {{ role.name }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-text">
+            No project members yet.
+          </p>
+        }
+      </div>
+    </section>
+  }
+</section>

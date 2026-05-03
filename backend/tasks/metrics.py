@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django.utils import timezone
 from .models import Task, TaskGroup
+from projects.models import ProjectMembership
 
 
 def get_project_metric_groups(project):
@@ -296,4 +297,215 @@ def build_project_metrics(project):
         "gantt": {
             "tasks": gantt_tasks,
         },
+    }
+
+def get_user_metric_tasks(project):
+    return list(
+        Task.objects
+        .filter(group__project=project)
+        .select_related("group", "assignee")
+        .prefetch_related("tags")
+        .order_by("group__position", "position", "id")
+    )
+
+
+def get_project_members_for_metrics(project):
+    return list(
+        ProjectMembership.objects
+        .filter(project=project)
+        .select_related("user", "project_role")
+        .order_by("id")
+    )
+
+
+def calculate_user_completion_rate(completed_tasks_count, assigned_tasks_count):
+    if assigned_tasks_count <= 0:
+        return 0
+
+    return round((completed_tasks_count / assigned_tasks_count) * 100)
+
+
+def calculate_user_contribution_score(
+    completion_rate,
+    completed_points,
+    max_completed_points,
+    overdue_tasks_count,
+    assigned_tasks_count,
+):
+    points_score = 0
+
+    if max_completed_points > 0:
+        points_score = round((completed_points / max_completed_points) * 100)
+
+    overdue_penalty = 0
+
+    if assigned_tasks_count > 0:
+        overdue_penalty = round((overdue_tasks_count / assigned_tasks_count) * 100)
+
+    score = round(
+        completion_rate * 0.45
+        + points_score * 0.40
+        - overdue_penalty * 0.15
+    )
+
+    return max(0, min(100, score))
+
+
+def serialize_user_metric_task(task):
+    return {
+        "id": task.id,
+        "title": task.title,
+        "parent_task": task.parent_task_id,
+        "group_id": task.group_id,
+        "group_name": task.group.name,
+        "start_date": task.start_date.isoformat() if task.start_date else None,
+        "deadline": task.deadline.isoformat() if task.deadline else None,
+        "is_completed": task.is_completed,
+        "completed_at": task.completed_at.isoformat() if task.completed_at else None,
+        "story_points": get_points_value(task),
+    }
+
+
+def build_project_user_metrics(project):
+    today = timezone.localdate()
+
+    tasks = get_user_metric_tasks(project)
+    memberships = get_project_members_for_metrics(project)
+
+    assigned_tasks = [task for task in tasks if task.assignee_id]
+    unassigned_tasks = [task for task in tasks if not task.assignee_id]
+
+    max_completed_points = 0
+    raw_user_items = []
+
+    for membership in memberships:
+        user_tasks = [
+            task for task in assigned_tasks
+            if task.assignee_id == membership.user_id
+        ]
+
+        assigned_tasks_count = len(user_tasks)
+        completed_tasks = [task for task in user_tasks if task.is_completed]
+        open_tasks = [task for task in user_tasks if not task.is_completed]
+
+        completed_tasks_count = len(completed_tasks)
+        open_tasks_count = len(open_tasks)
+
+        total_points = sum(get_points_value(task) for task in user_tasks)
+        completed_points = sum(get_points_value(task) for task in completed_tasks)
+        remaining_points = sum(get_points_value(task) for task in open_tasks)
+
+        overdue_tasks = [
+            task for task in open_tasks
+            if task.deadline and task.deadline < today
+        ]
+
+        due_soon_tasks = [
+            task for task in open_tasks
+            if task.deadline and today <= task.deadline <= today + timedelta(days=7)
+        ]
+
+        completion_rate = calculate_user_completion_rate(
+            completed_tasks_count=completed_tasks_count,
+            assigned_tasks_count=assigned_tasks_count,
+        )
+
+        max_completed_points = max(max_completed_points, completed_points)
+
+        raw_user_items.append(
+            {
+                "user": {
+                    "id": membership.user_id,
+                    "email": membership.user.email,
+                    "avatar": membership.user.avatar.url if getattr(membership.user, "avatar", None) else None,
+                    "project_role": membership.project_role_id,
+                    "project_role_name": membership.project_role.name if membership.project_role else None,
+                },
+                "assigned_tasks_count": assigned_tasks_count,
+                "completed_tasks_count": completed_tasks_count,
+                "open_tasks_count": open_tasks_count,
+                "completion_rate": completion_rate,
+                "total_points": total_points,
+                "completed_points": completed_points,
+                "remaining_points": remaining_points,
+                "overdue_tasks_count": len(overdue_tasks),
+                "due_soon_tasks_count": len(due_soon_tasks),
+                "overdue_tasks": [
+                    serialize_user_metric_task(task)
+                    for task in sorted(
+                        overdue_tasks,
+                        key=lambda item: (item.deadline, item.position, item.id),
+                    )[:5]
+                ],
+                "due_soon_tasks": [
+                    serialize_user_metric_task(task)
+                    for task in sorted(
+                        due_soon_tasks,
+                        key=lambda item: (item.deadline, item.position, item.id),
+                    )[:5]
+                ],
+            }
+        )
+
+    user_items = []
+
+    for item in raw_user_items:
+        item["contribution_score"] = calculate_user_contribution_score(
+            completion_rate=item["completion_rate"],
+            completed_points=item["completed_points"],
+            max_completed_points=max_completed_points,
+            overdue_tasks_count=item["overdue_tasks_count"],
+            assigned_tasks_count=item["assigned_tasks_count"],
+        )
+
+        user_items.append(item)
+
+    total_assigned_tasks = len(assigned_tasks)
+    total_completed_tasks = sum(1 for task in assigned_tasks if task.is_completed)
+    total_open_tasks = total_assigned_tasks - total_completed_tasks
+
+    total_assigned_points = sum(get_points_value(task) for task in assigned_tasks)
+    total_completed_points = sum(
+        get_points_value(task)
+        for task in assigned_tasks
+        if task.is_completed
+    )
+
+    total_remaining_points = total_assigned_points - total_completed_points
+
+    return {
+        "project": {
+            "id": project.id,
+            "name": project.name,
+        },
+        "summary": {
+            "members_count": len(memberships),
+            "assigned_tasks_count": total_assigned_tasks,
+            "completed_tasks_count": total_completed_tasks,
+            "open_tasks_count": total_open_tasks,
+            "unassigned_tasks_count": len(unassigned_tasks),
+            "assigned_points": total_assigned_points,
+            "completed_points": total_completed_points,
+            "remaining_points": total_remaining_points,
+            "completion_rate": calculate_user_completion_rate(
+                completed_tasks_count=total_completed_tasks,
+                assigned_tasks_count=total_assigned_tasks,
+            ),
+        },
+        "users": sorted(
+            user_items,
+            key=lambda item: (
+                -item["contribution_score"],
+                -item["completed_points"],
+                -item["completed_tasks_count"],
+                item["user"]["email"],
+            ),
+        ),
+        "unassigned_tasks": [
+            serialize_user_metric_task(task)
+            for task in sorted(
+                unassigned_tasks,
+                key=lambda item: (item.deadline or today, item.position, item.id),
+            )[:8]
+        ],
     }

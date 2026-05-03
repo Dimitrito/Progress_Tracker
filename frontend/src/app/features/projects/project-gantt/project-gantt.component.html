@@ -14,18 +14,6 @@
       </button>
     </div>
   } @else if (metrics(); as data) {
-    <header class="gantt-header">
-      <div>
-        <p class="gantt-kicker">Project schedule</p>
-        <h2>{{ data.project.name }}</h2>
-        <span>{{ projectDurationLabel() }}</span>
-      </div>
-
-      <button type="button" class="secondary-button" (click)="reload()">
-        Refresh
-      </button>
-    </header>
-
     <section class="gantt-summary-grid">
       <article class="gantt-summary-card">
         <span>Total scheduled</span>

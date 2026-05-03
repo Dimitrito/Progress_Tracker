@@ -170,6 +170,60 @@ export interface ProjectMetrics {
     tasks: ProjectMetricTask[];
   };
 }
+export interface ProjectUserMetricTask {
+  id: number;
+  title: string;
+  parent_task: number | null;
+  group_id: number;
+  group_name: string;
+  start_date: string | null;
+  deadline: string | null;
+  is_completed: boolean;
+  completed_at: string | null;
+  story_points: number;
+}
+
+export interface ProjectUserMetricItem {
+  user: {
+    id: number;
+    email: string;
+    avatar: string | null;
+    project_role: number | null;
+    project_role_name: string | null;
+  };
+  assigned_tasks_count: number;
+  completed_tasks_count: number;
+  open_tasks_count: number;
+  completion_rate: number;
+  total_points: number;
+  completed_points: number;
+  remaining_points: number;
+  overdue_tasks_count: number;
+  due_soon_tasks_count: number;
+  contribution_score: number;
+  overdue_tasks: ProjectUserMetricTask[];
+  due_soon_tasks: ProjectUserMetricTask[];
+}
+
+export interface ProjectUserMetrics {
+  project: {
+    id: number;
+    name: string;
+  };
+  summary: {
+    members_count: number;
+    assigned_tasks_count: number;
+    completed_tasks_count: number;
+    open_tasks_count: number;
+    unassigned_tasks_count: number;
+    assigned_points: number;
+    completed_points: number;
+    remaining_points: number;
+    completion_rate: number;
+  };
+  users: ProjectUserMetricItem[];
+  unassigned_tasks: ProjectUserMetricTask[];
+}
 
 @Injectable({
   providedIn: 'root',
@@ -181,6 +235,12 @@ export class TasksService {
   getProjectGroups(projectId: number): Observable<TaskGroup[]> {
     return this.http.get<TaskGroup[]>(
       `${this.baseUrl}/tasks/projects/${projectId}/groups/`,
+    );
+  }
+
+  getProjectUserMetrics(projectId: number): Observable<ProjectUserMetrics> {
+    return this.http.get<ProjectUserMetrics>(
+      `${this.baseUrl}/tasks/projects/${projectId}/metrics/users/`,
     );
   }
 

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import timedelta
 from django.utils import timezone
-from .metrics import build_project_metrics
+from .metrics import build_project_metrics, build_project_user_metrics
 from projects.models import Project
 
 from .functions import with_task_metrics
@@ -54,6 +54,18 @@ class ProjectMetricsView(APIView):
         data = build_project_metrics(project)
         return Response(data)
 
+
+class ProjectUserMetricsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, project_id):
+        project = get_object_or_404(Project, id=project_id)
+
+        if not has_project_access(request.user, project):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        data = build_project_user_metrics(project)
+        return Response(data)
 
 class TaskGroupsByProjectView(APIView):
     permission_classes = [permissions.IsAuthenticated]
