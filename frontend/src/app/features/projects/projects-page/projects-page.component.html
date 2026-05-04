@@ -222,12 +222,45 @@
   } @else if (selectedOrganization()) {
     <div class="projects-grid">
       @for (project of visibleProjects(); track project.id) {
-        <article class="project-card" [routerLink]="['/app/projects', project.id, 'tasks']">
-          <div class="project-card-main">
-            <div class="project-card-copy">
-              <h2 class="project-title">
-                {{ project.name }}
-              </h2>
+        <article
+          class="project-card"
+          [routerLink]="['/app/projects', project.id, 'tasks']"
+        >
+          <div class="project-card-shell">
+            <div class="project-card-content">
+              <div class="project-top-row">
+                <div class="project-identity">
+                  <div class="project-icon" aria-hidden="true">
+                    {{ project.name.slice(0, 2).toUpperCase() }}
+                  </div>
+
+                  <div class="project-title-block">
+                    <h2 class="project-title">
+                      {{ project.name }}
+                    </h2>
+
+                    <span class="project-workspace">
+                      {{ project.organization_name }}
+                    </span>
+                  </div>
+                </div>
+
+                @if (canEditProject(project)) {
+                  <a
+                    class="project-edit-button"
+                    [routerLink]="['/app/projects', project.id]"
+                    (click)="$event.stopPropagation()"
+                    [attr.aria-label]="'Edit project: ' + project.name"
+                    title="Edit project"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M4 20h4.75L19 9.75 14.25 5 4 15.25V20Zm3.9-1.5H5.5v-2.4l8.75-8.75 2.4 2.4L7.9 18.5ZM20.7 8.05a1.2 1.2 0 0 0 0-1.7l-3.05-3.05a1.2 1.2 0 0 0-1.7 0l-.95.95 4.75 4.75.95-.95Z"
+                      />
+                    </svg>
+                  </a>
+                }
+              </div>
 
               <p class="project-description">
                 {{
@@ -235,39 +268,98 @@
                     || 'No description provided for this project yet.'
                 }}
               </p>
+
+              <div class="project-team-block">
+                <div class="project-team-head">
+                  <div>
+                    <span class="section-label">Team structure</span>
+                    <strong>
+                      @if (project.team_roles?.length) {
+                        {{ project.team_roles?.length }} member(s)
+                      } @else {
+                        No members
+                      }
+                    </strong>
+                  </div>
+
+                  @if (getProjectMembersWithoutRole(project) > 0) {
+                    <span class="unassigned-role-badge">
+                      {{ getProjectMembersWithoutRole(project) }} without role
+                    </span>
+                  }
+                </div>
+
+                @if (hasAssignedTeamRoles(project)) {
+                  <div class="team-roles-list">
+                    @for (member of getVisibleTeamRoles(project); track member.membership_id) {
+                      <div class="team-role-chip">
+                        <span class="team-role-avatar">
+                          {{ getUserInitials(member.user_email) }}
+                        </span>
+
+                        <div class="team-role-copy">
+                          <strong>{{ member.project_role_name }}</strong>
+                          <span>{{ member.user_email }}</span>
+                        </div>
+                      </div>
+                    }
+
+                    @if (getHiddenTeamRolesCount(project) > 0) {
+                      <div class="team-role-more">
+                        <span>+{{ getHiddenTeamRolesCount(project) }}</span>
+                        <strong>more</strong>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="team-roles-empty">
+                    <span class="empty-dot"></span>
+                    <span>No project roles assigned yet</span>
+                  </div>
+                }
+              </div>
             </div>
 
-            <div class="project-meta">
-              <div class="meta-chip">
-                <span class="meta-label">Project manager</span>
-                <span class="meta-value">
-                  {{ project.manager_email || 'Not assigned' }}
-                </span>
+            <aside class="project-side-panel">
+              <div class="side-panel-card manager-panel">
+                <span class="side-label">Project manager</span>
+
+                @if (project.manager_email) {
+                  <div class="manager-row">
+                    <span class="manager-avatar">
+                      {{ getUserInitials(project.manager_email) }}
+                    </span>
+
+                    <strong>{{ project.manager_email }}</strong>
+                  </div>
+                } @else {
+                  <strong class="muted-value">Not assigned</strong>
+                }
               </div>
 
-              <div class="meta-chip">
-                <span class="meta-label">Planned duration</span>
-                <span class="meta-value">
-                  {{ formatDate(project.start_date) }} — {{ formatDate(project.end_date) }}
-                </span>
-              </div>
-            </div>
+              <div class="side-panel-card">
+                <span class="side-label">Planned duration</span>
 
-            @if (canEditProject(project)) {
-              <a
-                class="project-edit-button"
-                [routerLink]="['/app/projects', project.id]"
-                (click)="$event.stopPropagation()"
-                [attr.aria-label]="'Edit project: ' + project.name"
-                title="Edit project"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    d="M4 20h4.75L19 9.75 14.25 5 4 15.25V20Zm3.9-1.5H5.5v-2.4l8.75-8.75 2.4 2.4L7.9 18.5ZM20.7 8.05a1.2 1.2 0 0 0 0-1.7l-3.05-3.05a1.2 1.2 0 0 0-1.7 0l-.95.95 4.75 4.75.95-.95Z"
-                  />
-                </svg>
-              </a>
-            }
+                <div class="duration-display">
+                  <div>
+                    <span>Start</span>
+                    <strong>{{ formatDate(project.start_date) }}</strong>
+                  </div>
+
+                  <div class="duration-divider"></div>
+
+                  <div>
+                    <span>End</span>
+                    <strong>{{ formatDate(project.end_date) }}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="open-project-hint">
+                Open project board
+                <span>→</span>
+              </div>
+            </aside>
           </div>
         </article>
       }

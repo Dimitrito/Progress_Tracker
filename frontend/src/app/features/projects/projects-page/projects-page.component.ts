@@ -15,6 +15,7 @@ import { OrganizationContextService } from '../../../core/services/organization-
 import { OrganizationsService } from '../../../core/services/organizations.service';
 import {
   ProjectListItem,
+  ProjectTeamRolePreview,
   ProjectsService,
 } from '../../../core/services/projects.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -38,11 +39,11 @@ export class ProjectsPageComponent {
   private readonly projectsService = inject(ProjectsService);
   private readonly organizationsService = inject(OrganizationsService);
   private readonly organizationContext = inject(OrganizationContextService);
+  private readonly authService = inject(AuthService);
 
   protected readonly selectedOrganization =
     this.organizationContext.selectedOrganization;
 
-  private readonly authService = inject(AuthService);
   protected readonly isLoading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly projects = signal<ProjectListItem[]>([]);
@@ -58,23 +59,6 @@ export class ProjectsPageComponent {
   protected readonly canCreateProject = computed(
     () => this.selectedOrganization()?.role === 'admin',
   );
-
-  protected canEditProject(project: ProjectListItem): boolean {
-    const selectedOrganization = this.selectedOrganization();
-    const currentUser = this.authService.user();
-
-    if (!selectedOrganization || !currentUser) {
-      return false;
-    }
-
-    const isOrganizationOwner = selectedOrganization.role === 'admin';
-
-    const isProjectManager =
-      project.manager === currentUser.id ||
-      project.manager_email === currentUser.email;
-
-    return isOrganizationOwner || isProjectManager;
-  }
 
   protected readonly visibleProjects = computed(() => {
     const selectedOrganization = this.selectedOrganization();
@@ -108,11 +92,31 @@ export class ProjectsPageComponent {
       this.resetCreateForm();
 
       if (selectedOrganization) {
+        this.loadProjects();
         this.loadOrganizationMembers(selectedOrganization.id);
       } else {
+        this.projects.set([]);
         this.organizationMembers.set([]);
+        this.isLoading.set(false);
       }
     });
+  }
+
+  protected canEditProject(project: ProjectListItem): boolean {
+    const selectedOrganization = this.selectedOrganization();
+    const currentUser = this.authService.user();
+
+    if (!selectedOrganization || !currentUser) {
+      return false;
+    }
+
+    const isOrganizationOwner = selectedOrganization.role === 'admin';
+
+    const isProjectManager =
+      project.manager === currentUser.id ||
+      project.manager_email === currentUser.email;
+
+    return isOrganizationOwner || isProjectManager;
   }
 
   protected openCreateForm(): void {
@@ -194,6 +198,7 @@ export class ProjectsPageComponent {
     }
 
     const date = new Date(iso);
+
     if (Number.isNaN(date.getTime())) {
       return iso;
     }
@@ -205,12 +210,60 @@ export class ProjectsPageComponent {
     });
   }
 
+  protected getVisibleTeamRoles(project: ProjectListItem): ProjectTeamRolePreview[] {
+    return this.getAssignedTeamRoles(project).slice(0, 4);
+  }
+
+  protected getHiddenTeamRolesCount(project: ProjectListItem): number {
+    const count = this.getAssignedTeamRoles(project).length - 4;
+
+    return Math.max(0, count);
+  }
+
+  protected hasAssignedTeamRoles(project: ProjectListItem): boolean {
+    return this.getAssignedTeamRoles(project).length > 0;
+  }
+
+  protected getAssignedTeamRoles(project: ProjectListItem): ProjectTeamRolePreview[] {
+    return [...(project.team_roles ?? [])]
+      .filter((member) => !!member.project_role_name)
+      .sort((a, b) => {
+        const roleCompare = String(a.project_role_name).localeCompare(
+          String(b.project_role_name),
+        );
+
+        if (roleCompare !== 0) {
+          return roleCompare;
+        }
+
+        return a.user_email.localeCompare(b.user_email);
+      });
+  }
+
+  protected getProjectMembersWithoutRole(project: ProjectListItem): number {
+    return (project.team_roles ?? []).filter(
+      (member) => !member.project_role_name,
+    ).length;
+  }
+
+  protected getUserInitials(email: string): string {
+    return email.slice(0, 2).toUpperCase();
+  }
+
   private loadProjects(): void {
+    const selectedOrganization = this.selectedOrganization();
+
+    if (!selectedOrganization) {
+      this.projects.set([]);
+      this.isLoading.set(false);
+      return;
+    }
+
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
     this.projectsService
-      .getMyProjects(this.selectedOrganization()?.id)
+      .getMyProjects(selectedOrganization.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (projects) => {
@@ -260,6 +313,7 @@ export class ProjectsPageComponent {
       },
       { emitEvent: false },
     );
+
     this.createProjectForm.markAsPristine();
     this.createProjectForm.markAsUntouched();
   }
