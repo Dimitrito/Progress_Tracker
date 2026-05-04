@@ -4,7 +4,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 /* ================= HEADER ================= */
@@ -27,9 +27,9 @@
 .page-title {
   margin: 0;
   color: var(--text-primary);
-  font-size: 30px;
-  font-weight: 850;
-  letter-spacing: -0.04em;
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
 }
 
 .page-subtitle {
@@ -37,6 +37,7 @@
   margin: 0;
   color: var(--text-secondary);
   font-size: 14px;
+  font-weight: 500;
   line-height: 1.5;
 }
 
@@ -48,35 +49,27 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-
-  padding: 34px 24px;
-
+  padding: 30px 24px;
   border: 1px solid var(--border);
-  border-radius: 22px;
-  background:
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--primary) 9%, transparent),
-      transparent 32%
-    ),
-    var(--bg-surface);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.14);
+  border-radius: 16px;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm, 0 8px 22px rgba(0, 0, 0, 0.09));
 }
 
 .state-eyebrow {
   margin: 0 0 6px;
   color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 850;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
 }
 
 .state-title {
   margin: 0 0 8px;
   color: var(--text-primary);
-  font-size: 22px;
-  font-weight: 850;
+  font-size: 20px;
+  font-weight: 750;
 }
 
 .state-description {
@@ -88,20 +81,20 @@
 }
 
 .empty-state-icon {
-  width: 54px;
-  height: 54px;
+  width: 50px;
+  height: 50px;
   display: grid;
   place-items: center;
   margin-bottom: 14px;
-  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--border));
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--primary) 9%, var(--bg-surface-2));
-  color: var(--primary);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
 }
 
 .empty-state-icon svg {
-  width: 26px;
-  height: 26px;
+  width: 25px;
+  height: 25px;
   fill: currentColor;
 }
 
@@ -109,38 +102,45 @@
 
 .create-project-card {
   overflow: hidden;
-  border: 1px dashed color-mix(in srgb, var(--primary) 42%, var(--border));
-  border-radius: 22px;
+  border: 1px dashed color-mix(in srgb, var(--primary) 44%, var(--border));
+  border-radius: 16px;
   background:
-    radial-gradient(
-      circle at left,
-      color-mix(in srgb, var(--primary) 9%, transparent),
-      transparent 36%
-    ),
-    var(--bg-surface);
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--primary) 7%, var(--bg-surface)),
+      var(--bg-surface)
+    );
   transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease,
-    box-shadow 0.18s ease;
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .create-project-card:hover {
-  border-color: color-mix(in srgb, var(--primary) 64%, var(--border));
-  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.13);
+  border-color: color-mix(in srgb, var(--primary) 68%, var(--border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--primary) 10%, var(--bg-surface)),
+      color-mix(in srgb, var(--primary) 4%, var(--bg-surface))
+    );
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
 }
 
 .create-project-card-open {
-  padding: 20px;
+  padding: 18px;
   border-style: solid;
+  border-color: color-mix(in srgb, var(--primary) 36%, var(--border));
+  background: var(--bg-surface);
 }
 
 .create-project-trigger {
   width: 100%;
-  min-height: 92px;
+  min-height: 82px;
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 20px 22px;
+  gap: 14px;
+  padding: 18px 20px;
   border: none;
   background: transparent;
   text-align: left;
@@ -148,13 +148,13 @@
 }
 
 .create-project-plus {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   position: relative;
-  border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
-  border-radius: 15px;
-  background: color-mix(in srgb, var(--primary) 9%, var(--bg-surface-2));
+  border: 1px solid color-mix(in srgb, var(--primary) 44%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--bg-surface-2));
 }
 
 .create-project-plus::before,
@@ -164,18 +164,18 @@
   top: 50%;
   left: 50%;
   border-radius: 2px;
-  background: var(--primary);
+  background: color-mix(in srgb, var(--primary) 86%, var(--text-primary));
   transform: translate(-50%, -50%);
 }
 
 .create-project-plus::before {
-  width: 16px;
+  width: 15px;
   height: 2px;
 }
 
 .create-project-plus::after {
   width: 2px;
-  height: 16px;
+  height: 15px;
 }
 
 .create-project-copy {
@@ -186,14 +186,14 @@
 
 .create-project-title {
   color: var(--text-primary);
-  font-size: 16px;
-  font-weight: 850;
+  font-size: 15px;
+  font-weight: 750;
 }
 
 .create-project-subtitle {
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 500;
 }
 
 /* ================= FORM ================= */
@@ -205,8 +205,8 @@
 .card-title {
   margin: 0;
   color: var(--text-primary);
-  font-size: 20px;
-  font-weight: 850;
+  font-size: 19px;
+  font-weight: 750;
 }
 
 .card-subtitle {
@@ -247,7 +247,7 @@
 .field-label {
   color: var(--text-primary);
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 650;
 }
 
 .field-meta {
@@ -263,19 +263,22 @@
 .textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 13px;
+  border-radius: 10px;
   background: var(--bg-surface-2);
   color: var(--text-primary);
   padding: 10px 12px;
   font: inherit;
   font-size: 14px;
   outline: none;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .input:focus,
 .textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 13%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 50%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 11%, transparent);
 }
 
 .textarea {
@@ -293,7 +296,7 @@
   margin: 0;
   color: var(--danger);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .form-actions {
@@ -311,37 +314,42 @@
   align-items: center;
   justify-content: center;
   padding: 0 14px;
-  border-radius: 11px;
+  border-radius: 10px;
   font: inherit;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 650;
   cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    opacity 0.16s ease;
 }
 
 .primary-button {
-  border: 1px solid var(--primary);
-  background: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 58%, var(--border));
+  background: color-mix(in srgb, var(--primary) 88%, white);
   color: #fff;
 }
 
 .secondary-button {
   border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-secondary);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
 }
 
 .primary-button:hover {
-  filter: brightness(1.08);
+  background: var(--primary);
 }
 
 .secondary-button:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
+  background: color-mix(in srgb, var(--primary) 5%, var(--bg-surface-2));
 }
 
 .primary-button:disabled,
 .secondary-button:disabled {
-  opacity: 0.65;
+  opacity: 0.62;
   cursor: not-allowed;
 }
 
@@ -349,7 +357,7 @@
 
 .projects-grid {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 /* ================= PROJECT CARD ================= */
@@ -358,17 +366,14 @@
   position: relative;
   overflow: hidden;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
-  border-radius: 24px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--bg-surface) 96%, white 3%),
-      var(--bg-surface)
-    );
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg-surface);
   cursor: pointer;
-  transition: none;
-  will-change: auto;
+  box-shadow: var(--shadow-sm, 0 8px 22px rgba(0, 0, 0, 0.08));
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
 }
 
 .project-card::before {
@@ -376,15 +381,15 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 3px;
-  background: var(--primary);
+  background: color-mix(in srgb, var(--primary) 60%, var(--text-secondary));
   opacity: 0;
-  transition: none;
+  transition: opacity 0.16s ease;
   pointer-events: none;
 }
 
 .project-card:hover {
-  border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
-  box-shadow: none;
+  border-color: color-mix(in srgb, var(--primary) 26%, var(--border));
+  background: color-mix(in srgb, var(--bg-surface-2) 30%, var(--bg-surface));
 }
 
 .project-card:hover::before {
@@ -393,7 +398,7 @@
 
 .project-card-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   gap: 18px;
   padding: 18px;
 }
@@ -420,23 +425,17 @@
 }
 
 .project-icon {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--border));
-  border-radius: 15px;
-  background:
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--primary) 20%, transparent),
-      transparent 60%
-    ),
-    var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-surface-2);
   color: var(--text-primary);
   font-size: 13px;
-  font-weight: 950;
+  font-weight: 800;
   letter-spacing: -0.02em;
 }
 
@@ -449,10 +448,10 @@
   margin: 0;
   overflow: hidden;
   color: var(--text-primary);
-  font-size: 20px;
-  font-weight: 900;
-  line-height: 1.18;
-  letter-spacing: -0.035em;
+  font-size: 19px;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -463,20 +462,20 @@
   overflow: hidden;
   color: var(--text-secondary);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .project-description {
   display: -webkit-box;
-  min-height: 40px;
+  min-height: 38px;
   margin: 0;
   overflow: hidden;
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 650;
-  line-height: 1.5;
+  font-weight: 500;
+  line-height: 1.45;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -484,24 +483,22 @@
 /* ================= EDIT BUTTON ================= */
 
 .project-edit-button {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--border) 78%, white 8%);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   background: var(--bg-surface-2);
   color: var(--text-secondary);
   text-decoration: none;
   cursor: pointer;
   transition:
-    transform 0.16s ease,
     border-color 0.16s ease,
-    background-color 0.16s ease,
-    color 0.16s ease,
-    box-shadow 0.16s ease;
+    background 0.16s ease,
+    color 0.16s ease;
 }
 
 .project-edit-button svg {
@@ -511,26 +508,18 @@
 }
 
 .project-edit-button:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
-  background: color-mix(in srgb, var(--primary) 12%, var(--bg-surface-2));
-  color: var(--primary);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--border));
+  background: color-mix(in srgb, var(--primary) 6%, var(--bg-surface-2));
+  color: var(--text-primary);
 }
 
 /* ================= TEAM ROLES ================= */
 
 .project-team-block {
   padding: 14px;
-  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
-  border-radius: 18px;
-  background:
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--primary) 7%, transparent),
-      transparent 42%
-    ),
-    var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-surface-2);
 }
 
 .project-team-head {
@@ -544,9 +533,9 @@
 .section-label {
   display: block;
   color: var(--text-secondary);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -555,20 +544,20 @@
   margin-top: 4px;
   color: var(--text-primary);
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 700;
 }
 
 .unassigned-role-badge {
-  min-height: 25px;
+  min-height: 24px;
   display: inline-flex;
   align-items: center;
   padding: 0 9px;
-  border: 1px solid color-mix(in srgb, #f59e0b 42%, var(--border));
+  border: 1px solid color-mix(in srgb, #f59e0b 22%, var(--border));
   border-radius: 999px;
-  background: color-mix(in srgb, #f59e0b 9%, transparent);
-  color: #f59e0b;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 850;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -583,16 +572,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 58px;
+  min-height: 56px;
   padding: 9px;
-  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
-  border-radius: 15px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--primary) 8%, var(--bg-surface)),
-      var(--bg-surface)
-    );
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-surface);
 }
 
 .team-role-avatar {
@@ -601,12 +585,19 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--primary) 36%, var(--border));
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--primary) 14%, var(--bg-surface-2));
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-surface-2);
   color: var(--text-primary);
   font-size: 11px;
-  font-weight: 950;
+  font-weight: 750;
+}
+
+.team-role-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .team-role-copy {
@@ -618,8 +609,8 @@
   max-width: 100%;
   overflow: hidden;
   color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 900;
+  font-size: 12.5px;
+  font-weight: 700;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -631,28 +622,28 @@
   margin-top: 3px;
   overflow: hidden;
   color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 500;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .team-role-more {
-  min-height: 58px;
+  min-height: 56px;
   display: grid;
   place-items: center;
-  border: 1px dashed color-mix(in srgb, var(--primary) 38%, var(--border));
-  border-radius: 15px;
-  background: color-mix(in srgb, var(--primary) 5%, transparent);
-  color: var(--primary);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
   text-align: center;
 }
 
 .team-role-more span {
   display: block;
-  font-size: 16px;
-  font-weight: 950;
+  font-size: 15px;
+  font-weight: 750;
   line-height: 1;
 }
 
@@ -660,30 +651,31 @@
   display: block;
   margin-top: 3px;
   font-size: 11px;
-  font-weight: 850;
+  font-weight: 650;
   text-transform: uppercase;
 }
 
 .team-roles-empty {
-  min-height: 52px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   gap: 9px;
   padding: 0 12px;
   border: 1px dashed var(--border);
-  border-radius: 15px;
+  border-radius: 12px;
+  background: var(--bg-surface);
   color: var(--text-secondary);
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 500;
 }
 
 .empty-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   flex-shrink: 0;
   border-radius: 999px;
   background: var(--text-secondary);
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 /* ================= SIDE PANEL ================= */
@@ -697,21 +689,16 @@
 .side-panel-card {
   padding: 13px;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--bg-surface-2) 92%, white 2%),
-      var(--bg-surface-2)
-    );
+  border-radius: 13px;
+  background: var(--bg-surface-2);
 }
 
 .side-label {
   display: block;
   color: var(--text-secondary);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -729,21 +716,21 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--primary) 32%, var(--border));
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--primary) 12%, var(--bg-surface));
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg-surface);
   color: var(--text-primary);
   font-size: 10px;
-  font-weight: 950;
+  font-weight: 750;
 }
 
 .manager-row strong,
 .muted-value {
   display: block;
   overflow: hidden;
-  color: color-mix(in srgb, var(--primary) 72%, var(--text-primary));
+  color: var(--text-primary);
   font-size: 12px;
-  font-weight: 850;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -769,7 +756,7 @@
   display: block;
   color: var(--text-secondary);
   font-size: 10px;
-  font-weight: 850;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -779,7 +766,7 @@
   overflow: hidden;
   color: var(--text-primary);
   font-size: 12px;
-  font-weight: 850;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -790,6 +777,8 @@
   background: var(--border);
 }
 
+/* ================= OPEN PROJECT ACTION ================= */
+
 .open-project-hint {
   margin-top: auto;
   min-height: 38px;
@@ -798,12 +787,12 @@
   justify-content: space-between;
   gap: 10px;
   padding: 0 12px;
-  border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
-  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--bg-surface));
+  color: color-mix(in srgb, var(--primary) 82%, var(--text-primary));
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .open-project-hint span {

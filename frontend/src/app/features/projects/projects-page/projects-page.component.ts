@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { environment } from '../../../../environments/environment';
 
 import { OrganizationContextService } from '../../../core/services/organization-context.service';
 import { OrganizationsService } from '../../../core/services/organizations.service';
@@ -117,6 +118,25 @@ export class ProjectsPageComponent {
       project.manager_email === currentUser.email;
 
     return isOrganizationOwner || isProjectManager;
+  }
+
+  protected resolveMediaUrl(url: string | null | undefined): string | null {
+    if (!url) {
+      return null;
+    }
+
+    if (
+      url.startsWith('http://') ||
+      url.startsWith('https://') ||
+      url.startsWith('blob:') ||
+      url.startsWith('data:')
+    ) {
+      return url;
+    }
+
+    const apiHost = environment.apiUrl.replace(/\/api\/?$/, '');
+
+    return `${apiHost}${url}`;
   }
 
   protected openCreateForm(): void {

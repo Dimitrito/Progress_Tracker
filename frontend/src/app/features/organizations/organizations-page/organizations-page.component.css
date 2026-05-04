@@ -1,8 +1,10 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
+
+/* ================= HEADER ================= */
 
 .page-header {
   padding-bottom: 14px;
@@ -17,27 +19,28 @@
 }
 
 .page-header-copy {
+  min-width: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-width: 0;
-  flex: 1;
 }
 
 .page-title {
   margin: 0;
+  color: var(--text-primary);
   font-size: 28px;
   font-weight: 750;
   line-height: 1.15;
-  color: var(--text-primary);
+  letter-spacing: -0.03em;
 }
 
 .page-subtitle {
-  margin: 0;
   max-width: 760px;
-  font-size: 14px;
-  line-height: 1.55;
+  margin: 0;
   color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .page-content {
@@ -51,31 +54,32 @@
 .form-card,
 .state-card,
 .organization-card {
-  background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 16px;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm, 0 8px 22px rgba(0, 0, 0, 0.08));
 }
 
 .form-card {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 24px;
+  padding: 22px;
 }
 
 .form-title {
   margin: 0 0 6px;
-  font-size: 21px;
-  font-weight: 700;
-  line-height: 1.25;
   color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 750;
+  line-height: 1.25;
 }
 
 .form-subtitle {
   margin: 0;
+  color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.5;
-  color: var(--text-secondary);
 }
 
 .organization-form {
@@ -91,54 +95,55 @@
 }
 
 .form-label {
+  color: var(--text-primary);
   font-size: 13px;
   font-weight: 650;
-  color: var(--text-primary);
 }
 
 .form-input,
 .form-textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--bg-surface-2);
   color: var(--text-primary);
+  padding: 10px 12px;
   font: inherit;
   font-size: 14px;
-  padding: 11px 13px;
+  outline: none;
   transition:
     border-color 0.16s ease,
-    box-shadow 0.16s ease;
+    box-shadow 0.16s ease,
+    background 0.16s ease;
 }
 
 .form-input::placeholder,
 .form-textarea::placeholder {
-  color: var(--text-secondary);
+  color: color-mix(in srgb, var(--text-secondary) 76%, transparent);
 }
 
 .form-input:focus,
 .form-textarea:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 52%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 11%, transparent);
 }
 
 .form-textarea {
+  min-height: 104px;
   resize: vertical;
-  min-height: 112px;
 }
 
 .required-mark {
-  color: var(--danger);
   margin-left: 4px;
+  color: var(--danger);
 }
 
 .field-error,
 .form-error {
   margin: 0;
+  color: var(--danger);
   font-size: 13px;
   line-height: 1.5;
-  color: var(--danger);
 }
 
 .form-actions {
@@ -156,27 +161,27 @@
 
 .state-eyebrow {
   margin: 0;
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
   color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .state-title {
   margin: 0;
-  font-size: 21px;
-  font-weight: 700;
-  line-height: 1.3;
   color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 750;
+  line-height: 1.3;
 }
 
 .state-description {
-  margin: 0;
   max-width: 560px;
-  font-size: 14px;
-  line-height: 1.6;
+  margin: 0;
   color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 /* ================= GRID ================= */
@@ -184,7 +189,7 @@
 .organizations-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 16px;
+  gap: 14px;
   align-items: stretch;
 }
 
@@ -192,104 +197,104 @@
 
 .organization-create-card {
   width: 100%;
-  min-height: 190px;
-  padding: 24px;
-
+  min-height: 168px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 16px;
-
-  border: 1px dashed color-mix(in srgb, var(--primary) 42%, var(--border));
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--bg-surface) 94%, var(--primary) 6%);
+  gap: 14px;
+  border: 1px dashed color-mix(in srgb, var(--primary) 46%, var(--border));
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--primary) 7%, var(--bg-surface)),
+      var(--bg-surface)
+    );
   color: var(--text-primary);
-
   text-align: center;
   cursor: pointer;
-
   transition:
-    transform 0.16s ease,
     border-color 0.16s ease,
-    background-color 0.16s ease,
+    background 0.16s ease,
     box-shadow 0.16s ease;
 }
 
 .organization-create-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--primary);
-  background: color-mix(in srgb, var(--bg-surface) 90%, var(--primary) 10%);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
+  border-color: color-mix(in srgb, var(--primary) 68%, var(--border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--primary) 10%, var(--bg-surface)),
+      color-mix(in srgb, var(--primary) 4%, var(--bg-surface))
+    );
+  box-shadow: var(--shadow-sm, 0 8px 22px rgba(0, 0, 0, 0.1));
 }
 
 .organization-create-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-
-  border: 1px solid color-mix(in srgb, var(--primary) 48%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--primary) 46%, var(--border));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--primary) 14%, var(--bg-surface-2));
-  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--bg-surface-2));
+  color: color-mix(in srgb, var(--primary) 86%, var(--text-primary));
 }
 
 .organization-create-icon svg {
-  width: 21px;
-  height: 21px;
+  width: 20px;
+  height: 20px;
   fill: currentColor;
 }
 
 .organization-create-content {
+  max-width: 260px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 260px;
+  gap: 5px;
 }
 
 .organization-create-title {
+  color: var(--text-primary);
   font-size: 16px;
   font-weight: 750;
   line-height: 1.3;
-  color: var(--text-primary);
 }
 
 .organization-create-description {
-  font-size: 13px;
-  line-height: 1.55;
   color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 /* ================= ORGANIZATION CARD ================= */
 
 .organization-card {
   position: relative;
+  min-height: 168px;
   display: flex;
   flex-direction: column;
-  min-height: 190px;
   overflow: hidden;
-
   transition:
-    transform 0.16s ease,
     border-color 0.16s ease,
-    box-shadow 0.16s ease,
-    background-color 0.16s ease;
+    background 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .organization-card:hover {
-  transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--primary) 26%, var(--border));
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
+  background: color-mix(in srgb, var(--bg-surface-2) 28%, var(--bg-surface));
 }
 
 .organization-card-active {
-  border-color: color-mix(in srgb, var(--primary) 68%, var(--border));
+  border-color: color-mix(in srgb, var(--primary) 56%, var(--border));
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--primary) 34%, transparent),
-    0 14px 30px rgba(0, 0, 0, 0.14);
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 22%, transparent),
+    var(--shadow-sm, 0 8px 22px rgba(0, 0, 0, 0.1));
 }
 
 .organization-card-main {
@@ -302,13 +307,11 @@
 .organization-select {
   width: 100%;
   flex: 1;
-  min-height: 190px;
-  padding: 18px 54px 18px 18px;
-
+  min-height: 168px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-
+  gap: 14px;
+  padding: 18px 52px 16px 18px;
   border: 0;
   background: transparent;
   color: inherit;
@@ -324,31 +327,27 @@
 }
 
 .organization-identity {
+  min-width: 0;
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  min-width: 0;
 }
 
 .organization-avatar {
   width: 38px;
   height: 38px;
   flex-shrink: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 11px;
-  overflow: hidden;
-
   background: var(--bg-surface-2);
   color: var(--text-primary);
-
   font-size: 13px;
   font-weight: 750;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -369,46 +368,41 @@
 
 .organization-eyebrow {
   margin: 0 0 5px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
   color: var(--text-secondary);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
 .organization-name {
+  max-width: 220px;
   margin: 0;
-  max-width: 210px;
-
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.25;
-  color: var(--text-primary);
-
   overflow: hidden;
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .organization-description {
+  min-height: 42px;
   margin: 0;
-  min-height: 62px;
-
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--text-secondary);
-
-  display: -webkit-box;
   overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-
+  display: -webkit-box;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
   overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .organization-card-footer {
+  min-height: 28px;
   margin-top: auto;
-  min-height: 30px;
   display: flex;
   align-items: flex-end;
 }
@@ -416,13 +410,11 @@
 .organization-status {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-
-  padding: 6px 10px;
-  border: 1px solid var(--border);
+  gap: 7px;
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--primary) 26%, var(--border));
   border-radius: 999px;
-
-  background: var(--bg-surface-2);
+  background: color-mix(in srgb, var(--primary) 6%, var(--bg-surface-2));
 }
 
 .organization-status-hidden {
@@ -438,52 +430,50 @@
 }
 
 .status-indicator-active {
-  background: var(--primary);
+  background: color-mix(in srgb, var(--primary) 82%, var(--text-primary));
 }
 
 .status-text {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
   color: var(--text-primary);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 /* ================= ROLE BADGE ================= */
 
 .role-badge {
-  min-width: 76px;
+  min-width: 74px;
   height: 26px;
-  padding: 0 10px;
-
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-
+  padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--bg-surface-2);
-
-  font-size: 10px;
-  font-weight: 800;
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .role-owner {
-  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
-  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 32%, var(--border));
+  color: color-mix(in srgb, var(--primary) 84%, var(--text-primary));
 }
 
 .role-pm {
-  border-color: color-mix(in srgb, var(--warning) 40%, var(--border));
-  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 30%, var(--border));
+  color: color-mix(in srgb, var(--warning) 80%, var(--text-primary));
 }
 
 .role-worker {
-  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
-  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 28%, var(--border));
+  color: color-mix(in srgb, var(--success) 78%, var(--text-primary));
 }
 
 /* ================= EDIT BUTTON ================= */
@@ -492,48 +482,32 @@
   position: absolute;
   top: 12px;
   right: 12px;
-
-  width: 26px;
-  height: 26px;
-
+  width: 28px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  border: 1px solid color-mix(in srgb, var(--border) 75%, white 10%);
-  border-radius: 8px;
-
-  background: color-mix(in srgb, var(--bg-surface-2) 82%, white 8%);
-  color: #ffffff;
-
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
   cursor: pointer;
-
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
-
   transition:
-    transform 0.16s ease,
     border-color 0.16s ease,
-    background-color 0.16s ease,
-    box-shadow 0.16s ease;
+    background 0.16s ease,
+    color 0.16s ease;
 }
 
 .organization-edit-button svg {
   width: 13px;
   height: 13px;
   fill: currentColor;
-  opacity: 0.92;
 }
 
 .organization-edit-button:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
-  background: color-mix(in srgb, var(--primary) 22%, var(--bg-surface-2));
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
-}
-
-.organization-edit-button:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  border-color: color-mix(in srgb, var(--primary) 36%, var(--border));
+  background: color-mix(in srgb, var(--primary) 6%, var(--bg-surface-2));
+  color: var(--text-primary);
 }
 
 /* ================= BUTTONS ================= */
@@ -541,59 +515,48 @@
 .primary-button,
 .secondary-button {
   min-height: 38px;
-  padding: 0 14px;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
+  padding: 0 14px;
   border-radius: 10px;
   font: inherit;
   font-size: 13px;
   font-weight: 650;
   line-height: 1;
   cursor: pointer;
-
   transition:
-    transform 0.16s ease,
-    background-color 0.16s ease,
+    background 0.16s ease,
     border-color 0.16s ease,
     color 0.16s ease,
-    box-shadow 0.16s ease;
+    opacity 0.16s ease;
 }
 
 .primary-button {
-  border: 1px solid var(--primary);
-  background: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 58%, var(--border));
+  background: color-mix(in srgb, var(--primary) 88%, white);
   color: white;
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 24%, transparent);
 }
 
 .primary-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.08);
+  background: var(--primary);
 }
 
 .secondary-button {
   border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-secondary);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
 }
 
 .secondary-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
+  background: color-mix(in srgb, var(--primary) 5%, var(--bg-surface-2));
 }
 
 .primary-button:disabled,
 .secondary-button:disabled {
-  opacity: 0.58;
+  opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
-  filter: none;
-  box-shadow: none;
 }
 
 .organization-select:focus-visible,
@@ -603,7 +566,7 @@
 .secondary-button:focus-visible,
 .form-input:focus-visible,
 .form-textarea:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid color-mix(in srgb, var(--primary) 78%, white);
   outline-offset: 2px;
 }
 
@@ -623,15 +586,12 @@
 .icon-preview {
   width: 48px;
   height: 48px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 12px;
-  overflow: hidden;
-
   background: var(--bg-surface-2);
 }
 
@@ -664,7 +624,7 @@
   }
 
   .organization-select {
-    padding: 56px 18px 18px;
+    padding: 54px 18px 18px;
   }
 
   .organization-card-header {

@@ -114,11 +114,26 @@
                 <div class="task-main">
                   <div class="task-title-line">
                     <h3>{{ task.title }}</h3>
+                  </div>
 
-                    @if (task.parent_task) {
-                      <span class="subtask-badge">Subtask</span>
-                    } @else {
-                      <span class="subtask-badge">Task</span>
+                  <div class="task-context-row">
+                    <span class="task-context-item">
+                      <span class="task-context-label">Group</span>
+                      <span class="task-context-value">
+                        {{ getTaskGroupName(task) }}
+                      </span>
+                    </span>
+
+                    @if (task.priority) {
+                      <span
+                        class="priority-badge"
+                        [class]="getPriorityClass(task.priority)"
+                      >
+                        <span class="priority-icon">
+                          {{ getPriorityIcon(task.priority) }}
+                        </span>
+                        {{ getPriorityLabel(task.priority) }}
+                      </span>
                     }
                   </div>
 
@@ -127,18 +142,6 @@
                       {{ task.description }}
                     </p>
                   }
-
-                  <div class="task-tags">
-                    @for (tag of task.tags; track tag.id) {
-                      <span class="task-tag">
-                        <span
-                          class="task-tag-dot"
-                          [style.background]="tag.color"
-                        ></span>
-                        {{ tag.name }}
-                      </span>
-                    }
-                  </div>
                 </div>
 
                 <div class="task-meta">
@@ -154,12 +157,6 @@
                   >
                     📅 {{ formatDeadline(task.deadline) }}
                   </span>
-
-                  @if (task.priority) {
-                    <span class="meta-pill priority-pill">
-                      {{ task.priority }}
-                    </span>
-                  }
                 </div>
               </article>
             }

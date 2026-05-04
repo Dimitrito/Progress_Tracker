@@ -10,6 +10,7 @@ import {
 } from '../../../core/services/projects.service';
 import {
   TaskItem,
+  TaskPriority,
   TaskTag,
   TasksService,
 } from '../../../core/services/tasks.service';
@@ -45,6 +46,13 @@ export class MyTasksComponent {
   protected readonly selectedTaskId = signal<number | null>(null);
   protected readonly selectedProjectMembers = signal<ProjectMembership[]>([]);
   protected readonly selectedProjectTags = signal<TaskTag[]>([]);
+
+  protected readonly priorityOptions = [
+    { value: 'urgent', label: 'Urgent', icon: '🚩' },
+    { value: 'high', label: 'High', icon: '🟧' },
+    { value: 'normal', label: 'Normal', icon: '🟦' },
+    { value: 'low', label: 'Low', icon: '⬜' },
+  ] as const;
 
   protected readonly projectMap = computed(() => {
     const map = new Map<number, ProjectListItem>();
@@ -87,17 +95,29 @@ export class MyTasksComponent {
   protected readonly filteredTasks = computed(() => {
     const filter = this.activeFilter();
 
-    return this.workspaceTasks().filter((task) => {
-      if (filter === 'open') {
-        return !task.is_completed;
-      }
+    return this.workspaceTasks()
+      .filter((task) => {
+        if (filter === 'open') {
+          return !task.is_completed;
+        }
 
-      if (filter === 'completed') {
-        return task.is_completed;
-      }
+        if (filter === 'completed') {
+          return task.is_completed;
+        }
 
-      return true;
-    });
+        return true;
+      })
+      .sort((a, b) => {
+        const aDeadline = a.deadline ?? '9999-12-31';
+        const bDeadline = b.deadline ?? '9999-12-31';
+
+        return (
+          aDeadline.localeCompare(bDeadline) ||
+          a.group_name.localeCompare(b.group_name) ||
+          a.position - b.position ||
+          a.id - b.id
+        );
+      });
   });
 
   protected readonly openTasksCount = computed(
@@ -140,6 +160,40 @@ export class MyTasksComponent {
 
   protected getProjectName(projectId: number): string {
     return this.projectMap().get(projectId)?.name ?? `Project #${projectId}`;
+  }
+
+  protected getTaskGroupName(task: TaskItem): string {
+    return task.group_name || 'No group';
+  }
+
+  protected getPriorityLabel(priority: TaskPriority | null): string {
+    if (!priority) {
+      return 'No priority';
+    }
+
+    return (
+      this.priorityOptions.find((item) => item.value === priority)?.label ??
+      priority
+    );
+  }
+
+  protected getPriorityIcon(priority: TaskPriority | null): string {
+    if (!priority) {
+      return '⚑';
+    }
+
+    return (
+      this.priorityOptions.find((item) => item.value === priority)?.icon ??
+      '⚑'
+    );
+  }
+
+  protected getPriorityClass(priority: TaskPriority | null): string {
+    if (!priority) {
+      return 'priority-none';
+    }
+
+    return `priority-${priority}`;
   }
 
   protected openTask(task: TaskItem): void {

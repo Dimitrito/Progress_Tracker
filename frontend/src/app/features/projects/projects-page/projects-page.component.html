@@ -294,7 +294,15 @@
                     @for (member of getVisibleTeamRoles(project); track member.membership_id) {
                       <div class="team-role-chip">
                         <span class="team-role-avatar">
-                          {{ getUserInitials(member.user_email) }}
+                          @if (resolveMediaUrl(member.user_avatar); as avatarUrl) {
+                            <img
+                              [src]="avatarUrl"
+                              alt="Member avatar"
+                              class="team-role-avatar-image"
+                            />
+                          } @else {
+                            {{ getUserInitials(member.user_email) }}
+                          }
                         </span>
 
                         <div class="team-role-copy">
