@@ -15,6 +15,7 @@ import { OrganizationContextService } from '../../core/services/organization-con
 interface SidebarItem {
   label: string;
   route: string | null;
+  icon: 'tasks' | 'profile';
 }
 
 @Component({
@@ -53,8 +54,8 @@ export class SidebarComponent {
   });
 
   protected readonly items: SidebarItem[] = [
-    { label: 'My tasks', route: '/app/my-tasks' },
-    { label: 'Profile', route: '/app/profile' },
+    { label: 'My tasks', route: '/app/my-tasks', icon: 'tasks' },
+    { label: 'Profile', route: '/app/profile', icon: 'profile' },
   ];
 
   constructor() {

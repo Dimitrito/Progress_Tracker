@@ -15,7 +15,7 @@ export class TopbarComponent {
   protected readonly organizationName = computed(
     () =>
       this.organizationContext.selectedOrganization()?.name ??
-      'No organization selected',
+      'No workspace selected',
   );
 
   private readonly router = inject(Router);

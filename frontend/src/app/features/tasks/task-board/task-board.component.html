@@ -189,6 +189,7 @@
                 <button
                   type="button"
                   class="task-create-option"
+                  [class.task-create-option-active]="isCreatePopoverOpen('assignee')"
                   (click)="toggleCreateTaskPopover('assignee', $event)"
                 >
                   <span>👤</span>
@@ -202,6 +203,7 @@
                 <button
                   type="button"
                   class="task-create-option"
+                  [class.task-create-option-active]="isCreatePopoverOpen('deadline')"
                   (click)="toggleCreateTaskPopover('deadline', $event)"
                 >
                   <span>📅</span>
@@ -213,6 +215,7 @@
                 <button
                   type="button"
                   class="task-create-option"
+                  [class.task-create-option-active]="isCreatePopoverOpen('priority')"
                   (click)="toggleCreateTaskPopover('priority', $event)"
                 >
                   <span>{{ getPriorityIcon(taskForm.controls.priority.value) }}</span>
@@ -224,6 +227,7 @@
                 <button
                   type="button"
                   class="task-create-option"
+                  [class.task-create-option-active]="isCreatePopoverOpen('points')"
                   (click)="toggleCreateTaskPopover('points', $event)"
                 >
                   <span>◆</span>
@@ -235,6 +239,7 @@
                 <button
                   type="button"
                   class="task-create-option"
+                  [class.task-create-option-active]="isCreatePopoverOpen('tags')"
                   (click)="toggleCreateTaskPopover('tags', $event)"
                 >
                   <span>🏷</span>
@@ -248,139 +253,6 @@
                 </button>
               </div>
 
-              @if (activeCreateTaskPopover() === 'assignee') {
-                <div class="task-action-popover create-task-popover" (pointerdown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
-                  <p class="popover-title">Assign task</p>
-
-                  <button type="button" class="popover-option" (click)="setCreateAssignee(null)">
-                    No assignee
-                  </button>
-
-                  @for (member of projectMembers(); track member.id) {
-                    <button
-                      type="button"
-                      class="popover-option"
-                      (click)="setCreateAssignee(member.user)"
-                    >
-                      <span class="assignee-avatar">
-                        @if (member.user_avatar) {
-                          <img
-                            [src]="resolveMediaUrl(member.user_avatar)"
-                            alt="Member avatar"
-                            class="assignee-avatar-image"
-                          />
-                        } @else {
-                          <span class="assignee-avatar-fallback">
-                            {{ buildUserInitials(member.user_email) }}
-                          </span>
-                        }
-                      </span>
-
-                      <span>{{ member.user_email }}</span>
-                    </button>
-                  }
-                </div>
-              }
-
-              @if (activeCreateTaskPopover() === 'deadline') {
-                <div class="task-action-popover create-task-popover" (pointerdown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
-                  <p class="popover-title">Set deadline</p>
-
-                  <input
-                    class="popover-date-input"
-                    type="date"
-                    [value]="taskForm.controls.deadline.value || ''"
-                    (change)="setCreateDeadline($event)"
-                  />
-
-                  @if (taskForm.controls.deadline.value) {
-                    <button
-                      type="button"
-                      class="popover-danger-option"
-                      (click)="clearCreateDeadline()"
-                    >
-                      Clear deadline
-                    </button>
-                  }
-                </div>
-              }
-
-              @if (activeCreateTaskPopover() === 'priority') {
-                <div class="task-action-popover create-task-popover" (pointerdown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
-                  <p class="popover-title">Priority</p>
-
-                  @for (priority of priorityOptions; track priority.value) {
-                    <button
-                      type="button"
-                      class="popover-option"
-                      (click)="setCreatePriority(priority.value)"
-                    >
-                      <span class="priority-icon">{{ priority.icon }}</span>
-                      <span>{{ priority.label }}</span>
-                    </button>
-                  }
-
-                  <button
-                    type="button"
-                    class="popover-danger-option"
-                    (click)="setCreatePriority(null)"
-                  >
-                    Clear
-                  </button>
-                </div>
-              }
-
-              @if (activeCreateTaskPopover() === 'points') {
-                <div class="task-action-popover create-task-popover points-popover" (pointerdown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
-                  <p class="popover-title">Story points</p>
-
-                  <label class="points-field">
-                    <span>Complexity estimate</span>
-                    <input
-                      class="points-input"
-                      type="number"
-                      min="0"
-                      step="1"
-                      [value]="taskForm.controls.story_points.value || ''"
-                      (change)="setCreateStoryPoints($event)"
-                      placeholder="0"
-                    />
-                  </label>
-
-                  @if (taskForm.controls.story_points.value) {
-                    <button
-                      type="button"
-                      class="popover-danger-option"
-                      (click)="clearCreateStoryPoints()"
-                    >
-                      Clear points
-                    </button>
-                  }
-                </div>
-              }
-
-              @if (activeCreateTaskPopover() === 'tags') {
-                <div class="task-action-popover create-task-popover" (pointerdown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
-                  <p class="popover-title">Tags</p>
-
-                  <div class="tag-options">
-                    @for (tag of taskTags(); track tag.id) {
-                      <button
-                        type="button"
-                        class="tag-option"
-                        (click)="toggleCreateTag(tag)"
-                      >
-                        <span class="tag-color-dot" [style.background]="tag.color"></span>
-                        <span>{{ tag.name }}</span>
-
-                        @if (hasCreateTag(tag.id)) {
-                          <span class="tag-check">✓</span>
-                        }
-                      </button>
-                    }
-                  </div>
-                </div>
-              }
             </form>
           }
         </div>
@@ -444,6 +316,155 @@
   </div>
 }
 
+
+
+@if (activeCreateTaskPopover(); as popover) {
+  <div
+    class="task-action-popover task-action-popover-floating create-task-popover-floating"
+    [class.task-action-popover-up]="popover.direction === 'up'"
+    [class.task-action-popover-down]="popover.direction === 'down'"
+    [class.assignee-popover]="popover.type === 'assignee'"
+    [class.deadline-popover]="popover.type === 'deadline'"
+    [class.priority-popover]="popover.type === 'priority'"
+    [class.points-popover]="popover.type === 'points'"
+    [class.tags-popover]="popover.type === 'tags'"
+    [ngStyle]="getCreatePopoverStyle()"
+    (pointerdown)="$event.stopPropagation()"
+    (click)="$event.stopPropagation()"
+  >
+    @if (popover.type === 'assignee') {
+      <p class="popover-title">Assign task</p>
+
+      <button
+        type="button"
+        class="popover-option"
+        (click)="setCreateAssignee(null)"
+      >
+        No assignee
+      </button>
+
+      @for (member of projectMembers(); track member.id) {
+        <button
+          type="button"
+          class="popover-option"
+          (click)="setCreateAssignee(member.user)"
+        >
+          <span class="assignee-avatar">
+            @if (member.user_avatar) {
+              <img
+                [src]="resolveMediaUrl(member.user_avatar)"
+                alt="Member avatar"
+                class="assignee-avatar-image"
+              />
+            } @else {
+              <span class="assignee-avatar-fallback">
+                {{ buildUserInitials(member.user_email) }}
+              </span>
+            }
+          </span>
+
+          <span>{{ member.user_email }}</span>
+        </button>
+      }
+    }
+
+    @if (popover.type === 'deadline') {
+      <p class="popover-title">Set deadline</p>
+
+      <input
+        class="popover-date-input"
+        type="date"
+        [value]="taskForm.controls.deadline.value || ''"
+        (change)="setCreateDeadline($event)"
+      />
+
+      @if (taskForm.controls.deadline.value) {
+        <button
+          type="button"
+          class="popover-danger-option"
+          (click)="clearCreateDeadline()"
+        >
+          Clear deadline
+        </button>
+      }
+    }
+
+    @if (popover.type === 'priority') {
+      <p class="popover-title">Priority</p>
+
+      @for (priority of priorityOptions; track priority.value) {
+        <button
+          type="button"
+          class="popover-option"
+          (click)="setCreatePriority(priority.value)"
+        >
+          <span class="priority-icon">{{ priority.icon }}</span>
+          <span>{{ priority.label }}</span>
+        </button>
+      }
+
+      <button
+        type="button"
+        class="popover-danger-option"
+        (click)="setCreatePriority(null)"
+      >
+        Clear
+      </button>
+    }
+
+    @if (popover.type === 'points') {
+      <p class="popover-title">Story points</p>
+
+      <label class="points-field">
+        <span>Complexity estimate</span>
+        <input
+          class="points-input"
+          type="number"
+          min="0"
+          step="1"
+          [value]="taskForm.controls.story_points.value || ''"
+          (change)="setCreateStoryPoints($event)"
+          placeholder="0"
+        />
+      </label>
+
+      @if (taskForm.controls.story_points.value) {
+        <button
+          type="button"
+          class="popover-danger-option"
+          (click)="clearCreateStoryPoints()"
+        >
+          Clear points
+        </button>
+      }
+    }
+
+    @if (popover.type === 'tags') {
+      <p class="popover-title">Tags</p>
+
+      <div class="tag-options">
+        @for (tag of taskTags(); track tag.id) {
+          <button
+            type="button"
+            class="tag-option"
+            (click)="toggleCreateTag(tag)"
+          >
+            <span
+              class="tag-color-dot"
+              [style.background]="tag.color"
+            ></span>
+
+            <span>{{ tag.name }}</span>
+
+            @if (hasCreateTag(tag.id)) {
+              <span class="tag-check">✓</span>
+            }
+          </button>
+        }
+      </div>
+    }
+  </div>
+}
 
 @if (activeTaskPopover(); as popover) {
   @if (getActivePopoverTask(); as task) {

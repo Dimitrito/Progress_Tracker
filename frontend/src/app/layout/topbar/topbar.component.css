@@ -9,92 +9,118 @@
 }
 
 .topbar-copy {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+  gap: 5px;
 }
 
 .topbar-label {
   margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .topbar-title {
+  max-width: min(720px, 56vw);
   margin: 0;
-  font-size: 24px;
-  line-height: 1.2;
-  color: var(--text-primary);
-
   overflow: hidden;
+  color: var(--text-primary);
+  font-size: 23px;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .topbar-actions {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
+/* более аккуратный user block, без ощущения “черной коробки” */
 .topbar-user-card {
-  display: inline-flex; /* ← важно */
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  background: var(--bg-main);
-}
-
-.topbar-user-value {
-  font-size: 14px;
-  color: var(--text-primary);
-}
-
-.topbar-logout {
+  min-height: 40px;
+  max-width: 260px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  height: 40px;
   padding: 0 14px;
-
   border: 1px solid var(--border);
   border-radius: 10px;
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+}
 
-  background: transparent; /* ← ключевое */
+.topbar-user-value {
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-logout {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
   color: var(--text-secondary);
-
   font: inherit;
   font-size: 13px;
-  font-weight: 500;
-
+  font-weight: 650;
+  line-height: 1;
   cursor: pointer;
-
   transition:
-    color 0.2s ease,
-    border-color 0.2s ease,
-    background-color 0.2s ease;
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
 }
 
 .topbar-logout:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
+  background: color-mix(in srgb, var(--primary) 5%, var(--bg-surface-2));
+  color: var(--text-primary);
+}
+
+.topbar-user-card:focus-within,
+.topbar-logout:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 72%, white);
+  outline-offset: 2px;
 }
 
 @media (max-width: 720px) {
-  .topbar,
-  .topbar-actions {
+  .topbar {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-title {
+    max-width: 100%;
+  }
+
+  .topbar-actions {
+    width: 100%;
     align-items: stretch;
   }
 
   .topbar-user-card,
   .topbar-logout {
-    width: 100%;
+    flex: 1;
+    max-width: none;
   }
 }

@@ -15,6 +15,18 @@
           routerLinkActive="sidebar-link-active"
           class="sidebar-link sidebar-parent-link"
         >
+          <span class="sidebar-main-icon workspace-main-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M4.75 20.25V5.75A2 2 0 0 1 6.75 3.75h7.5a2 2 0 0 1 2 2v14.5" />
+              <path d="M16.25 9.75h1A2 2 0 0 1 19.25 11.75v8.5" />
+              <path d="M8 8h4.5" />
+              <path d="M8 11.5h4.5" />
+              <path d="M8 15h4.5" />
+              <path d="M10.25 20.25v-3.5h2.5v3.5" />
+              <path d="M3.75 20.25h16.5" />
+            </svg>
+          </span>
+
           <span class="sidebar-link-label">Workspaces</span>
         </a>
 
@@ -42,12 +54,8 @@
             >
               <span class="sidebar-item-icon workspace-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
-                  <path
-                    d="M4.75 20.25V5.75A2 2 0 0 1 6.75 3.75h7.5a2 2 0 0 1 2 2v14.5"
-                  />
-                  <path
-                    d="M16.25 9.75h1A2 2 0 0 1 19.25 11.75v8.5"
-                  />
+                  <path d="M4.75 20.25V5.75A2 2 0 0 1 6.75 3.75h7.5a2 2 0 0 1 2 2v14.5" />
+                  <path d="M16.25 9.75h1A2 2 0 0 1 19.25 11.75v8.5" />
                   <path d="M8 8h4.5" />
                   <path d="M8 11.5h4.5" />
                   <path d="M8 15h4.5" />
@@ -76,6 +84,13 @@
           routerLinkActive="sidebar-link-active"
           class="sidebar-link sidebar-parent-link"
         >
+          <span class="sidebar-main-icon project-main-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M3.75 7.75A2 2 0 0 1 5.75 5.75h4.05c.62 0 .96.15 1.38.62l1.03 1.13c.38.42.7.5 1.27.5h4.77a2 2 0 0 1 2 2v7.25a2 2 0 0 1-2 2H5.75a2 2 0 0 1-2-2V7.75Z" />
+              <path d="M3.95 10.25h16.1" />
+            </svg>
+          </span>
+
           <span class="sidebar-link-label">Projects</span>
         </a>
 
@@ -102,9 +117,7 @@
             >
               <span class="sidebar-item-icon project-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
-                  <path
-                    d="M3.75 7.75A2 2 0 0 1 5.75 5.75h4.05c.62 0 .96.15 1.38.62l1.03 1.13c.38.42.7.5 1.27.5h4.77a2 2 0 0 1 2 2v7.25a2 2 0 0 1-2 2H5.75a2 2 0 0 1-2-2V7.75Z"
-                  />
+                  <path d="M3.75 7.75A2 2 0 0 1 5.75 5.75h4.05c.62 0 .96.15 1.38.62l1.03 1.13c.38.42.7.5 1.27.5h4.77a2 2 0 0 1 2 2v7.25a2 2 0 0 1-2 2H5.75a2 2 0 0 1-2-2V7.75Z" />
                   <path d="M3.95 10.25h16.1" />
                 </svg>
               </span>
@@ -127,6 +140,13 @@
       routerLinkActive="sidebar-link-active"
       class="sidebar-link"
     >
+      <span class="sidebar-main-icon neutral-main-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M4.75 7.75A2 2 0 0 1 6.75 5.75h10.5a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H6.75a2 2 0 0 1-2-2v-8.5Z" />
+          <path d="m5.25 8.25 5.9 4a1.5 1.5 0 0 0 1.7 0l5.9-4" />
+        </svg>
+      </span>
+
       <span class="sidebar-link-label">Invitations</span>
 
       @if (invitationsCount() > 0) {
@@ -143,6 +163,25 @@
           routerLinkActive="sidebar-link-active"
           class="sidebar-link"
         >
+          <span
+            class="sidebar-main-icon neutral-main-icon"
+            [class.tasks-main-icon]="item.icon === 'tasks'"
+            [class.profile-main-icon]="item.icon === 'profile'"
+            aria-hidden="true"
+          >
+            @if (item.icon === 'tasks') {
+              <svg viewBox="0 0 24 24">
+                <path d="M8.25 12.25 10.6 14.6l5.15-5.2" />
+                <path d="M4.75 12a7.25 7.25 0 1 1 14.5 0 7.25 7.25 0 0 1-14.5 0Z" />
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24">
+                <path d="M8.25 9.25a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0Z" />
+                <path d="M5.25 20.25a6.75 6.75 0 0 1 13.5 0" />
+              </svg>
+            }
+          </span>
+
           <span class="sidebar-link-label">{{ item.label }}</span>
         </a>
       } @else {

@@ -95,7 +95,13 @@ export class TaskBoardComponent implements OnChanges {
   protected readonly renameGroupError = signal<string | null>(null);
 
   protected readonly selectedRenameColor = signal<string>('');
-  protected readonly activeCreateTaskPopover = signal<TaskPopoverType | null>(null);
+  protected readonly activeCreateTaskPopover = signal<{
+    type: TaskPopoverType;
+    top: number | null;
+    bottom: number | null;
+    left: number;
+    direction: TaskPopoverDirection;
+  } | null>(null);
   protected readonly selectedCreateTagIds = signal<number[]>([]);
   protected readonly selectedTaskId = signal<number | null>(null);
   protected dragPlaceholderHeight = signal<number | null>(null);
@@ -459,6 +465,8 @@ export class TaskBoardComponent implements OnChanges {
 
           this.isCreatingTask.set(false);
           this.activeTaskGroupId.set(null);
+          this.activeCreateTaskPopover.set(null);
+          this.selectedCreateTagIds.set([]);
           this.taskForm.reset({ title: '' }, { emitEvent: false });
         },
         error: (error: HttpErrorResponse) => {
@@ -471,9 +479,54 @@ export class TaskBoardComponent implements OnChanges {
   protected toggleCreateTaskPopover(type: TaskPopoverType, event: Event): void {
     event.stopPropagation();
 
-    this.activeCreateTaskPopover.update((current) =>
-      current === type ? null : type,
+    const active = this.activeCreateTaskPopover();
+
+    if (active?.type === type) {
+      this.activeCreateTaskPopover.set(null);
+      return;
+    }
+
+    const trigger = event.currentTarget as HTMLElement | null;
+    const rect = trigger?.getBoundingClientRect();
+    const viewport = this.document.defaultView;
+
+    if (!rect || !viewport) {
+      this.activeCreateTaskPopover.set({
+        type,
+        top: 120,
+        bottom: null,
+        left: 120,
+        direction: 'down',
+      });
+      return;
+    }
+
+    const width = this.getPopoverWidth(type);
+    const height = this.getPopoverEstimatedHeight(type);
+    const gap = 8;
+    const edgeGap = 12;
+
+    const spaceBelow = viewport.innerHeight - rect.bottom - edgeGap;
+    const spaceAbove = rect.top - edgeGap;
+
+    const direction: TaskPopoverDirection =
+      spaceBelow < height + gap && spaceAbove > spaceBelow ? 'up' : 'down';
+
+    const left = Math.min(
+      Math.max(rect.left, edgeGap),
+      Math.max(edgeGap, viewport.innerWidth - width - edgeGap),
     );
+
+    this.activeCreateTaskPopover.set({
+      type,
+      left,
+      top: direction === 'down' ? rect.bottom + gap : null,
+      bottom: direction === 'up' ? viewport.innerHeight - rect.top + gap : null,
+      direction,
+    });
+
+    this.activeTaskPopover.set(null);
+    this.activeGroupOptionsId.set(null);
   }
 
   protected setCreateAssignee(userId: number | null): void {
@@ -782,6 +835,32 @@ export class TaskBoardComponent implements OnChanges {
     }
 
     return style;
+  }
+
+  protected getCreatePopoverStyle(): Record<string, string> {
+    const active = this.activeCreateTaskPopover();
+
+    if (!active) {
+      return {};
+    }
+
+    const style: Record<string, string> = {
+      left: `${active.left}px`,
+    };
+
+    if (active.top !== null) {
+      style['top'] = `${active.top}px`;
+    }
+
+    if (active.bottom !== null) {
+      style['bottom'] = `${active.bottom}px`;
+    }
+
+    return style;
+  }
+
+  protected isCreatePopoverOpen(type: TaskPopoverType): boolean {
+    return this.activeCreateTaskPopover()?.type === type;
   }
 
   protected toggleTaskPopover(

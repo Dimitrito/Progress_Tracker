@@ -26,117 +26,105 @@
       [title]="task.is_completed ? 'Mark as not completed' : 'Mark as completed'"
       [attr.aria-label]="task.is_completed ? 'Mark task as not completed' : 'Mark task as completed'"
     >
-      {{ task.is_completed ? '☑' : '☐' }}
+      <span></span>
     </button>
   </div>
 
   @if (shouldShowStoryPoints(task)) {
-    <div class="task-card-meta-row">
+    <div class="task-points-row">
       <button
         type="button"
-        class="story-points-badge story-points-button"
-        [class.story-points-button-active]="isPopoverActive('points')"
+        class="task-points-badge"
+        [class.task-points-badge-active]="isPopoverActive('points')"
         (pointerdown)="$event.stopPropagation()"
         (click)="requestPopover('points', $event)"
         title="Edit story points"
       >
-        <span class="story-points-icon">◆</span>
+        <span class="task-points-icon">◆</span>
         <strong>{{ getActiveStoryPoints(task) }}</strong>
-        <span>points</span>
+        <span>pts</span>
       </button>
     </div>
   }
 
-  @if (task.tags.length > 0) {
-    <div class="task-tags-row">
-      @for (tag of task.tags; track tag.id) {
-        <span class="task-tag-chip" [style.border-color]="tag.color">
-          <span
-            class="task-tag-dot"
-            [style.background]="tag.color"
-          ></span>
-          {{ tag.name }}
-        </span>
-      }
-    </div>
-  }
-
-  <div class="task-card-actions-left">
-    <button
-      type="button"
-      class="task-action-button"
-      [class.task-action-button-active]="isPopoverActive('assignee') || !!task.assignee_email"
-      (pointerdown)="$event.stopPropagation()"
-      (click)="requestPopover('assignee', $event)"
-      title="Assignee"
-    >
-      @if (task.assignee_email) {
-        <span class="assignee-avatar">
-          @if (task.assignee_avatar) {
-            <img
-              [src]="resolveMediaUrl(task.assignee_avatar)"
-              alt="Assignee avatar"
-              class="assignee-avatar-image"
-            />
-          } @else {
-            <span class="assignee-avatar-fallback">
-              {{ buildUserInitials(task.assignee_email) }}
-            </span>
-          }
-        </span>
-      } @else {
-        <span class="task-action-icon">👤</span>
-      }
-    </button>
-
-    <button
-      type="button"
-      class="task-action-button"
-      [class.task-action-button-active]="isPopoverActive('deadline') || !!task.deadline"
-      (pointerdown)="$event.stopPropagation()"
-      (click)="requestPopover('deadline', $event)"
-      title="Deadline"
-    >
-      <span class="task-action-icon">📅</span>
-
-      @if (task.deadline) {
-        <span>{{ formatDeadline(task.deadline) }}</span>
-      }
-    </button>
-
-    <button
-      type="button"
-      class="task-action-button"
-      [class.task-action-button-active]="isPopoverActive('priority') || !!task.priority"
-      (pointerdown)="$event.stopPropagation()"
-      (click)="requestPopover('priority', $event)"
-      title="Priority"
-    >
-      <span class="task-action-icon">{{ getPriorityIcon(task.priority) }}</span>
-
-      @if (task.priority) {
-        <span>{{ formatPriority(task.priority) }}</span>
-      }
-    </button>
-
-    <button
-      type="button"
-      class="task-action-button"
-      [class.task-action-button-active]="isPopoverActive('tags') || task.tags.length > 0"
-      (pointerdown)="$event.stopPropagation()"
-      (click)="requestPopover('tags', $event)"
-      title="Tags"
-    >
-      <span class="task-action-icon">🏷</span>
-
-      @if (task.tags.length > 0) {
-        <span>{{ task.tags[0].name }}</span>
-
-        @if (task.tags.length > 1) {
-          <span class="task-tag-more">+{{ task.tags.length - 1 }}</span>
+  <div class="task-card-footer">
+    <div class="task-meta-list">
+      <button
+        type="button"
+        class="task-meta-item"
+        [class.task-meta-item-active]="isPopoverActive('assignee') || !!task.assignee_email"
+        (pointerdown)="$event.stopPropagation()"
+        (click)="requestPopover('assignee', $event)"
+        title="Assignee"
+      >
+        @if (task.assignee_email) {
+          <span class="assignee-avatar">
+            @if (task.assignee_avatar) {
+              <img
+                [src]="resolveMediaUrl(task.assignee_avatar)"
+                alt="Assignee avatar"
+                class="assignee-avatar-image"
+              />
+            } @else {
+              <span class="assignee-avatar-fallback">
+                {{ buildUserInitials(task.assignee_email) }}
+              </span>
+            }
+          </span>
+        } @else {
+          <span class="task-meta-icon">👤</span>
         }
-      }
-    </button>
+      </button>
+
+      <button
+        type="button"
+        class="task-meta-item"
+        [class.task-meta-item-active]="isPopoverActive('deadline') || !!task.deadline"
+        (pointerdown)="$event.stopPropagation()"
+        (click)="requestPopover('deadline', $event)"
+        title="Deadline"
+      >
+        <span class="task-meta-icon">📅</span>
+
+        @if (task.deadline) {
+          <span>{{ formatDeadline(task.deadline) }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="task-meta-item"
+        [class.task-meta-item-active]="isPopoverActive('priority') || !!task.priority"
+        (pointerdown)="$event.stopPropagation()"
+        (click)="requestPopover('priority', $event)"
+        title="Priority"
+      >
+        <span class="task-meta-icon">{{ getPriorityIcon(task.priority) }}</span>
+
+        @if (task.priority) {
+          <span>{{ formatPriority(task.priority) }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="task-meta-item task-meta-tags"
+        [class.task-meta-item-active]="isPopoverActive('tags') || task.tags.length > 0"
+        (pointerdown)="$event.stopPropagation()"
+        (click)="requestPopover('tags', $event)"
+        title="Tags"
+      >
+        <span class="task-meta-icon">🏷</span>
+
+        @if (task.tags.length > 0) {
+          <span>{{ task.tags[0].name }}</span>
+
+          @if (task.tags.length > 1) {
+            <span class="task-tag-more">+{{ task.tags.length - 1 }}</span>
+          }
+        }
+      </button>
+    </div>
   </div>
 
   <ng-template cdkDragPlaceholder>
@@ -165,72 +153,66 @@
           [class.task-complete-button-active]="task.is_completed"
           disabled
         >
-          {{ task.is_completed ? '☑' : '☐' }}
+          <span></span>
         </button>
       </div>
 
       @if (shouldShowStoryPoints(task)) {
-        <div class="task-card-meta-row">
-          <span class="story-points-badge" title="Story points">
-            <span class="story-points-icon">◆</span>
+        <div class="task-points-row">
+          <span class="task-points-badge">
+            <span class="task-points-icon">◆</span>
             <strong>{{ getActiveStoryPoints(task) }}</strong>
-            <span>points</span>
+            <span>pts</span>
           </span>
         </div>
       }
 
-      @if (task.tags.length > 0) {
-        <div class="task-tags-row">
-          @for (tag of task.tags; track tag.id) {
-            <span class="task-tag-chip" [style.border-color]="tag.color">
-              <span class="task-tag-dot" [style.background]="tag.color"></span>
-              {{ tag.name }}
-            </span>
-          }
+      <div class="task-card-footer">
+        <div class="task-meta-list">
+          <span class="task-meta-item">
+            @if (task.assignee_email) {
+              <span class="assignee-avatar">
+                @if (task.assignee_avatar) {
+                  <img
+                    [src]="resolveMediaUrl(task.assignee_avatar)"
+                    alt="Assignee avatar"
+                    class="assignee-avatar-image"
+                  />
+                } @else {
+                  <span class="assignee-avatar-fallback">
+                    {{ buildUserInitials(task.assignee_email) }}
+                  </span>
+                }
+              </span>
+            } @else {
+              <span class="task-meta-icon">👤</span>
+            }
+          </span>
+
+          <span class="task-meta-item">
+            <span class="task-meta-icon">📅</span>
+
+            @if (task.deadline) {
+              <span>{{ formatDeadline(task.deadline) }}</span>
+            }
+          </span>
+
+          <span class="task-meta-item">
+            <span class="task-meta-icon">{{ getPriorityIcon(task.priority) }}</span>
+
+            @if (task.priority) {
+              <span>{{ formatPriority(task.priority) }}</span>
+            }
+          </span>
+
+          <span class="task-meta-item task-meta-tags">
+            <span class="task-meta-icon">🏷</span>
+
+            @if (task.tags.length > 0) {
+              <span>{{ task.tags[0].name }}</span>
+            }
+          </span>
         </div>
-      }
-
-      <div class="task-card-actions-left">
-        <span class="task-action-button">
-          @if (task.assignee_email) {
-            <span class="assignee-avatar">
-              @if (task.assignee_avatar) {
-                <img
-                  [src]="resolveMediaUrl(task.assignee_avatar)"
-                  alt="Assignee avatar"
-                  class="assignee-avatar-image"
-                />
-              } @else {
-                <span class="assignee-avatar-fallback">
-                  {{ buildUserInitials(task.assignee_email) }}
-                </span>
-              }
-            </span>
-          } @else {
-            <span class="task-action-icon">👤</span>
-          }
-        </span>
-
-        <span class="task-action-button">
-          <span class="task-action-icon">📅</span>
-          @if (task.deadline) {
-            <span>{{ formatDeadline(task.deadline) }}</span>
-          }
-        </span>
-
-        <span class="task-action-button">
-          <span class="task-action-icon">{{ getPriorityIcon(task.priority) }}</span>
-          @if (task.priority) {
-            <span>{{ formatPriority(task.priority) }}</span>
-          }
-        </span>
-
-        <span class="task-action-button">
-          <span class="task-action-icon">🏷</span>
-          @if (task.tags.length > 0) {
-            <span>{{ task.tags[0].name }}</span>
-          }
-        </span>
       </div>
     </div>
   </ng-template>
