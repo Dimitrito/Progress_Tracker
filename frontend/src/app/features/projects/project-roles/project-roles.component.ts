@@ -163,14 +163,6 @@ export class ProjectRolesComponent implements OnChanges {
   }
 
   protected deleteRole(role: ProjectRole): void {
-    const confirmed = window.confirm(
-      `Delete role “${role.name}”? Members with this role will become unassigned.`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
     this.projectsService
       .deleteProjectRole(role.id)
       .pipe(takeUntilDestroyed(this.destroyRef))

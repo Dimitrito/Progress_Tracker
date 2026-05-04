@@ -26,6 +26,8 @@ interface OrganizationDetailViewModel {
   createdAt: string;
 }
 
+type ConfirmAction = 'remove-member' | 'delete-organization' | 'leave-organization';
+
 @Component({
   selector: 'app-organization-detail-page',
   standalone: true,
@@ -53,6 +55,7 @@ export class OrganizationDetailPageComponent {
   protected readonly confirmDialogMessage = signal('');
   protected readonly confirmDialogConfirmText = signal('');
   protected readonly confirmDialogBusy = signal(false);
+  protected readonly pendingConfirmAction = signal<ConfirmAction | null>(null);
   protected readonly memberPendingRemoval = signal<OrganizationMember | null>(null);
 
   protected readonly isLoading = signal(true);
@@ -194,19 +197,21 @@ export class OrganizationDetailPageComponent {
   }
 
   private deleteOrganization(id: number): void {
-    if (!confirm('Are you sure you want to delete this organization?')) {
-      return;
-    }
+    this.confirmDialogBusy.set(true);
 
     this.organizationsService
       .deleteOrganization(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.confirmDialogBusy.set(false);
+          this.confirmDialogOpen.set(false);
+          this.pendingConfirmAction.set(null);
           this.organizationContext.clearSelectedOrganization();
           this.router.navigateByUrl('/app/organizations');
         },
         error: () => {
+          this.confirmDialogBusy.set(false);
           this.saveError.set('Failed to delete organization.');
         },
       });
@@ -214,29 +219,47 @@ export class OrganizationDetailPageComponent {
 
   protected handleDangerAction(): void {
     const organization = this.organization();
-    if (!organization) return;
+
+    if (!organization) {
+      return;
+    }
 
     if (organization.role === 'admin') {
-      this.deleteOrganization(organization.id);
-    } else {
-      this.leaveOrganization(organization.id);
+      this.pendingConfirmAction.set('delete-organization');
+      this.confirmDialogTitle.set('Delete workspace');
+      this.confirmDialogMessage.set(
+        `Delete "${organization.name}"? All projects, tasks, invitations and workspace data will be permanently deleted. This action cannot be undone.`,
+      );
+      this.confirmDialogConfirmText.set('Delete workspace');
+      this.confirmDialogOpen.set(true);
+      return;
     }
+
+    this.pendingConfirmAction.set('leave-organization');
+    this.confirmDialogTitle.set('Leave workspace');
+    this.confirmDialogMessage.set(
+      `Leave "${organization.name}"? You will lose access to this workspace and its projects.`,
+    );
+    this.confirmDialogConfirmText.set('Leave workspace');
+    this.confirmDialogOpen.set(true);
   }
 
   private leaveOrganization(id: number): void {
-    if (!confirm('Leave this organization?')) {
-      return;
-    }
+    this.confirmDialogBusy.set(true);
 
     this.organizationsService
       .leaveOrganization(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.confirmDialogBusy.set(false);
+          this.confirmDialogOpen.set(false);
+          this.pendingConfirmAction.set(null);
           this.organizationContext.clearSelectedOrganization();
           this.router.navigateByUrl('/app/organizations');
         },
         error: () => {
+          this.confirmDialogBusy.set(false);
           this.saveError.set('Failed to leave organization.');
         },
       });
@@ -429,6 +452,7 @@ export class OrganizationDetailPageComponent {
   }
 
   protected openRemoveMemberDialog(member: OrganizationMember): void {
+    this.pendingConfirmAction.set('remove-member');
     this.memberPendingRemoval.set(member);
     this.confirmDialogTitle.set('Remove member');
     this.confirmDialogMessage.set(
@@ -444,7 +468,31 @@ export class OrganizationDetailPageComponent {
     }
 
     this.confirmDialogOpen.set(false);
+    this.pendingConfirmAction.set(null);
     this.memberPendingRemoval.set(null);
+  }
+
+  protected confirmDialogAction(): void {
+    const organization = this.organization();
+    const action = this.pendingConfirmAction();
+
+    if (!organization || !action) {
+      return;
+    }
+
+    if (action === 'remove-member') {
+      this.confirmMemberRemoval();
+      return;
+    }
+
+    if (action === 'delete-organization') {
+      this.deleteOrganization(organization.id);
+      return;
+    }
+
+    if (action === 'leave-organization') {
+      this.leaveOrganization(organization.id);
+    }
   }
 
   protected confirmMemberRemoval(): void {
@@ -465,6 +513,7 @@ export class OrganizationDetailPageComponent {
           this.members.update((list) => list.filter((item) => item.id !== member.id));
           this.confirmDialogBusy.set(false);
           this.confirmDialogOpen.set(false);
+          this.pendingConfirmAction.set(null);
           this.memberPendingRemoval.set(null);
         },
         error: (error: HttpErrorResponse) => {

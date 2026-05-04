@@ -4,9 +4,9 @@
       <h1 class="page-title">Projects</h1>
       <p class="page-subtitle">
         @if (selectedOrganization()) {
-          Create and manage projects inside the selected organization.
+          Create and manage projects inside the selected workspace.
         } @else {
-          View and manage projects across your organizations.
+          View and manage projects across your workspaces.
         }
       </p>
     </div>
@@ -14,10 +14,9 @@
 
   @if (!selectedOrganization()) {
     <div class="state-card">
-      <p class="state-eyebrow">Organization</p>
       <h2 class="state-title">Select a workspace first</h2>
       <p class="state-description">
-        Choose an organization from the Organizations page to create projects in
+        Choose an workspace from the workspaces page to create projects in
         that workspace.
       </p>
     </div>
