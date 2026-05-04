@@ -5,6 +5,8 @@
   gap: 16px;
 }
 
+/* Shared */
+
 .roles-header,
 .panel-header,
 .role-card-main,
@@ -18,11 +20,11 @@
 }
 
 .roles-kicker {
-  margin: 0 0 5px;
+  margin: 0 0 6px;
   color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 850;
-  letter-spacing: 0.12em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -30,8 +32,8 @@
 .panel-header h3 {
   margin: 0;
   color: var(--text-primary);
-  font-weight: 850;
-  letter-spacing: -0.03em;
+  font-weight: 750;
+  letter-spacing: -0.02em;
 }
 
 .roles-header h2 {
@@ -43,52 +45,66 @@
   margin-top: 6px;
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .panel-header h3 {
   font-size: 17px;
+  line-height: 1.25;
 }
+
+/* Buttons */
 
 .secondary-button,
 .primary-button,
 .small-primary-button,
 .small-secondary-button {
-  min-height: 34px;
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border);
   border-radius: 10px;
   font: inherit;
-  font-size: 12px;
-  font-weight: 850;
+  font-size: 13px;
+  font-weight: 650;
   cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    opacity 0.16s ease;
 }
 
 .secondary-button,
 .small-secondary-button {
-  background: transparent;
-  color: var(--text-secondary);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
 }
 
 .secondary-button:hover,
 .small-secondary-button:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
+  background: color-mix(in srgb, var(--primary) 5%, var(--bg-surface-2));
 }
 
 .primary-button,
 .small-primary-button {
+  border-color: color-mix(in srgb, var(--primary) 52%, var(--border));
+  background: color-mix(in srgb, var(--primary) 88%, #ffffff);
+  color: #fff;
+}
+
+.primary-button:hover,
+.small-primary-button:hover {
   border-color: var(--primary);
   background: var(--primary);
-  color: #fff;
 }
 
 .primary-button:disabled,
 .small-primary-button:disabled,
 .small-secondary-button:disabled {
-  opacity: 0.65;
+  opacity: 0.62;
   cursor: not-allowed;
 }
 
@@ -98,62 +114,64 @@
 
 .small-primary-button,
 .small-secondary-button {
-  min-height: 30px;
-  padding: 0 10px;
+  min-height: 32px;
+  padding: 0 11px;
 }
 
 .secondary-button {
-  padding: 0 12px;
+  padding: 0 14px;
 }
+
+/* States */
 
 .state-card {
   border: 1px solid var(--border);
-  border-radius: 22px;
-  background:
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--primary) 10%, transparent),
-      transparent 34%
-    ),
-    var(--bg-surface);
-  padding: 34px;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+  border-radius: 16px;
+  background: var(--bg-surface);
+  padding: 28px;
+  box-shadow: var(--shadow-sm, 0 8px 22px rgba(0, 0, 0, 0.1));
 }
 
 .state-card h2 {
   margin: 0 0 8px;
   color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 750;
 }
 
 .state-card p {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
 }
+
+/* Summary */
 
 .roles-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .summary-card,
 .panel-card {
-  border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
-  border-radius: 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
   background: var(--bg-surface);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.14);
+  box-shadow: var(--shadow-sm, 0 8px 22px rgba(0, 0, 0, 0.09));
 }
 
 .summary-card {
-  min-height: 112px;
+  min-height: 104px;
   padding: 16px;
 }
 
 .summary-card span {
   color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 850;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -161,31 +179,36 @@
   display: block;
   margin-top: 10px;
   color: var(--text-primary);
-  font-size: 32px;
-  font-weight: 950;
+  font-size: 29px;
+  font-weight: 800;
   line-height: 1;
+  letter-spacing: -0.03em;
 }
 
 .summary-card p {
   margin: 8px 0 0;
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .warning-card {
-  border-color: color-mix(in srgb, #f59e0b 42%, var(--border));
+  border-color: color-mix(in srgb, #f59e0b 18%, var(--border));
 }
+
+/* Main layout */
 
 .roles-layout {
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
+  grid-template-columns: 340px minmax(0, 1fr);
   gap: 14px;
 }
 
 .panel-card {
   padding: 16px;
 }
+
+/* Create role */
 
 .create-role-form {
   display: flex;
@@ -203,8 +226,8 @@
 .role-field span {
   color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 850;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -214,13 +237,17 @@
   width: 100%;
   min-height: 38px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--bg-surface-2);
   color: var(--text-primary);
   font: inherit;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 600;
   outline: none;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
 }
 
 .role-field input,
@@ -233,25 +260,29 @@
   cursor: pointer;
 }
 
+.role-field input::placeholder {
+  color: color-mix(in srgb, var(--text-secondary) 72%, transparent);
+}
+
 .role-field input:focus,
 .role-edit-form input:focus,
 .select-cell select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 54%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
 }
 
 .field-error {
   margin: 0;
   color: var(--danger);
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .roles-help {
-  margin-top: 18px;
+  margin-top: 16px;
   padding: 14px;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 13px;
   background: var(--bg-surface-2);
 }
 
@@ -259,7 +290,7 @@
   display: block;
   color: var(--text-primary);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 750;
 }
 
 .role-examples {
@@ -276,10 +307,13 @@
   padding: 0 9px;
   border: 1px solid var(--border);
   border-radius: 999px;
+  background: var(--bg-surface);
   color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 11.5px;
+  font-weight: 600;
 }
+
+/* Roles list */
 
 .roles-list {
   display: grid;
@@ -290,7 +324,7 @@
 .role-card {
   padding: 13px;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 13px;
   background: var(--bg-surface-2);
 }
 
@@ -298,15 +332,15 @@
   margin: 0;
   color: var(--text-primary);
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 750;
 }
 
 .role-card-main span {
   display: block;
   margin-top: 4px;
   color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 750;
+  font-size: 11.5px;
+  font-weight: 500;
 }
 
 .role-actions {
@@ -321,22 +355,28 @@
   display: inline-grid;
   place-items: center;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 9px;
   background: var(--bg-surface);
   color: var(--text-secondary);
   font: inherit;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 750;
   cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
 }
 
 .icon-button:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--border));
+  background: color-mix(in srgb, var(--primary) 5%, var(--bg-surface));
+  color: var(--text-primary);
 }
 
 .danger-icon-button:hover {
-  border-color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 38%, var(--border));
+  background: color-mix(in srgb, var(--danger) 5%, var(--bg-surface));
   color: var(--danger);
 }
 
@@ -356,9 +396,10 @@
   padding: 0 8px;
   border: 1px solid var(--border);
   border-radius: 999px;
+  background: var(--bg-surface);
   color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 750;
+  font-size: 11.5px;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -372,6 +413,8 @@
   gap: 10px;
 }
 
+/* Assignment table */
+
 .member-assignment-panel {
   overflow: hidden;
 }
@@ -379,14 +422,17 @@
 .members-table {
   margin-top: 16px;
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 14px;
   overflow: hidden;
 }
 
 .members-table-head,
 .member-row {
   display: grid;
-  grid-template-columns: minmax(260px, 1.2fr) minmax(180px, 0.8fr) minmax(220px, 0.8fr);
+  grid-template-columns:
+    minmax(260px, 1.2fr)
+    minmax(180px, 0.8fr)
+    minmax(220px, 0.8fr);
   gap: 12px;
   align-items: center;
 }
@@ -401,8 +447,8 @@
 .members-table-head span {
   color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -410,10 +456,15 @@
   min-height: 66px;
   padding: 12px 14px;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background: var(--bg-surface);
 }
 
 .member-row:last-child {
   border-bottom: 0;
+}
+
+.member-row:hover {
+  background: color-mix(in srgb, var(--bg-surface-2) 52%, var(--bg-surface));
 }
 
 .member-cell {
@@ -427,12 +478,12 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--primary) 34%, var(--border));
-  border-radius: 13px;
-  background: color-mix(in srgb, var(--primary) 12%, var(--bg-surface-2));
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--bg-surface-2);
   color: var(--text-primary);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 750;
 }
 
 .member-cell strong {
@@ -441,7 +492,7 @@
   overflow: hidden;
   color: var(--text-primary);
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 750;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -450,8 +501,8 @@
   display: block;
   margin-top: 3px;
   color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 500;
 }
 
 .role-pill {
@@ -461,12 +512,12 @@
   max-width: 100%;
   overflow: hidden;
   padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--primary) 34%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--primary) 9%, transparent);
+  background: color-mix(in srgb, var(--primary) 5%, var(--bg-surface));
   color: var(--text-primary);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -481,8 +532,11 @@
   margin: 0;
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 500;
+  line-height: 1.45;
 }
+
+/* Responsive */
 
 @media (max-width: 1180px) {
   .roles-summary-grid {
@@ -495,7 +549,10 @@
 
   .members-table-head,
   .member-row {
-    grid-template-columns: minmax(220px, 1fr) minmax(160px, 0.8fr) minmax(190px, 0.8fr);
+    grid-template-columns:
+      minmax(220px, 1fr)
+      minmax(160px, 0.8fr)
+      minmax(190px, 0.8fr);
   }
 }
 
@@ -524,7 +581,16 @@
     grid-template-columns: 1fr;
     margin-bottom: 10px;
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 14px;
     background: var(--bg-surface-2);
   }
+}
+.member-avatar {
+  overflow: hidden;
+}
+
+.member-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

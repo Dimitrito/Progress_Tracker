@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
+import { environment } from '../../../../environments/environment';
 import {
   ProjectMembership,
   ProjectRole,
@@ -235,6 +235,25 @@ export class ProjectRolesComponent implements OnChanges {
           this.loadData();
         },
       });
+  }
+
+  protected resolveMediaUrl(url: string | null | undefined): string | null {
+    if (!url) {
+      return null;
+    }
+
+    if (
+      url.startsWith('http://') ||
+      url.startsWith('https://') ||
+      url.startsWith('blob:') ||
+      url.startsWith('data:')
+    ) {
+      return url;
+    }
+
+    const apiHost = environment.apiUrl.replace(/\/api\/?$/, '');
+
+    return `${apiHost}${url}`;
   }
 
   protected getInitials(email: string): string {

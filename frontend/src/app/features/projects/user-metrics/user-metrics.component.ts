@@ -13,7 +13,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { environment } from '../../../../environments/environment';
 import {
   ProjectUserMetricItem,
-  ProjectUserMetricTask,
   ProjectUserMetrics,
   TasksService,
 } from '../../../core/services/tasks.service';
@@ -50,10 +49,6 @@ export class UserMetricsComponent implements OnChanges {
     const values = this.metrics()?.users.map((user) => user.remaining_points) ?? [];
 
     return Math.max(1, ...values);
-  });
-
-  protected readonly topContributor = computed(() => {
-    return this.metrics()?.users[0] ?? null;
   });
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -130,26 +125,6 @@ export class UserMetricsComponent implements OnChanges {
     const apiHost = environment.apiUrl.replace(/\/api\/?$/, '');
 
     return `${apiHost}${url}`;
-  }
-
-  protected formatDate(date: string | null): string {
-    if (!date) {
-      return 'No date';
-    }
-
-    return new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }
-
-  protected getTaskLabel(task: ProjectUserMetricTask): string {
-    return task.parent_task ? 'Subtask' : 'Task';
-  }
-
-  protected getVisibleTasks(tasks: ProjectUserMetricTask[]): ProjectUserMetricTask[] {
-    return tasks.slice(0, 3);
   }
 
   private loadMetrics(): void {

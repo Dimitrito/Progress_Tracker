@@ -209,7 +209,15 @@
           <div class="member-row">
             <div class="member-cell">
               <div class="member-avatar">
-                <span>{{ getInitials(member.user_email) }}</span>
+                @if (resolveMediaUrl(member.user_avatar); as avatarUrl) {
+                  <img
+                    [src]="avatarUrl"
+                    alt="Member avatar"
+                    class="member-avatar-image"
+                  />
+                } @else {
+                  <span>{{ getInitials(member.user_email) }}</span>
+                }
               </div>
 
               <div>

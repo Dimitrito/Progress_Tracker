@@ -40,53 +40,6 @@
       </article>
     </section>
 
-    @if (topContributor(); as topUser) {
-      <section class="top-contributor-card">
-        <div class="top-contributor-profile">
-          <div class="user-avatar large-avatar">
-            @if (resolveMediaUrl(topUser.user.avatar); as avatarUrl) {
-              <img [src]="avatarUrl" alt="User avatar" />
-            } @else {
-              <span>{{ getInitials(topUser.user.email) }}</span>
-            }
-          </div>
-
-          <div>
-            <p class="metrics-kicker">Top contributor</p>
-            <h3>{{ topUser.user.email }}</h3>
-            <span>
-              {{ topUser.user.project_role_name || 'Project member' }}
-            </span>
-          </div>
-        </div>
-
-        <div
-          class="contribution-score"
-          [class]="getContributionClass(topUser.contribution_score)"
-        >
-          <strong>{{ topUser.contribution_score }}%</strong>
-          <span>contribution score</span>
-        </div>
-
-        <div class="top-contributor-stats">
-          <div>
-            <span>Completed points</span>
-            <strong>{{ topUser.completed_points }}</strong>
-          </div>
-
-          <div>
-            <span>Completed tasks</span>
-            <strong>{{ topUser.completed_tasks_count }}</strong>
-          </div>
-
-          <div>
-            <span>Completion rate</span>
-            <strong>{{ topUser.completion_rate }}%</strong>
-          </div>
-        </div>
-      </section>
-    }
-
     <section class="user-chart-panel">
       <header class="panel-header">
         <div>
@@ -167,101 +120,6 @@
       </div>
     </section>
 
-    <section class="user-cards-grid">
-      @for (user of data.users; track user.user.id) {
-        <article class="member-card">
-          <header class="member-card-header">
-            <div class="user-avatar">
-              @if (resolveMediaUrl(user.user.avatar); as avatarUrl) {
-                <img [src]="avatarUrl" alt="User avatar" />
-              } @else {
-                <span>{{ getInitials(user.user.email) }}</span>
-              }
-            </div>
-
-            <div>
-              <h3>{{ user.user.email }}</h3>
-              <p>{{ user.user.project_role_name || 'Project member' }}</p>
-            </div>
-          </header>
-
-          <div class="member-stats-grid">
-            <div>
-              <span>Assigned</span>
-              <strong>{{ user.assigned_tasks_count }}</strong>
-            </div>
-
-            <div>
-              <span>Open</span>
-              <strong>{{ user.open_tasks_count }}</strong>
-            </div>
-
-            <div>
-              <span>Done</span>
-              <strong>{{ user.completed_tasks_count }}</strong>
-            </div>
-
-            <div>
-              <span>Rate</span>
-              <strong>{{ user.completion_rate }}%</strong>
-            </div>
-          </div>
-
-          <div class="member-points">
-            <div class="member-points-row">
-              <span>Completed points</span>
-              <strong>{{ user.completed_points }}</strong>
-            </div>
-
-            <div class="member-points-row">
-              <span>Remaining points</span>
-              <strong>{{ user.remaining_points }}</strong>
-            </div>
-
-            <div class="member-points-track">
-              <div
-                class="member-points-fill"
-                [style.width.%]="getPercent(user.completion_rate)"
-              ></div>
-            </div>
-          </div>
-
-          <div class="member-risk-row">
-            <span
-              class="risk-pill"
-              [class.risk-pill-danger]="user.overdue_tasks_count > 0"
-            >
-              {{ user.overdue_tasks_count }} overdue
-            </span>
-
-            <span
-              class="risk-pill"
-              [class.risk-pill-warning]="user.due_soon_tasks_count > 0"
-            >
-              {{ user.due_soon_tasks_count }} due soon
-            </span>
-          </div>
-
-          @if (getVisibleTasks(user.overdue_tasks).length > 0) {
-            <div class="member-task-list">
-              <h4>Overdue tasks</h4>
-
-              @for (task of getVisibleTasks(user.overdue_tasks); track task.id) {
-                <div class="member-task-item">
-                  <div>
-                    <strong>{{ task.title }}</strong>
-                    <span>{{ getTaskLabel(task) }} · {{ task.group_name }}</span>
-                  </div>
-
-                  <time>{{ formatDate(task.deadline) }}</time>
-                </div>
-              }
-            </div>
-          }
-        </article>
-      }
-    </section>
-
     @if (data.unassigned_tasks.length > 0) {
       <section class="unassigned-panel">
         <header class="panel-header">
@@ -276,10 +134,18 @@
             <div class="unassigned-task">
               <div>
                 <strong>{{ task.title }}</strong>
-                <span>{{ getTaskLabel(task) }} · {{ task.group_name }}</span>
+                <span>
+                  {{ task.parent_task ? 'Subtask' : 'Task' }} · {{ task.group_name }}
+                </span>
               </div>
 
-              <time>{{ formatDate(task.deadline) }}</time>
+              <time>
+                @if (task.deadline) {
+                  {{ task.deadline }}
+                } @else {
+                  No date
+                }
+              </time>
             </div>
           }
         </div>

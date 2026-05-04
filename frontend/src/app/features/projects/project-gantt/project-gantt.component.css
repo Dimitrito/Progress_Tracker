@@ -5,6 +5,8 @@
   gap: 16px;
 }
 
+/* Header */
+
 .gantt-header {
   display: flex;
   align-items: flex-start;
@@ -13,11 +15,11 @@
 }
 
 .gantt-kicker {
-  margin: 0 0 5px;
+  margin: 0 0 6px;
   color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 850;
-  letter-spacing: 0.12em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -25,8 +27,8 @@
   margin: 0;
   color: var(--text-primary);
   font-size: 24px;
-  font-weight: 850;
-  letter-spacing: -0.03em;
+  font-weight: 750;
+  letter-spacing: -0.02em;
 }
 
 .gantt-header span {
@@ -34,77 +36,84 @@
   margin-top: 6px;
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
+/* Buttons */
+
 .secondary-button {
-  min-height: 34px;
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
+  padding: 0 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: transparent;
-  color: var(--text-secondary);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
   font: inherit;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 650;
   cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
 }
 
 .secondary-button:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
+  background: color-mix(in srgb, var(--primary) 5%, var(--bg-surface-2));
 }
+
+/* States */
 
 .state-card,
 .empty-gantt-card {
   border: 1px solid var(--border);
-  border-radius: 22px;
-  background:
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--primary) 10%, transparent),
-      transparent 34%
-    ),
-    var(--bg-surface);
-  padding: 34px;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+  border-radius: 16px;
+  background: var(--bg-surface);
+  padding: 28px;
+  box-shadow: var(--shadow-sm, 0 8px 22px rgba(0, 0, 0, 0.1));
 }
 
 .state-card h2,
 .empty-gantt-card h3 {
   margin: 0 0 8px;
   color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 750;
 }
 
 .state-card p,
 .empty-gantt-card p {
   margin: 0;
   color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
 }
+
+/* Summary cards */
 
 .gantt-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .gantt-summary-card {
-  min-height: 108px;
-  padding: 15px;
-  border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
-  border-radius: 18px;
+  min-height: 104px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
   background: var(--bg-surface);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.13);
+  box-shadow: var(--shadow-sm, 0 8px 22px rgba(0, 0, 0, 0.09));
 }
 
 .gantt-summary-card span {
   color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 850;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -112,41 +121,46 @@
   display: block;
   margin-top: 10px;
   color: var(--text-primary);
-  font-size: 30px;
-  font-weight: 950;
+  font-size: 29px;
+  font-weight: 800;
   line-height: 1;
+  letter-spacing: -0.03em;
 }
 
 .gantt-summary-card p {
   margin: 8px 0 0;
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .success-card {
-  border-color: color-mix(in srgb, var(--success) 34%, var(--border));
+  border-color: color-mix(in srgb, var(--success) 18%, var(--border));
 }
 
 .danger-card {
-  border-color: color-mix(in srgb, var(--danger) 38%, var(--border));
+  border-color: color-mix(in srgb, var(--danger) 20%, var(--border));
 }
+
+/* Gantt shell */
 
 .gantt-shell {
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
-  border-radius: 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
   background: var(--bg-surface);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-sm, 0 8px 22px rgba(0, 0, 0, 0.09));
 }
 
 .gantt-table {
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
-  grid-template-rows: 54px auto;
+  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-rows: 52px auto;
   max-height: calc(100vh - 330px);
-  min-height: 420px;
+  min-height: 390px;
 }
+
+/* Left header */
 
 .gantt-left-header {
   position: sticky;
@@ -154,16 +168,18 @@
   z-index: 4;
   display: flex;
   align-items: center;
-  padding: 0 18px;
+  padding: 0 16px;
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   background: var(--bg-surface);
   color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+/* Timeline header */
 
 .gantt-timeline-header {
   overflow-x: auto;
@@ -173,7 +189,7 @@
 }
 
 .gantt-days {
-  height: 54px;
+  height: 52px;
   display: flex;
 }
 
@@ -183,31 +199,34 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   padding: 0 10px;
-  border-right: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
   color: var(--text-secondary);
 }
 
 .gantt-day span {
   font-size: 10px;
-  font-weight: 850;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .gantt-day strong {
   color: var(--text-primary);
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 750;
 }
 
 .gantt-day-weekend {
-  background: color-mix(in srgb, var(--bg-surface-2) 60%, transparent);
+  background: color-mix(in srgb, var(--bg-surface-2) 50%, transparent);
 }
 
 .gantt-day-today {
-  background: color-mix(in srgb, var(--primary) 10%, var(--bg-surface));
+  background: color-mix(in srgb, var(--primary) 6%, var(--bg-surface));
 }
+
+/* Left body */
 
 .gantt-left-body {
   overflow-y: auto;
@@ -220,7 +239,7 @@
   display: flex;
   align-items: center;
   padding: 0 16px;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
 }
 
 .gantt-task-name-content {
@@ -228,35 +247,35 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-left: calc(var(--task-depth, 0) * 22px);
+  padding-left: calc(var(--task-depth, 0) * 20px);
 }
 
 .task-status-dot {
-  width: 13px;
-  height: 13px;
+  width: 10px;
+  height: 10px;
   flex-shrink: 0;
-  border: 2px solid color-mix(in srgb, var(--primary) 72%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--primary) 52%, var(--border));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  background: color-mix(in srgb, var(--primary) 45%, var(--text-secondary));
 }
 
 .task-status-dot-completed {
-  border-color: var(--success);
-  background: var(--success);
+  border-color: color-mix(in srgb, var(--success) 50%, var(--border));
+  background: color-mix(in srgb, var(--success) 58%, var(--text-secondary));
 }
 
 .task-status-dot-overdue {
-  border-color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border));
+  background: color-mix(in srgb, var(--danger) 58%, var(--text-secondary));
 }
 
 .gantt-task-name-content strong {
   display: block;
-  max-width: 270px;
+  max-width: 260px;
   overflow: hidden;
   color: var(--text-primary);
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 750;
   line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -266,9 +285,11 @@
   display: block;
   margin-top: 3px;
   color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 500;
 }
+
+/* Timeline body */
 
 .gantt-timeline-body {
   overflow: auto;
@@ -278,94 +299,58 @@
 .gantt-grid {
   position: relative;
   min-height: 100%;
-}
-
-.gantt-grid-column {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 92px;
-  border-right: 1px solid color-mix(in srgb, var(--border) 54%, transparent);
-}
-
-.gantt-grid-column:nth-child(1) {
-  left: 0;
-}
-
-.gantt-grid-column-weekend {
-  background: color-mix(in srgb, var(--bg-surface) 42%, transparent);
-}
-
-.gantt-grid-column-today {
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
-}
-
-.gantt-grid-column {
-  left: calc((var(--column-index, 0)) * 92px);
-}
-
-/* Angular does not set index custom vars here, so this layout is handled by normal flow fallback below. */
-.gantt-grid {
   background:
     repeating-linear-gradient(
       90deg,
       transparent 0,
       transparent 91px,
-      color-mix(in srgb, var(--border) 52%, transparent) 91px,
-      color-mix(in srgb, var(--border) 52%, transparent) 92px
+      color-mix(in srgb, var(--border) 56%, transparent) 91px,
+      color-mix(in srgb, var(--border) 56%, transparent) 92px
     ),
     var(--bg-surface-2);
+}
+
+.gantt-grid-column {
+  display: none;
 }
 
 .gantt-task-bar-row {
   position: relative;
   height: 54px;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
 }
+
+/* Task bars */
 
 .gantt-task-bar {
   position: absolute;
-  top: 13px;
-  height: 28px;
+  top: 16px;
+  height: 22px;
+  min-width: 44px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--primary) 72%, transparent);
+  padding: 0 9px;
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--border));
   border-radius: 999px;
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--primary) 76%, #8b5cf6),
-      var(--primary)
-    );
-  color: #fff;
+  background: color-mix(in srgb, var(--primary) 56%, var(--text-secondary));
+  color: var(--text-primary);
   font-size: 11px;
-  font-weight: 900;
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--primary) 20%, transparent);
+  font-weight: 750;
+  box-shadow: none;
 }
 
 .gantt-task-bar-completed {
-  border-color: color-mix(in srgb, var(--success) 76%, transparent);
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--success) 72%, #06b6d4),
-      var(--success)
-    );
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--success) 18%, transparent);
+  border-color: color-mix(in srgb, var(--success) 24%, var(--border));
+  background: color-mix(in srgb, var(--success) 52%, var(--text-secondary));
 }
 
 .gantt-task-bar-overdue {
-  border-color: color-mix(in srgb, var(--danger) 84%, transparent);
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--danger) 70%, #f97316),
-      var(--danger)
-    );
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--danger) 18%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 28%, var(--border));
+  background: color-mix(in srgb, var(--danger) 50%, var(--text-secondary));
 }
+
+/* Today marker */
 
 .today-marker {
   position: absolute;
@@ -373,22 +358,24 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: var(--danger);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--danger) 32%, transparent);
+  background: color-mix(in srgb, var(--danger) 72%, var(--text-secondary));
 }
 
 .today-marker span {
   position: absolute;
   top: 8px;
-  left: 6px;
+  left: 7px;
   padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--danger) 32%, var(--border));
   border-radius: 999px;
-  background: var(--danger);
-  color: #fff;
+  background: var(--bg-surface);
+  color: color-mix(in srgb, var(--danger) 82%, white);
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 750;
   white-space: nowrap;
 }
+
+/* Legend */
 
 .gantt-legend {
   display: flex;
@@ -396,7 +383,7 @@
   gap: 12px;
   color: var(--text-secondary);
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .gantt-legend span {
@@ -406,32 +393,58 @@
 }
 
 .legend-dot {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 999px;
 }
 
 .default-dot {
-  background: var(--primary);
+  background: color-mix(in srgb, var(--primary) 56%, var(--text-secondary));
 }
 
 .completed-dot {
-  background: var(--success);
+  background: color-mix(in srgb, var(--success) 52%, var(--text-secondary));
 }
 
 .overdue-dot {
-  background: var(--danger);
+  background: color-mix(in srgb, var(--danger) 50%, var(--text-secondary));
 }
 
 .legend-line {
   width: 2px;
-  height: 16px;
+  height: 15px;
   border-radius: 999px;
 }
 
 .today-line-legend {
-  background: var(--danger);
+  background: color-mix(in srgb, var(--danger) 72%, var(--text-secondary));
 }
+
+/* Scrollbars */
+
+.gantt-timeline-header::-webkit-scrollbar,
+.gantt-timeline-body::-webkit-scrollbar,
+.gantt-left-body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.gantt-timeline-header::-webkit-scrollbar-thumb,
+.gantt-timeline-body::-webkit-scrollbar-thumb,
+.gantt-left-body::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-secondary) 32%, transparent);
+  background-clip: padding-box;
+}
+
+.gantt-timeline-header::-webkit-scrollbar-track,
+.gantt-timeline-body::-webkit-scrollbar-track,
+.gantt-left-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Responsive */
 
 @media (max-width: 1100px) {
   .gantt-summary-grid {
@@ -458,5 +471,9 @@
 
   .gantt-table {
     grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .gantt-task-name-content strong {
+    max-width: 170px;
   }
 }

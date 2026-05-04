@@ -2,6 +2,7 @@ from rest_framework import generics, permissions
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 
 from .serializers import (
     UserMeSerializer,
@@ -13,7 +14,7 @@ from .serializers import (
 class RegisterView(generics.CreateAPIView):
     serializer_class = UserRegisterSerializer
     permission_classes = [permissions.AllowAny]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
 
 class MeView(APIView):
