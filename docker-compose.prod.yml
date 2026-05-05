@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:17
+    container_name: tracker_prod_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - tracker_prod_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: tracker_prod_backend
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - tracker_prod_media:/app/media
+      - tracker_prod_static:/app/staticfiles
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: tracker_prod_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  tracker_prod_postgres_data:
+  tracker_prod_media:
+  tracker_prod_static:
