@@ -192,7 +192,12 @@ export class ProjectRolesComponent implements OnChanges {
 
   protected setMemberRole(member: ProjectMembership, event: Event): void {
     const select = event.target as HTMLSelectElement;
-    const value = select.value ? Number(select.value) : null;
+    const value = select.value === '' ? null : Number(select.value);
+
+    const roleName =
+      value === null
+        ? null
+        : this.roles().find((role) => role.id === value)?.name ?? null;
 
     this.members.update((members) =>
       members.map((item) =>
@@ -200,8 +205,7 @@ export class ProjectRolesComponent implements OnChanges {
           ? {
               ...item,
               project_role: value,
-              project_role_name:
-                this.roles().find((role) => role.id === value)?.name ?? null,
+              project_role_name: roleName,
             }
           : item,
       ),

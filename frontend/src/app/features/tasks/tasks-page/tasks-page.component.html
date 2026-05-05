@@ -65,22 +65,22 @@
   </nav>
 
   @if (activeView() === 'board') {
-    <app-task-board [projectId]="projectId" />
+    <app-task-board [projectId]="projectId()" />
   }
 
   @if (activeView() === 'project-metrics') {
-    <app-project-metrics [projectId]="projectId" />
+    <app-project-metrics [projectId]="projectId()" />
   }
 
   @if (activeView() === 'user-metrics') {
-    <app-user-metrics [projectId]="projectId" />
+    <app-user-metrics [projectId]="projectId()" />
   }
 
   @if (activeView() === 'gantt') {
-    <app-project-gantt [projectId]="projectId" />
+    <app-project-gantt [projectId]="projectId()" />
   }
 
   @if (activeView() === 'roles' && canManageProjectRoles()) {
-    <app-project-roles [projectId]="projectId" />
+    <app-project-roles [projectId]="projectId()" />
   }
 </section>

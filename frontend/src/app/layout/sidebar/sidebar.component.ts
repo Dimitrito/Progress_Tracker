@@ -1,6 +1,11 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+} from '@angular/router';
 
 import {
   OrganizationListItem,
@@ -27,6 +32,7 @@ interface SidebarItem {
 })
 export class SidebarComponent {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
   private readonly organizationsService = inject(OrganizationsService);
   private readonly projectsService = inject(ProjectsService);
   private readonly organizationContext = inject(OrganizationContextService);
@@ -40,6 +46,7 @@ export class SidebarComponent {
 
   protected readonly workspacesOpen = signal(false);
   protected readonly projectsOpen = signal(false);
+  protected readonly selectedProjectId = signal<number | null>(null);
 
   protected readonly visibleProjects = computed(() => {
     const selectedOrganization = this.selectedOrganization();
@@ -59,6 +66,16 @@ export class SidebarComponent {
   ];
 
   constructor() {
+    this.updateSelectedProjectFromUrl(this.router.url);
+
+    this.router.events
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((event) => {
+        if (event instanceof NavigationEnd) {
+          this.updateSelectedProjectFromUrl(event.urlAfterRedirects);
+        }
+      });
+
     this.loadOrganizations();
     this.loadInvitationsCount();
     this.loadProjects();
@@ -84,10 +101,57 @@ export class SidebarComponent {
       icon: organization.icon,
       role: organization.role,
     });
+
+    this.projectsOpen.set(true);
+    this.selectedProjectId.set(null);
+
+    void this.router.navigate(['/app/projects']);
+  }
+
+  protected openProject(project: ProjectListItem): void {
+    if (!this.isProjectInsideSelectedWorkspace(project)) {
+      const organization = this.organizations().find(
+        (item) => item.id === project.organization,
+      );
+
+      if (organization) {
+        this.organizationContext.setSelectedOrganization({
+          id: organization.id,
+          name: organization.name,
+          description: organization.description,
+          icon: organization.icon,
+          role: organization.role,
+        });
+      }
+    }
+
+    this.projectsOpen.set(true);
+    this.selectedProjectId.set(project.id);
+
+    void this.router.navigate(['/app/projects', project.id, 'tasks']);
   }
 
   protected isSelectedOrganization(organizationId: number): boolean {
     return this.selectedOrganization()?.id === organizationId;
+  }
+
+  protected isSelectedProject(projectId: number): boolean {
+    return this.selectedProjectId() === projectId;
+  }
+
+  private isProjectInsideSelectedWorkspace(project: ProjectListItem): boolean {
+    return this.selectedOrganization()?.id === project.organization;
+  }
+
+  private updateSelectedProjectFromUrl(url: string): void {
+    const match = url.match(/\/app\/projects\/(\d+)\/tasks/);
+    const projectId = match ? Number(match[1]) : null;
+
+    this.selectedProjectId.set(projectId);
+
+    if (projectId) {
+      this.projectsOpen.set(true);
+    }
   }
 
   private loadOrganizations(): void {

@@ -60,7 +60,14 @@
                   [class.gantt-day-today]="day.isToday"
                   [class.gantt-day-weekend]="day.isWeekend"
                 >
-                  <span>{{ day.weekday }}</span>
+                  <div class="gantt-day-top">
+                    <span>{{ day.weekday }}</span>
+
+                    @if (day.isToday) {
+                      <em class="today-day-label">Today</em>
+                    }
+                  </div>
+
                   <strong>{{ day.day }}</strong>
                 </div>
               }
@@ -105,9 +112,8 @@
                 <div
                   class="today-marker"
                   [style.left.px]="todayLeft"
-                >
-                  <span>Today</span>
-                </div>
+                  aria-label="Today"
+                ></div>
               }
 
               @for (task of ganttTasks(); track task.id) {

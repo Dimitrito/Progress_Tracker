@@ -110,10 +110,11 @@
       @if (projectsOpen()) {
         <div class="sidebar-submenu">
           @for (project of visibleProjects(); track project.id) {
-            <a
+            <button
+              type="button"
               class="sidebar-submenu-item"
-              [routerLink]="['/app/projects', project.id, 'tasks']"
-              routerLinkActive="sidebar-submenu-item-active"
+              [class.sidebar-submenu-item-active]="isSelectedProject(project.id)"
+              (click)="openProject(project)"
             >
               <span class="sidebar-item-icon project-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
@@ -125,7 +126,7 @@
               <span class="sidebar-submenu-text">
                 {{ project.name }}
               </span>
-            </a>
+            </button>
           } @empty {
             <a routerLink="/app/projects" class="sidebar-submenu-empty">
               No projects in workspace

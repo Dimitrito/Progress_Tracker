@@ -139,6 +139,27 @@ export class ProjectsPageComponent {
     return `${apiHost}${url}`;
   }
 
+  protected getProjectManagerMember(project: ProjectListItem): ProjectTeamRolePreview | null {
+    if (!project.manager && !project.manager_email) {
+      return null;
+    }
+
+    return (
+      (project.team_roles ?? []).find((member) => {
+        const sameId = project.manager !== null && member.user === project.manager;
+        const sameEmail =
+          !!project.manager_email &&
+          member.user_email.toLowerCase() === project.manager_email.toLowerCase();
+
+        return sameId || sameEmail;
+      }) ?? null
+    );
+  }
+
+  protected getProjectManagerAvatar(project: ProjectListItem): string | null {
+    return this.resolveMediaUrl(this.getProjectManagerMember(project)?.user_avatar);
+  }
+
   protected openCreateForm(): void {
     if (!this.canCreateProject()) {
       return;

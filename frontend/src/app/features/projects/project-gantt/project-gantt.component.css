@@ -205,7 +205,14 @@
   color: var(--text-secondary);
 }
 
-.gantt-day span {
+.gantt-day-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.gantt-day-top span {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -361,20 +368,22 @@
   background: color-mix(in srgb, var(--danger) 72%, var(--text-secondary));
 }
 
-.today-marker span {
-  position: absolute;
-  top: 8px;
-  left: 7px;
-  padding: 3px 7px;
-  border: 1px solid color-mix(in srgb, var(--danger) 32%, var(--border));
+.today-day-label {
+  min-height: 18px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border: 1px solid color-mix(in srgb, var(--danger) 36%, var(--border));
   border-radius: 999px;
-  background: var(--bg-surface);
-  color: color-mix(in srgb, var(--danger) 82%, white);
-  font-size: 10px;
-  font-weight: 750;
+  background: color-mix(in srgb, var(--danger) 9%, var(--bg-surface));
+  color: color-mix(in srgb, var(--danger) 84%, white);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 850;
+  line-height: 1;
+  text-transform: uppercase;
   white-space: nowrap;
 }
-
 /* Legend */
 
 .gantt-legend {

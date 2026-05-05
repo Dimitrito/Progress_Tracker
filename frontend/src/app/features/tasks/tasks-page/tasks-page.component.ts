@@ -41,7 +41,10 @@ export class TasksPageComponent {
   private readonly projectsService = inject(ProjectsService);
   private readonly organizationContext = inject(OrganizationContextService);
 
-  protected readonly projectId = Number(this.route.snapshot.paramMap.get('id'));
+  protected readonly projectId = signal<number>(
+    Number(this.route.snapshot.paramMap.get('id')),
+  );
+
   protected readonly activeView = signal<TaskView>('board');
   protected readonly project = signal<ProjectListItem | null>(null);
 
@@ -67,7 +70,20 @@ export class TasksPageComponent {
   });
 
   constructor() {
-    this.loadProject();
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const nextProjectId = Number(params.get('id'));
+
+        if (!nextProjectId) {
+          this.project.set(null);
+          return;
+        }
+
+        this.projectId.set(nextProjectId);
+        this.activeView.set('board');
+        this.loadProject();
+      });
   }
 
   protected setActiveView(view: TaskView): void {
@@ -79,8 +95,15 @@ export class TasksPageComponent {
   }
 
   private loadProject(): void {
+    const currentProjectId = this.projectId();
+
+    if (!currentProjectId) {
+      this.project.set(null);
+      return;
+    }
+
     this.projectsService
-      .getProjectById(this.projectId)
+      .getProjectById(currentProjectId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (project) => this.project.set(project),

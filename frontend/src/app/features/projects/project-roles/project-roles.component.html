@@ -240,13 +240,21 @@
 
             <div class="select-cell">
               <select
-                [value]="member.project_role || ''"
+                [value]="member.project_role === null ? '' : member.project_role"
                 (change)="setMemberRole(member, $event)"
               >
-                <option value="">No role</option>
+                <option
+                  value=""
+                  [selected]="member.project_role === null"
+                >
+                  No role
+                </option>
 
                 @for (role of roles(); track role.id) {
-                  <option [value]="role.id">
+                  <option
+                    [value]="role.id"
+                    [selected]="member.project_role === role.id"
+                  >
                     {{ role.name }}
                   </option>
                 }

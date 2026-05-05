@@ -207,14 +207,18 @@ export class ProjectGanttComponent implements OnChanges {
 
   protected getTodayLeft(): number | null {
     const today = this.startOfDay(new Date());
-    const start = this.timelineStart();
-    const end = this.timelineEnd();
+    const start = this.startOfDay(this.timelineStart());
+    const end = this.startOfDay(this.timelineEnd());
 
-    if (today.getTime() < start.getTime() || today.getTime() > end.getTime()) {
+    const todayTime = today.getTime();
+
+    if (todayTime < start.getTime() || todayTime > end.getTime()) {
       return null;
     }
 
-    return this.daysBetween(start, today) * this.dayWidth + this.dayWidth / 2;
+    const dayIndex = this.daysBetween(start, today);
+
+    return dayIndex * this.dayWidth + this.dayWidth / 2;
   }
 
   protected isTaskOverdue(task: ProjectMetricTask): boolean {

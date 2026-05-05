@@ -215,7 +215,7 @@
 
       <h2 class="state-title">No projects yet</h2>
       <p class="state-description">
-        There are no projects in this organization yet.
+        There are no projects in this workspace yet.
       </p>
     </div>
   } @else if (selectedOrganization()) {
@@ -334,7 +334,15 @@
                 @if (project.manager_email) {
                   <div class="manager-row">
                     <span class="manager-avatar">
-                      {{ getUserInitials(project.manager_email) }}
+                      @if (getProjectManagerAvatar(project); as avatarUrl) {
+                        <img
+                          [src]="avatarUrl"
+                          alt="Project manager avatar"
+                          class="manager-avatar-image"
+                        />
+                      } @else {
+                        {{ getUserInitials(project.manager_email) }}
+                      }
                     </span>
 
                     <strong>{{ project.manager_email }}</strong>
