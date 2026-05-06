@@ -1,15 +1,26 @@
 .page {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .page-header {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 8px;
+}
+
+.page-header > div {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .page-kicker {
@@ -22,7 +33,10 @@
 }
 
 .page-title {
+  max-width: 100%;
   margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   color: var(--text-primary);
   font-size: 30px;
   font-weight: 800;
@@ -36,16 +50,29 @@
 }
 
 .view-tabs {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin: 8px 0 18px;
   display: flex;
   align-items: center;
   gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.view-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .view-tab {
   position: relative;
   min-height: 40px;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -56,6 +83,7 @@
   font: inherit;
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -75,10 +103,74 @@
   bottom: -1px;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--primary), color-mix(in srgb, var(--primary) 50%, #8b5cf6));
+  background: linear-gradient(
+    90deg,
+    var(--primary),
+    color-mix(in srgb, var(--primary) 50%, #8b5cf6)
+  );
 }
 
 .view-tab:disabled {
   opacity: 0.42;
   cursor: not-allowed;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 768px) {
+  .page {
+    overflow-x: hidden;
+  }
+
+  .page-header {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .page-kicker {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  .page-title {
+    font-size: clamp(24px, 8vw, 30px);
+    line-height: 1.08;
+    letter-spacing: -0.045em;
+  }
+
+  .page-title-muted {
+    display: inline;
+  }
+
+  .view-tabs {
+    margin: 10px 0 16px;
+    padding-bottom: 1px;
+  }
+
+  .view-tab {
+    min-height: 38px;
+    gap: 7px;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+
+  .view-tab-icon {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 26px;
+  }
+
+  .view-tabs {
+    gap: 4px;
+  }
+
+  .view-tab {
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
 }

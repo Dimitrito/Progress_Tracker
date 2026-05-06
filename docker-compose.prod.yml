@@ -41,7 +41,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"
+      - "8085:80"
 
 volumes:
   tracker_prod_postgres_data:
