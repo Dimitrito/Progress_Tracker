@@ -26,7 +26,7 @@ ALLOWED_HOSTS = split_env(
 
 CSRF_TRUSTED_ORIGINS = split_env(
     "CSRF_TRUSTED_ORIGINS",
-    "http://localhost:8085,http://127.0.0.1:8085",
+    "http://localhost:5005,http://127.0.0.1:5005",
 )
 
 
@@ -70,7 +70,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = split_env(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:4200,http://127.0.0.1:4200,http://localhost,http://127.0.0.1,http://localhost:8085,http://127.0.0.1:8085",
+    "http://localhost:4200,http://127.0.0.1:4200,http://localhost,http://127.0.0.1,http://localhost:5005,http://127.0.0.1:5005",
 )
 
 CORS_ALLOW_CREDENTIALS = True
