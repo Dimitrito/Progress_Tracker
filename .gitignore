@@ -11,6 +11,9 @@ frontend/.angular/
 
 # Env
 .env
+.env.*
+!.env.example
+!.env.prod.example
 
 # IDE
 .idea/
