@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-
+import { environment } from '../../../../environments/environment';
 import { OrganizationContextService } from '../../../core/services/organization-context.service';
 import {
   OrganizationApiRole,
@@ -124,6 +124,40 @@ export class OrganizationDetailPageComponent {
 
   protected hasDescription(organization: OrganizationDetailViewModel): boolean {
     return organization.description.trim().length > 0;
+  }
+
+  private resolveMediaUrl(url: string | null | undefined): string | null {
+    if (!url) {
+      return null;
+    }
+
+    if (url.startsWith('blob:') || url.startsWith('data:')) {
+      return url;
+    }
+
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      try {
+        const parsedUrl = new URL(url);
+
+        if (
+          parsedUrl.hostname === 'localhost' ||
+          parsedUrl.hostname === '127.0.0.1' ||
+          parsedUrl.hostname === window.location.hostname
+        ) {
+          return `${window.location.origin}${parsedUrl.pathname}`;
+        }
+
+        return url;
+      } catch {
+        return url;
+      }
+    }
+
+    if (url.startsWith('/')) {
+      return `${window.location.origin}${url}`;
+    }
+
+    return `${window.location.origin}/${url}`;
   }
 
   protected heroInitials(name: string): string {
@@ -315,7 +349,7 @@ export class OrganizationDetailPageComponent {
           this.organization.set(detailViewModel);
           this.setBaselineFromApi(updatedOrganization);
           this.selectedIconFile.set(null);
-          this.iconPreviewUrl.set(updatedOrganization.icon);
+          this.iconPreviewUrl.set(this.resolveMediaUrl(updatedOrganization.icon));
           this.removeIcon.set(false);
           this.editOrganizationForm.reset(
             {
@@ -571,7 +605,7 @@ export class OrganizationDetailPageComponent {
           this.organization.set(detailViewModel);
           this.setBaselineFromApi(organization);
           this.selectedIconFile.set(null);
-          this.iconPreviewUrl.set(organization.icon);
+          this.iconPreviewUrl.set(this.resolveMediaUrl(organization.icon));
           this.removeIcon.set(false);
           this.editOrganizationForm.reset(
             {
@@ -648,7 +682,7 @@ export class OrganizationDetailPageComponent {
     this.baseline = {
       name: organization.name,
       description: organization.description,
-      icon: organization.icon,
+      icon: this.resolveMediaUrl(organization.icon),
     };
   }
 
@@ -680,7 +714,7 @@ export class OrganizationDetailPageComponent {
       id: organization.id,
       name: organization.name,
       description: organization.description,
-      icon: organization.icon,
+      icon: this.resolveMediaUrl(organization.icon),
       role: organization.role,
       roleLabel: this.mapRoleLabel(organization.role),
       createdAt: organization.created_at,

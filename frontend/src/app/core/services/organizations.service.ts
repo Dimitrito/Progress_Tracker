@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { map, Observable, Subject, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 
@@ -78,7 +78,12 @@ export class OrganizationsService {
   private readonly baseUrl = environment.apiUrl;
   private readonly invitationsCountSignal = signal(0);
   readonly invitationsCount = this.invitationsCountSignal.asReadonly();
+  private readonly organizationsChangedSubject = new Subject<void>();
+  readonly organizationsChanged$ = this.organizationsChangedSubject.asObservable();
 
+  notifyOrganizationsChanged(): void {
+    this.organizationsChangedSubject.next();
+  }
   setInvitationsCount(count: number): void {
     this.invitationsCountSignal.set(count);
   }
@@ -128,7 +133,9 @@ export class OrganizationsService {
 
     return this.http.post<OrganizationListItem>(
       `${this.baseUrl}/organizations/create/`,
-      formData
+      formData,
+    ).pipe(
+      tap(() => this.notifyOrganizationsChanged()),
     );
   }
 
@@ -151,6 +158,8 @@ export class OrganizationsService {
     return this.http.patch<OrganizationListItem>(
       `${this.baseUrl}/organizations/${organizationId}/`,
       formData,
+    ).pipe(
+      tap(() => this.notifyOrganizationsChanged()),
     );
   }
 
@@ -212,7 +221,9 @@ export class OrganizationsService {
   }
 
   deleteOrganization(id: number) {
-    return this.http.delete(`${this.baseUrl}/organizations/${id}/delete/`);
+    return this.http.delete(`${this.baseUrl}/organizations/${id}/delete/`).pipe(
+      tap(() => this.notifyOrganizationsChanged()),
+    );
   }
 
   leaveOrganization(id: number) {

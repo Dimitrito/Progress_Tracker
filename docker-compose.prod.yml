@@ -42,6 +42,8 @@ services:
       - backend
     ports:
       - "5005:80"
+    volumes:
+      - tracker_prod_media:/usr/share/nginx/media:ro
 
 volumes:
   tracker_prod_postgres_data:

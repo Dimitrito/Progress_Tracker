@@ -79,6 +79,18 @@ export class SidebarComponent {
     this.loadOrganizations();
     this.loadInvitationsCount();
     this.loadProjects();
+
+    this.organizationsService.organizationsChanged$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.loadOrganizations();
+      });
+
+    this.projectsService.projectsChanged$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.loadProjects();
+      });
   }
 
   protected toggleWorkspaces(event: MouseEvent): void {

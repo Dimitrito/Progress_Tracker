@@ -419,7 +419,8 @@
 }
 
 .subtasks-table {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--bg-surface-2);
@@ -428,11 +429,15 @@
 .subtasks-table-head,
 .subtask-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 140px 112px 70px 122px 122px;
+  grid-template-columns: minmax(180px, 1fr) 132px 104px 64px 112px 112px;
   gap: 8px;
   align-items: center;
+  min-width: 760px;
 }
-
+.subtask-date-input {
+  min-width: 0;
+  max-width: 112px;
+}
 .subtasks-table-head {
   min-height: 40px;
   padding: 0 12px;

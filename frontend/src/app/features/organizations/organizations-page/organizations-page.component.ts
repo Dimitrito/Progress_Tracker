@@ -221,7 +221,7 @@ export class OrganizationsPageComponent {
       name: organization.name,
       description:
         organization.description.trim() || 'No description provided yet.',
-      icon: organization.icon,
+      icon: this.resolveMediaUrl(organization.icon),
       apiRole: organization.role,
       role: this.mapRole(organization.role),
       roleLabel: this.mapRoleLabel(organization.role),
@@ -287,5 +287,39 @@ export class OrganizationsPageComponent {
     }
 
     return 'Unable to create the organization right now.';
+  }
+
+  private resolveMediaUrl(url: string | null | undefined): string | null {
+    if (!url) {
+      return null;
+    }
+
+    if (url.startsWith('blob:') || url.startsWith('data:')) {
+      return url;
+    }
+
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      try {
+        const parsedUrl = new URL(url);
+
+        if (
+          parsedUrl.hostname === 'localhost' ||
+          parsedUrl.hostname === '127.0.0.1' ||
+          parsedUrl.hostname === window.location.hostname
+        ) {
+          return `${window.location.origin}${parsedUrl.pathname}`;
+        }
+
+        return url;
+      } catch {
+        return url;
+      }
+    }
+
+    if (url.startsWith('/')) {
+      return `${window.location.origin}${url}`;
+    }
+
+    return `${window.location.origin}/${url}`;
   }
 }

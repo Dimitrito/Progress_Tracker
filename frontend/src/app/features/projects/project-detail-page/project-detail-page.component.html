@@ -228,7 +228,7 @@
         <div class="card-header-copy">
           <h2 class="card-title">Project members</h2>
           <p class="card-subtitle">
-            Add organization members to this project.
+            Add workspace members to this project.
           </p>
         </div>
       </div>
@@ -246,7 +246,7 @@
             class="input"
             formControlName="user"
           >
-            <option [ngValue]="null">Select organization member</option>
+            <option [ngValue]="null">Select workspace member</option>
 
             @for (member of availableOrganizationMembers(); track member.id) {
               <option [ngValue]="member.user">

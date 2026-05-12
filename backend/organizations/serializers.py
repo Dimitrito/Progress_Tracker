@@ -25,11 +25,16 @@ class AbsoluteIconUrlMixin:
         return request.build_absolute_uri(url)
 
 class OrganizationCreateSerializer(AbsoluteIconUrlMixin, serializers.ModelSerializer):
-    icon = serializers.SerializerMethodField()
+    icon = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Organization
         fields = ("id", "name", "description", "icon")
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["icon"] = self.get_icon(instance)
+        return data
 
 class OrganizationUpdateSerializer(AbsoluteIconUrlMixin, serializers.ModelSerializer):
     icon = serializers.ImageField(required=False, allow_null=True)

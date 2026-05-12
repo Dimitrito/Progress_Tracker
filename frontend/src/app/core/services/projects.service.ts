@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 
@@ -80,7 +80,12 @@ export interface UpdateProjectMemberRolePayload {
 export class ProjectsService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
+  private readonly projectsChangedSubject = new Subject<void>();
+  readonly projectsChanged$ = this.projectsChangedSubject.asObservable();
 
+  notifyProjectsChanged(): void {
+    this.projectsChangedSubject.next();
+  }
   getMyProjects(organizationId?: number): Observable<ProjectListItem[]> {
     const url = organizationId
       ? `${this.baseUrl}/projects/my/?organization_id=${organizationId}`
@@ -99,6 +104,8 @@ export class ProjectsService {
     return this.http.post<ProjectListItem>(
       `${this.baseUrl}/projects/create/`,
       payload,
+    ).pipe(
+      tap(() => this.notifyProjectsChanged()),
     );
   }
 
@@ -109,6 +116,8 @@ export class ProjectsService {
     return this.http.patch<ProjectListItem>(
       `${this.baseUrl}/projects/${projectId}/`,
       payload,
+    ).pipe(
+      tap(() => this.notifyProjectsChanged()),
     );
   }
 
@@ -143,9 +152,10 @@ export class ProjectsService {
   deleteProject(projectId: number): Observable<void> {
     return this.http.delete<void>(
       `${this.baseUrl}/projects/${projectId}/`,
+    ).pipe(
+      tap(() => this.notifyProjectsChanged()),
     );
   }
-
   removeProjectMember(
     projectId: number,
     membershipId: number,
