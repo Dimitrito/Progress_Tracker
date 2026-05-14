@@ -12,6 +12,7 @@ import { ProjectMetricsComponent } from '../../projects/project-metrics/project-
 import { ProjectRolesComponent } from '../../projects/project-roles/project-roles.component';
 import { TaskBoardComponent } from '../task-board/task-board.component';
 import { UserMetricsComponent } from '../../projects/user-metrics/user-metrics.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 type TaskView =
   | 'board'
@@ -40,6 +41,7 @@ export class TasksPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly projectsService = inject(ProjectsService);
   private readonly organizationContext = inject(OrganizationContextService);
+  private readonly authService = inject(AuthService);
 
   protected readonly projectId = signal<number>(
     Number(this.route.snapshot.paramMap.get('id')),
@@ -54,17 +56,24 @@ export class TasksPageComponent {
   protected readonly canManageProjectRoles = computed(() => {
     const organization = this.selectedOrganization();
     const project = this.project();
+    const currentUser = this.authService.user();
 
     const organizationRole = String(organization?.role ?? '').toLowerCase();
     const isOwnerOrAdmin =
       organizationRole === 'owner' ||
       organizationRole === 'admin';
 
-    const currentUserEmail = this.getCurrentUserEmail();
     const isProjectManager =
-      !!project?.manager_email &&
-      !!currentUserEmail &&
-      project.manager_email.toLowerCase() === currentUserEmail.toLowerCase();
+      !!project &&
+      !!currentUser &&
+      (
+        project.manager === currentUser.id ||
+        (
+          !!project.manager_email &&
+          !!currentUser.email &&
+          project.manager_email.toLowerCase() === currentUser.email.toLowerCase()
+        )
+      );
 
     return isOwnerOrAdmin || isProjectManager;
   });
@@ -109,96 +118,5 @@ export class TasksPageComponent {
         next: (project) => this.project.set(project),
         error: () => this.project.set(null),
       });
-  }
-
-  private getCurrentUserEmail(): string | null {
-    const directKeys = [
-      'email',
-      'user_email',
-      'current_user_email',
-    ];
-
-    for (const key of directKeys) {
-      const value = localStorage.getItem(key);
-
-      if (value) {
-        return value.replaceAll('"', '');
-      }
-    }
-
-    const userPayloadKeys = [
-      'user',
-      'currentUser',
-      'auth_user',
-    ];
-
-    for (const key of userPayloadKeys) {
-      const value = localStorage.getItem(key);
-
-      if (!value) {
-        continue;
-      }
-
-      try {
-        const parsed = JSON.parse(value);
-
-        if (typeof parsed?.email === 'string') {
-          return parsed.email;
-        }
-
-        if (typeof parsed?.user_email === 'string') {
-          return parsed.user_email;
-        }
-      } catch {
-        continue;
-      }
-    }
-
-    const tokenKeys = [
-      'access',
-      'access_token',
-      'token',
-      'jwt',
-    ];
-
-    for (const key of tokenKeys) {
-      const token = localStorage.getItem(key);
-
-      if (!token) {
-        continue;
-      }
-
-      const email = this.getEmailFromJwt(token);
-
-      if (email) {
-        return email;
-      }
-    }
-
-    return null;
-  }
-
-  private getEmailFromJwt(token: string): string | null {
-    const parts = token.split('.');
-
-    if (parts.length < 2) {
-      return null;
-    }
-
-    try {
-      const payload = JSON.parse(atob(parts[1]));
-
-      if (typeof payload?.email === 'string') {
-        return payload.email;
-      }
-
-      if (typeof payload?.user_email === 'string') {
-        return payload.user_email;
-      }
-
-      return null;
-    } catch {
-      return null;
-    }
   }
 }

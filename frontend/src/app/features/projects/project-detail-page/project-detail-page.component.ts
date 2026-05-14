@@ -133,7 +133,10 @@ export class ProjectDetailPageComponent {
       return false;
     }
 
-    return project.manager_email === currentUser.email;
+    return (
+      project.manager === currentUser.id ||
+      project.manager_email === currentUser.email
+    );
   }
 
   protected canRemoveProjectMember(member: ProjectMembership): boolean {
@@ -143,14 +146,19 @@ export class ProjectDetailPageComponent {
       return false;
     }
 
-    if (this.isOrganizationOwner(member)) {
-      return false;
+    const currentUser = this.authService.user();
+    const currentUserIsOwner = selectedOrganization.role === 'admin';
+    const memberIsOwner = this.isOrganizationOwner(member);
+
+    if (memberIsOwner) {
+      return currentUserIsOwner;
     }
 
     if (
       this.isCurrentUserProjectManager() &&
-      selectedOrganization.role !== 'admin' &&
-      member.user === this.project()?.manager
+      !currentUserIsOwner &&
+      currentUser &&
+      member.user === currentUser.id
     ) {
       return false;
     }
