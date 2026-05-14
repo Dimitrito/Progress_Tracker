@@ -332,20 +332,21 @@ def calculate_user_contribution_score(
     overdue_tasks_count,
     assigned_tasks_count,
 ):
+    if assigned_tasks_count <= 0:
+        return 0
+
     points_score = 0
 
     if max_completed_points > 0:
         points_score = round((completed_points / max_completed_points) * 100)
 
-    overdue_penalty = 0
-
-    if assigned_tasks_count > 0:
-        overdue_penalty = round((overdue_tasks_count / assigned_tasks_count) * 100)
+    overdue_penalty = round((overdue_tasks_count / assigned_tasks_count) * 100)
+    deadline_score = max(0, 100 - overdue_penalty)
 
     score = round(
         completion_rate * 0.45
         + points_score * 0.40
-        - overdue_penalty * 0.15
+        + deadline_score * 0.15
     )
 
     return max(0, min(100, score))
